@@ -1,5 +1,6 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
+import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/returns/return_dialog.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:flutter/material.dart';
@@ -152,6 +153,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                             cash: sale.cash,
                             change: sale.change,
                             totalSavings: sale.discount,
+                            customerId: sale.customerId,
                             readOnly: true,
                           ),
                         );
@@ -185,6 +187,30 @@ class SalesHistoryPage extends GetView<SalesController> {
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
+                                  // Show customer name
+                                  if (sale.hasCustomer)
+                                    Builder(builder: (_) {
+                                      final customersController = Get.find<CustomersController>();
+                                      final customer = customersController.findById(sale.customerId);
+                                      if (customer != null) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.person_outline, size: 12, color: cs.onSurfaceVariant),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                customer.name,
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: cs.onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    }),
                                   const SizedBox(height: 2),
                                   Row(
                                     children: [

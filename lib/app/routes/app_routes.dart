@@ -7,6 +7,7 @@ abstract class Routes {
   static const settings = '/settings';
   static const expenses = '/expenses';
   static const returns = '/returns';
+  static const customers = '/customers';
 
   static const inventory = '/inventory';
   static const invoice = '/invoice';
