@@ -10,6 +10,8 @@ import 'package:printing/printing.dart';
 
 class InvoicePreviewPage extends StatelessWidget {
   final List<CartItemModel> items;
+  final double subtotal;
+  final double checkoutDiscount; // checkout discount percentage
   final double total;
   final double cash;
   final double change;
@@ -21,6 +23,8 @@ class InvoicePreviewPage extends StatelessWidget {
   const InvoicePreviewPage({
     super.key,
     required this.items,
+    this.subtotal = 0,
+    this.checkoutDiscount = 0,
     required this.total,
     required this.cash,
     required this.change,
@@ -28,9 +32,13 @@ class InvoicePreviewPage extends StatelessWidget {
     this.readOnly = false,
   });
 
+  double get _checkoutDiscountAmount => subtotal * checkoutDiscount / 100;
+
   Future<void> _printInvoice() async {
     final pdfBytes = await InvoicePdfService.generateInvoice(
       items: items,
+      subtotal: subtotal,
+      checkoutDiscount: checkoutDiscount,
       total: total,
       cash: cash,
       change: change,
@@ -118,7 +126,8 @@ class InvoicePreviewPage extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           item.product.name,
@@ -127,7 +136,8 @@ class InvoicePreviewPage extends StatelessWidget {
                                         if (item.product.hasBrand)
                                           Text(
                                             item.product.brand,
-                                            style: theme.textTheme.bodySmall?.copyWith(
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
                                               color: cs.onSurfaceVariant,
                                               fontSize: 10,
                                             ),
@@ -172,12 +182,30 @@ class InvoicePreviewPage extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
 
                     // ---------- Totals ----------
-                    if (totalSavings > 0) ...[
-                      _row(theme, "Discount saved",
-                          "-${Formatters.currency(totalSavings)}",
-                          valueColor: AppColors.success),
+                    _row(theme, "Subtotal", Formatters.currency(subtotal)),
+                    const SizedBox(height: AppSpacing.sm),
+                    // Product-level discount savings
+                    if (totalSavings - _checkoutDiscountAmount > 0) ...[
+                      _row(
+                        theme,
+                        "Product discounts",
+                        "-${Formatters.currency(totalSavings - _checkoutDiscountAmount)}",
+                        valueColor: AppColors.success,
+                      ),
                       const SizedBox(height: AppSpacing.sm),
                     ],
+                    // Checkout discount
+                    if (checkoutDiscount > 0) ...[
+                      _row(
+                        theme,
+                        "Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%)",
+                        "-${Formatters.currency(_checkoutDiscountAmount)}",
+                        valueColor: AppColors.danger,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                    const Divider(height: 1),
+                    const SizedBox(height: AppSpacing.sm),
                     _row(theme, "Total", Formatters.currency(total),
                         emphasize: true),
                     const SizedBox(height: AppSpacing.sm),
@@ -232,6 +260,7 @@ class InvoicePreviewPage extends StatelessWidget {
                           Get.find<SalesController>().completeSale(
                             cash: cash,
                             change: change,
+                            checkoutDiscount: checkoutDiscount,
                           );
                           Get.offAllNamed('/');
                         },
