@@ -63,6 +63,8 @@ class _SettingsFormState extends State<_SettingsForm> {
   late final _phoneController = TextEditingController(text: widget.settings.phone);
   late final _footerController = TextEditingController(text: widget.settings.receiptFooter);
   late final _currencyController = TextEditingController(text: widget.settings.currencySymbol);
+  late final _taxRateController = TextEditingController(text: widget.settings.taxRate.toStringAsFixed(1));
+  late bool _taxInclusive = widget.settings.taxInclusive;
 
   @override
   void dispose() {
@@ -71,12 +73,14 @@ class _SettingsFormState extends State<_SettingsForm> {
     _phoneController.dispose();
     _footerController.dispose();
     _currencyController.dispose();
+    _taxRateController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<SettingsController>();
+    final theme = Theme.of(context);
 
     return Column(
       children: [
@@ -126,65 +130,63 @@ class _SettingsFormState extends State<_SettingsForm> {
             hintText: "e.g. No refunds after 7 days",
           ),
         ),
-        const SizedBox(height: AppSpacing.xl),
 
-        // ---------- Preview ----------
-        Text("Receipt Preview", style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: AppSpacing.sm),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              children: [
-                Text(
-                  _shopNameController.text.isEmpty
-                      ? "My Shop"
-                      : _shopNameController.text,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1,
-                      ),
+        // ---------- Tax Settings ----------
+        const SizedBox(height: AppSpacing.xl),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.accent.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.receipt_outlined, color: AppColors.accent),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                "Tax Settings",
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
-                if (_addressController.text.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    _addressController.text,
-                    style: Theme.of(context).textTheme.bodySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-                if (_phoneController.text.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    _phoneController.text,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                const Divider(height: 1),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  "Items will appear here...",
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const Divider(height: 1),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  _footerController.text.isEmpty
-                      ? "Thank you for shopping!"
-                      : _footerController.text,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+        const SizedBox(height: AppSpacing.lg),
+        TextField(
+          controller: _taxRateController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: "Tax rate",
+            prefixIcon: Icon(Icons.percent_outlined),
+            suffixText: "%",
+            hintText: "e.g. 16 for 16% VAT",
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        StatefulBuilder(
+          builder: (context, setInnerState) {
+            return SwitchListTile(
+              value: _taxInclusive,
+              onChanged: (val) => setInnerState(() => _taxInclusive = val),
+              title: const Text("Tax-inclusive pricing"),
+              subtitle: Text(
+                _taxInclusive
+                    ? "Product prices already include tax"
+                    : "Tax is added on top of product prices",
+                style: TextStyle(
+                  color: _taxInclusive ? AppColors.success : AppColors.warning,
+                  fontSize: 12,
+                ),
+              ),
+              secondary: Icon(
+                _taxInclusive ? Icons.check_circle_outline : Icons.add_circle_outline,
+                color: _taxInclusive ? AppColors.success : AppColors.warning,
+              ),
+            );
+          },
+        ),
+
         const SizedBox(height: AppSpacing.xl),
 
         // ---------- Save ----------
@@ -202,10 +204,12 @@ class _SettingsFormState extends State<_SettingsForm> {
               currencySymbol: _currencyController.text.trim().isEmpty
                   ? 'Rs'
                   : _currencyController.text.trim(),
+              taxRate: double.tryParse(_taxRateController.text) ?? 0,
+              taxInclusive: _taxInclusive,
             ));
             Get.snackbar(
               "Saved",
-              "Shop settings updated",
+              "Settings updated",
               snackPosition: SnackPosition.BOTTOM,
             );
           },

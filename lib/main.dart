@@ -18,6 +18,7 @@ void main() async {
   await Hive.openBox('products');
   await Hive.openBox('sales');
   await Hive.openBox('settings');
+  await Hive.openBox('expenses');
   runApp(const PosApp());
 }
 

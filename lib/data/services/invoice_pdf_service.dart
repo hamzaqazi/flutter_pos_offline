@@ -12,6 +12,9 @@ class InvoicePdfService {
     required List<CartItemModel> items,
     double subtotal = 0,
     double checkoutDiscount = 0,
+    double taxRate = 0,
+    bool taxInclusive = false,
+    double taxAmount = 0,
     required double total,
     required double cash,
     required double change,
@@ -125,6 +128,18 @@ class InvoicePdfService {
                   children: [
                     pw.Text("Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%):"),
                     pw.Text("-$currency ${checkoutDiscountAmount.toStringAsFixed(0)}"),
+                  ],
+                ),
+              ],
+              // Tax
+              if (taxAmount > 0) ...[
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(taxInclusive
+                        ? "Tax incl. (${taxRate.toStringAsFixed(1)}%):"
+                        : "Tax (${taxRate.toStringAsFixed(1)}%):"),
+                    pw.Text("$currency ${taxAmount.toStringAsFixed(0)}"),
                   ],
                 ),
               ],

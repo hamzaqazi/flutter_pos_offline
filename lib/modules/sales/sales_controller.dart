@@ -45,6 +45,7 @@ class SalesController extends GetxController {
           items: items,
           subtotal: (e['subtotal'] ?? e['total'] ?? 0).toDouble(),
           checkoutDiscount: (e['checkoutDiscount'] ?? 0).toDouble(),
+          taxAmount: (e['taxAmount'] ?? 0).toDouble(),
           total: (e['total'] ?? 0).toDouble(),
           cash: (e['cash'] ?? 0).toDouble(),
           change: (e['change'] ?? 0).toDouble(),
@@ -60,6 +61,7 @@ class SalesController extends GetxController {
     required double cash,
     required double change,
     double checkoutDiscount = 0,
+    double taxAmount = 0,
   }) {
     final cart = Get.find<CartController>();
     final products = Get.find<ProductsController>();
@@ -68,9 +70,9 @@ class SalesController extends GetxController {
 
     final saleId = DateTime.now().microsecondsSinceEpoch.toString();
 
-    final subtotal = cart.totalAmount; // after product-level discounts
+    final subtotal = cart.subtotalAmount; // after product-level discounts
     final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
-    final grandTotal = subtotal - checkoutDiscountAmount;
+    final grandTotal = cart.totalAmount - checkoutDiscountAmount;
 
     // Product-level discount savings
     final productSavings = cart.cartItems.fold<double>(
@@ -89,6 +91,7 @@ class SalesController extends GetxController {
       items: List.from(cart.cartItems),
       subtotal: subtotal,
       checkoutDiscount: checkoutDiscount,
+      taxAmount: taxAmount,
       total: grandTotal,
       cash: cash,
       change: change,
@@ -122,6 +125,7 @@ class SalesController extends GetxController {
           .toList(),
       'subtotal': sale.subtotal,
       'checkoutDiscount': sale.checkoutDiscount,
+      'taxAmount': sale.taxAmount,
       'total': sale.total,
       'cash': sale.cash,
       'change': sale.change,

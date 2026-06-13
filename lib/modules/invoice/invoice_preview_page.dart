@@ -13,6 +13,9 @@ class InvoicePreviewPage extends StatelessWidget {
   final List<CartItemModel> items;
   final double subtotal;
   final double checkoutDiscount; // checkout discount percentage
+  final double taxRate;         // tax rate %
+  final bool taxInclusive;      // whether tax is included in price
+  final double taxAmount;       // calculated tax amount
   final double total;
   final double cash;
   final double change;
@@ -26,6 +29,9 @@ class InvoicePreviewPage extends StatelessWidget {
     required this.items,
     this.subtotal = 0,
     this.checkoutDiscount = 0,
+    this.taxRate = 0,
+    this.taxInclusive = false,
+    this.taxAmount = 0,
     required this.total,
     required this.cash,
     required this.change,
@@ -40,6 +46,9 @@ class InvoicePreviewPage extends StatelessWidget {
       items: items,
       subtotal: subtotal,
       checkoutDiscount: checkoutDiscount,
+      taxRate: taxRate,
+      taxInclusive: taxInclusive,
+      taxAmount: taxAmount,
       total: total,
       cash: cash,
       change: change,
@@ -231,6 +240,18 @@ class InvoicePreviewPage extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                     ],
+                    // Tax
+                    if (taxAmount > 0) ...[
+                      _row(
+                        theme,
+                        taxInclusive
+                            ? "Tax incl. (${taxRate.toStringAsFixed(1)}%)"
+                            : "Tax (${taxRate.toStringAsFixed(1)}%)",
+                        Formatters.currency(taxAmount),
+                        valueColor: AppColors.accent,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
                     const Divider(height: 1),
                     const SizedBox(height: AppSpacing.sm),
                     _row(theme, "Total", Formatters.currency(total),
@@ -291,6 +312,7 @@ class InvoicePreviewPage extends StatelessWidget {
                             cash: cash,
                             change: change,
                             checkoutDiscount: checkoutDiscount,
+                            taxAmount: taxAmount,
                           );
                           Get.offAllNamed('/');
                         },

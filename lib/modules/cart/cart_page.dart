@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
+import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -56,6 +57,8 @@ class CartPage extends GetView<CartController> {
             ),
             _SummaryBar(
               total: controller.totalAmount,
+              subtotal: controller.subtotalAmount,
+              tax: controller.taxAmount,
               savings: controller.totalSavings,
               itemCount: controller.totalItems,
               onCheckout: () => _checkout(context),
@@ -83,10 +86,18 @@ class CartPage extends GetView<CartController> {
               // Parse checkout discount %
               final checkoutDiscountPct =
                   double.tryParse(checkoutDiscountController.text.trim()) ?? 0;
+              // Discount applies on subtotal (before tax for tax-exclusive, on total for tax-inclusive)
               final checkoutDiscountAmount =
-                  cart.totalAmount * checkoutDiscountPct / 100;
-              final grandTotal =
-                  cart.totalAmount - checkoutDiscountAmount;
+                  cart.subtotalAmount * checkoutDiscountPct / 100;
+              // For tax-exclusive: discount reduces subtotal, then tax is recalculated
+              final settings = SettingsService.getSettings();
+              final discountedSubtotal = cart.subtotalAmount - checkoutDiscountAmount;
+              final taxOnDiscounted = settings.taxInclusive
+                  ? discountedSubtotal - (discountedSubtotal / (1 + settings.taxRate / 100))
+                  : discountedSubtotal * settings.taxRate / 100;
+              final grandTotal = settings.taxInclusive
+                  ? discountedSubtotal  // tax already included
+                  : discountedSubtotal + taxOnDiscounted;
 
               final cash = double.tryParse(cashController.text.trim()) ?? 0;
               final change = cash - grandTotal;
@@ -115,14 +126,14 @@ class CartPage extends GetView<CartController> {
                       ),
                       child: Column(
                         children: [
-                          // Subtotal (after product-level discounts)
+                          // Subtotal (after product-level discounts, before tax)
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text("Subtotal",
                                   style: theme.textTheme.bodyMedium),
                               Text(
-                                Formatters.currency(cart.totalAmount),
+                                Formatters.currency(cart.subtotalAmount),
                                 style: theme.textTheme.bodyLarge?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -145,6 +156,29 @@ class CartPage extends GetView<CartController> {
                                   style:
                                       theme.textTheme.bodyMedium?.copyWith(
                                     color: AppColors.success,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          // Tax
+                          if (cart.taxAmount > 0) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    "${SettingsService.getSettings().taxInclusive ? 'Tax incl.' : 'Tax'} (${SettingsService.getSettings().taxRate}%)",
+                                    style:
+                                        theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.accent,
+                                    )),
+                                Text(
+                                  Formatters.currency(cart.taxAmount),
+                                  style:
+                                      theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.accent,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -305,9 +339,14 @@ class CartPage extends GetView<CartController> {
                                     Get.to(
                                       () => InvoicePreviewPage(
                                         items: cart.cartItems,
-                                        subtotal: cart.totalAmount,
+                                        subtotal: cart.subtotalAmount,
                                         checkoutDiscount:
                                             checkoutDiscountPct,
+                                        taxRate: settings.taxRate,
+                                        taxInclusive: settings.taxInclusive,
+                                        taxAmount: settings.taxInclusive
+                                            ? (grandTotal - grandTotal / (1 + settings.taxRate / 100))
+                                            : taxOnDiscounted,
                                         total: grandTotal,
                                         cash: cash,
                                         change: change,
@@ -523,12 +562,16 @@ class _StepBtn extends StatelessWidget {
 class _SummaryBar extends StatelessWidget {
   const _SummaryBar({
     required this.total,
+    required this.subtotal,
+    required this.tax,
     required this.savings,
     required this.itemCount,
     required this.onCheckout,
   });
 
   final double total;
+  final double subtotal;
+  final double tax;
   final double savings;
   final int itemCount;
   final VoidCallback onCheckout;
@@ -580,6 +623,14 @@ class _SummaryBar extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
+                    if (tax > 0)
+                      Text(
+                        "incl. tax ${Formatters.currency(tax)}",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
+                      ),
                     if (savings > 0)
                       Text(
                         "Saving ${Formatters.currency(savings)}",
