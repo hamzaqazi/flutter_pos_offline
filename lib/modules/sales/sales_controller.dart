@@ -43,6 +43,8 @@ class SalesController extends GetxController {
         return SaleModel(
           id: e['id'] ?? '',
           items: items,
+          subtotal: (e['subtotal'] ?? e['total'] ?? 0).toDouble(),
+          checkoutDiscount: (e['checkoutDiscount'] ?? 0).toDouble(),
           total: (e['total'] ?? 0).toDouble(),
           cash: (e['cash'] ?? 0).toDouble(),
           change: (e['change'] ?? 0).toDouble(),
@@ -54,7 +56,11 @@ class SalesController extends GetxController {
     );
   }
 
-  void completeSale({required double cash, required double change}) {
+  void completeSale({
+    required double cash,
+    required double change,
+    double checkoutDiscount = 0,
+  }) {
     final cart = Get.find<CartController>();
     final products = Get.find<ProductsController>();
 
@@ -62,20 +68,28 @@ class SalesController extends GetxController {
 
     final saleId = DateTime.now().microsecondsSinceEpoch.toString();
 
-    final totalDiscount = cart.cartItems.fold<double>(
+    final subtotal = cart.totalAmount; // after product-level discounts
+    final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
+    final grandTotal = subtotal - checkoutDiscountAmount;
+
+    // Product-level discount savings
+    final productSavings = cart.cartItems.fold<double>(
       0,
       (sum, item) => sum + item.savings,
     );
 
-    final totalProfit = cart.cartItems.fold<double>(
-      0,
-      (sum, item) => sum + item.profit,
-    );
+    // Total discount = product discounts + checkout discount
+    final totalDiscount = productSavings + checkoutDiscountAmount;
+
+    // Profit is reduced by the checkout discount amount
+    final totalProfit = cart.totalProfit - checkoutDiscountAmount;
 
     final sale = SaleModel(
       id: saleId,
       items: List.from(cart.cartItems),
-      total: cart.totalAmount,
+      subtotal: subtotal,
+      checkoutDiscount: checkoutDiscount,
+      total: grandTotal,
       cash: cash,
       change: change,
       discount: totalDiscount,
@@ -106,6 +120,8 @@ class SalesController extends GetxController {
             },
           )
           .toList(),
+      'subtotal': sale.subtotal,
+      'checkoutDiscount': sale.checkoutDiscount,
       'total': sale.total,
       'cash': sale.cash,
       'change': sale.change,

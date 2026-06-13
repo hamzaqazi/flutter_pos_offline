@@ -69,6 +69,7 @@ class CartPage extends GetView<CartController> {
   void _checkout(BuildContext context) {
     final cart = Get.find<CartController>();
     final cashController = TextEditingController();
+    final checkoutDiscountController = TextEditingController();
 
     Get.dialog(
       Dialog(
@@ -78,9 +79,21 @@ class CartPage extends GetView<CartController> {
           child: StatefulBuilder(
             builder: (context, setState) {
               final theme = Theme.of(context);
+
+              // Parse checkout discount %
+              final checkoutDiscountPct =
+                  double.tryParse(checkoutDiscountController.text.trim()) ?? 0;
+              final checkoutDiscountAmount =
+                  cart.totalAmount * checkoutDiscountPct / 100;
+              final grandTotal =
+                  cart.totalAmount - checkoutDiscountAmount;
+
               final cash = double.tryParse(cashController.text.trim()) ?? 0;
-              final change = cash - cart.totalAmount;
-              final enough = cash >= cart.totalAmount;
+              final change = cash - grandTotal;
+              final enough = cash >= grandTotal;
+
+              final totalAllSavings =
+                  cart.totalSavings + checkoutDiscountAmount;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -90,6 +103,8 @@ class CartPage extends GetView<CartController> {
                   children: [
                     Text("Checkout", style: theme.textTheme.titleLarge),
                     const SizedBox(height: AppSpacing.lg),
+
+                    // ---------- Price summary ----------
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
@@ -100,34 +115,94 @@ class CartPage extends GetView<CartController> {
                       ),
                       child: Column(
                         children: [
+                          // Subtotal (after product-level discounts)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Subtotal",
+                                  style: theme.textTheme.bodyMedium),
+                              Text(
+                                Formatters.currency(cart.totalAmount),
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Product-level savings
+                          if (cart.totalSavings > 0) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text("Product discounts",
+                                    style:
+                                        theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.success,
+                                    )),
+                                Text(
+                                  "-${Formatters.currency(cart.totalSavings)}",
+                                  style:
+                                      theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          // Checkout discount
+                          if (checkoutDiscountPct > 0) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    "Checkout discount ($checkoutDiscountPct%)",
+                                    style:
+                                        theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.danger,
+                                    )),
+                                Text(
+                                  "-${Formatters.currency(checkoutDiscountAmount)}",
+                                  style:
+                                      theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.danger,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            const Divider(height: 1),
+                            const SizedBox(height: AppSpacing.sm),
+                          ],
+                          // Grand total
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text("Total payable",
-                                  style: theme.textTheme.bodyMedium),
+                                  style: theme.textTheme.titleMedium),
                               Text(
-                                Formatters.currency(cart.totalAmount),
-                                style: theme.textTheme.titleLarge?.copyWith(
+                                Formatters.currency(grandTotal),
+                                style:
+                                    theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                             ],
                           ),
-                          if (cart.totalSavings > 0) ...[
+                          if (totalAllSavings > 0) ...[
                             const SizedBox(height: AppSpacing.sm),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Text("You saved",
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.success,
-                                    )),
                                 Text(
-                                  Formatters.currency(cart.totalSavings),
-                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                  "Total saved: ${Formatters.currency(totalAllSavings)}",
+                                  style: theme.textTheme.bodySmall?.copyWith(
                                     color: AppColors.success,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -137,6 +212,39 @@ class CartPage extends GetView<CartController> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
+
+                    // ---------- Checkout discount field ----------
+                    TextField(
+                      controller: checkoutDiscountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Additional discount %",
+                        prefixIcon: Icon(Icons.discount_outlined),
+                        suffixText: "%",
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      children: [
+                        _discountChip("0%", "0", checkoutDiscountController,
+                            setState),
+                        _discountChip("5%", "5", checkoutDiscountController,
+                            setState),
+                        _discountChip("10%", "10", checkoutDiscountController,
+                            setState),
+                        _discountChip("15%", "15", checkoutDiscountController,
+                            setState),
+                        _discountChip("20%", "20", checkoutDiscountController,
+                            setState),
+                        _discountChip("25%", "25", checkoutDiscountController,
+                            setState),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // ---------- Cash field ----------
                     TextField(
                       controller: cashController,
                       keyboardType: TextInputType.number,
@@ -151,11 +259,11 @@ class CartPage extends GetView<CartController> {
                     Wrap(
                       spacing: AppSpacing.sm,
                       children: [
-                        _quickChip("Exact", cart.totalAmount, cashController,
+                        _quickChip("Exact", grandTotal, cashController,
                             setState),
-                        _quickChip("+500", cart.totalAmount + 500,
-                            cashController, setState),
-                        _quickChip("+1000", cart.totalAmount + 1000,
+                        _quickChip(
+                            "+500", grandTotal + 500, cashController, setState),
+                        _quickChip("+1000", grandTotal + 1000,
                             cashController, setState),
                       ],
                     ),
@@ -197,10 +305,13 @@ class CartPage extends GetView<CartController> {
                                     Get.to(
                                       () => InvoicePreviewPage(
                                         items: cart.cartItems,
-                                        total: cart.totalAmount,
+                                        subtotal: cart.totalAmount,
+                                        checkoutDiscount:
+                                            checkoutDiscountPct,
+                                        total: grandTotal,
                                         cash: cash,
                                         change: change,
-                                        totalSavings: cart.totalSavings,
+                                        totalSavings: totalAllSavings,
                                       ),
                                     );
                                   }
@@ -230,6 +341,21 @@ class CartPage extends GetView<CartController> {
       label: Text(label),
       onPressed: () {
         controller.text = value.toStringAsFixed(0);
+        setState(() {});
+      },
+    );
+  }
+
+  Widget _discountChip(
+    String label,
+    String value,
+    TextEditingController controller,
+    void Function(void Function()) setState,
+  ) {
+    return ActionChip(
+      label: Text(label),
+      onPressed: () {
+        controller.text = value;
         setState(() {});
       },
     );
