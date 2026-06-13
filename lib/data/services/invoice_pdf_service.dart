@@ -8,12 +8,16 @@ import '../models/cart_item_model.dart';
 class InvoicePdfService {
   static Future<Uint8List> generateInvoice({
     required List<CartItemModel> items,
+    double subtotal = 0,
+    double checkoutDiscount = 0,
     required double total,
     required double cash,
     required double change,
     double totalSavings = 0,
   }) async {
     final pdf = pw.Document();
+    final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
+    final productDiscountAmount = totalSavings - checkoutDiscountAmount;
 
     pdf.addPage(
       pw.Page(
@@ -75,16 +79,37 @@ class InvoicePdfService {
 
               pw.Divider(),
 
-              if (totalSavings > 0) ...[
+              // Subtotal
+              if (subtotal > 0) ...[
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text("Discount saved"),
-                    pw.Text("-Rs ${totalSavings.toStringAsFixed(0)}"),
+                    pw.Text("Subtotal:"),
+                    pw.Text("Rs ${subtotal.toStringAsFixed(0)}"),
                   ],
                 ),
-                pw.SizedBox(height: 3),
               ],
+              // Product discounts
+              if (productDiscountAmount > 0) ...[
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text("Product discounts:"),
+                    pw.Text("-Rs ${productDiscountAmount.toStringAsFixed(0)}"),
+                  ],
+                ),
+              ],
+              // Checkout discount
+              if (checkoutDiscount > 0) ...[
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text("Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%):"),
+                    pw.Text("-Rs ${checkoutDiscountAmount.toStringAsFixed(0)}"),
+                  ],
+                ),
+              ],
+              // Total
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [

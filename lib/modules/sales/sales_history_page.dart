@@ -134,6 +134,8 @@ class SalesHistoryPage extends GetView<SalesController> {
                         Get.to(
                           () => InvoicePreviewPage(
                             items: sale.items,
+                            subtotal: sale.subtotal,
+                            checkoutDiscount: sale.checkoutDiscount,
                             total: sale.total,
                             cash: sale.cash,
                             change: sale.change,
