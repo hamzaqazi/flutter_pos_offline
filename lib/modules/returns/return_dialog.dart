@@ -2,7 +2,6 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/return_model.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
-import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -97,9 +96,6 @@ void showReturnDialog(SaleModel sale) {
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (_, index) {
                       final item = sale.items[index];
-                      final returnQty =
-                          int.tryParse(qtyControllers[index].text.trim()) ??
-                              0;
 
                       // Check already returned
                       final alreadyReturned = returnsController
@@ -148,6 +144,15 @@ void showReturnDialog(SaleModel sale) {
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
+                                    if (maxReturnable <= 0)
+                                      Text(
+                                        "Fully returned",
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: AppColors.danger,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -158,6 +163,7 @@ void showReturnDialog(SaleModel sale) {
                                   controller: qtyControllers[index],
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
+                                  enabled: maxReturnable > 0,
                                   decoration: InputDecoration(
                                     labelText: "Return",
                                     isDense: true,
@@ -258,7 +264,7 @@ void showReturnDialog(SaleModel sale) {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: Get.back,
+                          onPressed: () => Navigator.of(context).pop(),
                           child: const Text("Cancel"),
                         ),
                       ),
@@ -305,13 +311,21 @@ void showReturnDialog(SaleModel sale) {
                                     return;
                                   }
 
-                                  returnsController.processReturn(
-                                    saleId: sale.id,
-                                    returnItems: returnItems,
-                                    reason: reasonController.text.trim(),
-                                  );
+                                  // Close dialog FIRST, then process return
+                                  // This avoids Get.back() conflicting with Get.snackbar
+                                  final itemsToReturn = List<ReturnItemModel>.from(returnItems);
+                                  final reason = reasonController.text.trim();
 
-                                  Get.back(); // close dialog
+                                  Navigator.of(context).pop();
+
+                                  // Process after dialog is closed
+                                  Future.microtask(() {
+                                    returnsController.processReturn(
+                                      saleId: sale.id,
+                                      returnItems: itemsToReturn,
+                                      reason: reason,
+                                    );
+                                  });
                                 }
                               : null,
                           style: FilledButton.styleFrom(
