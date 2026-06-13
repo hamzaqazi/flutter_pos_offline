@@ -51,7 +51,7 @@ class ReportsPage extends GetView<ReportsController> {
           // ---------- Report tabs ----------
           Expanded(
             child: DefaultTabController(
-              length: 4,
+              length: 5,
               child: Column(
                 children: [
                   TabBar(
@@ -500,8 +500,12 @@ class _ExpensesTab extends GetView<ReportsController> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    controller.netProfit >= 0 ? AppColors.success : AppColors.danger,
-                    (controller.netProfit >= 0 ? AppColors.success : AppColors.danger)
+                    controller.netProfit >= 0
+                        ? AppColors.success
+                        : AppColors.danger,
+                    (controller.netProfit >= 0
+                            ? AppColors.success
+                            : AppColors.danger)
                         .withValues(alpha: 0.75),
                   ],
                 ),
@@ -585,12 +589,18 @@ class _ExpensesTab extends GetView<ReportsController> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                           child: LinearProgressIndicator(
                             value: pct,
                             minHeight: 6,
-                            backgroundColor: AppColors.danger.withValues(alpha: 0.12),
-                            valueColor: const AlwaysStoppedAnimation(AppColors.danger),
+                            backgroundColor: AppColors.danger.withValues(
+                              alpha: 0.12,
+                            ),
+                            valueColor: const AlwaysStoppedAnimation(
+                              AppColors.danger,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 4),
