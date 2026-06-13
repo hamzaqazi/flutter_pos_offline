@@ -25,6 +25,10 @@ class SalesHistoryPage extends GetView<SalesController> {
         final sales = controller.sales.reversed.toList();
         final totalRevenue =
             sales.fold<double>(0, (sum, s) => sum + s.total);
+        final totalProfit =
+            sales.fold<double>(0, (sum, s) => sum + s.profit);
+        final totalDiscount =
+            sales.fold<double>(0, (sum, s) => sum + s.discount);
 
         return Column(
           children: [
@@ -41,25 +45,69 @@ class SalesHistoryPage extends GetView<SalesController> {
                 ),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: _BannerStat(
-                      label: "Total revenue",
-                      value: Formatters.currency(totalRevenue),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Revenue",
+                          value: Formatters.currency(totalRevenue),
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 36,
+                        color: Colors.white24,
+                      ),
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Profit",
+                          value: Formatters.currency(totalProfit),
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 36,
+                        color: Colors.white24,
+                      ),
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Sales",
+                          value: sales.length.toString(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (totalDiscount > 0) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.discount_outlined,
+                              color: Colors.white70, size: 14),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            "Total discounts given: ${Formatters.currency(totalDiscount)}",
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: Colors.white24,
-                  ),
-                  Expanded(
-                    child: _BannerStat(
-                      label: "Transactions",
-                      value: sales.length.toString(),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -89,6 +137,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                             total: sale.total,
                             cash: sale.cash,
                             change: sale.change,
+                            totalSavings: sale.discount,
                             readOnly: true,
                           ),
                         );
@@ -123,12 +172,39 @@ class SalesHistoryPage extends GetView<SalesController> {
                                     ),
                                   ),
                                   const SizedBox(height: 2),
-                                  Text(
-                                    Formatters.dateTime(sale.date),
-                                    style:
-                                        theme.textTheme.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        Formatters.dateTime(sale.date),
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: cs.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      if (sale.profit > 0) ...[
+                                        const SizedBox(width: AppSpacing.sm),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.xs,
+                                            vertical: 1,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.success
+                                                .withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(
+                                                AppSpacing.radiusSm),
+                                          ),
+                                          child: Text(
+                                            "+${Formatters.currency(sale.profit)} profit",
+                                            style: const TextStyle(
+                                              color: AppColors.success,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ],
                               ),
@@ -180,18 +256,21 @@ class _BannerStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(color: Colors.white70, fontSize: 12),
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
         ),
       ],
     );

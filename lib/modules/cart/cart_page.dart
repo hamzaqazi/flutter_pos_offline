@@ -56,6 +56,7 @@ class CartPage extends GetView<CartController> {
             ),
             _SummaryBar(
               total: controller.totalAmount,
+              savings: controller.totalSavings,
               itemCount: controller.totalItems,
               onCheckout: () => _checkout(context),
             ),
@@ -97,18 +98,41 @@ class CartPage extends GetView<CartController> {
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusMd),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
                         children: [
-                          Text("Total payable",
-                              style: theme.textTheme.bodyMedium),
-                          Text(
-                            Formatters.currency(cart.totalAmount),
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Total payable",
+                                  style: theme.textTheme.bodyMedium),
+                              Text(
+                                Formatters.currency(cart.totalAmount),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
                           ),
+                          if (cart.totalSavings > 0) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text("You saved",
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.success,
+                                    )),
+                                Text(
+                                  Formatters.currency(cart.totalSavings),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -176,6 +200,7 @@ class CartPage extends GetView<CartController> {
                                         total: cart.totalAmount,
                                         cash: cash,
                                         change: change,
+                                        totalSavings: cart.totalSavings,
                                       ),
                                     );
                                   }
@@ -209,7 +234,6 @@ class CartPage extends GetView<CartController> {
       },
     );
   }
-
 }
 
 class _CartTile extends StatelessWidget {
@@ -228,6 +252,7 @@ class _CartTile extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final accent = AppColors.forCategory(item.product.category);
+    final hasDiscount = item.product.discount > 0;
 
     return Card(
       child: Padding(
@@ -257,12 +282,51 @@ class _CartTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    "${Formatters.currency(item.product.price)} each",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
+                  if (hasDiscount) ...[
+                    Row(
+                      children: [
+                        Text(
+                          Formatters.currency(item.product.price),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            decoration: TextDecoration.lineThrough,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger.withValues(alpha: 0.12),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: Text(
+                            "-${item.product.discount.toStringAsFixed(0)}%",
+                            style: const TextStyle(
+                              color: AppColors.danger,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "${Formatters.currency(item.product.discountedPrice)} each",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ] else ...[
+                    Text(
+                      "${Formatters.currency(item.product.price)} each",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     Formatters.currency(item.total),
@@ -333,11 +397,13 @@ class _StepBtn extends StatelessWidget {
 class _SummaryBar extends StatelessWidget {
   const _SummaryBar({
     required this.total,
+    required this.savings,
     required this.itemCount,
     required this.onCheckout,
   });
 
   final double total;
+  final double savings;
   final int itemCount;
   final VoidCallback onCheckout;
 
@@ -388,6 +454,14 @@ class _SummaryBar extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
+                    if (savings > 0)
+                      Text(
+                        "Saving ${Formatters.currency(savings)}",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                   ],
                 ),
                 FilledButton.icon(

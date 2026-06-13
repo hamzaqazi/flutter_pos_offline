@@ -8,6 +8,8 @@ class SaleModel {
   final double total;
   final double cash;
   final double change;
+  final double discount;   // total discount amount across all items
+  final double profit;     // total profit for this sale
   final DateTime date;
 
   SaleModel({
@@ -16,6 +18,8 @@ class SaleModel {
     required this.total,
     required this.cash,
     required this.change,
+    this.discount = 0,
+    this.profit = 0,
     required this.date,
   });
 
@@ -28,6 +32,9 @@ class SaleModel {
               'productId': e.product.id,
               'name': e.product.name,
               'price': e.product.price,
+              'purchasePrice': e.product.purchasePrice,
+              'discount': e.product.discount,
+              'discountedPrice': e.product.discountedPrice,
               'qty': e.quantity,
             },
           )
@@ -35,6 +42,8 @@ class SaleModel {
       'total': total,
       'cash': cash,
       'change': change,
+      'discount': discount,
+      'profit': profit,
       'date': date.toIso8601String(),
     };
   }
@@ -46,6 +55,8 @@ class SaleModel {
       total: data['total'],
       cash: data['cash'],
       change: data['change'],
+      discount: (data['discount'] ?? 0).toDouble(),
+      profit: (data['profit'] ?? 0).toDouble(),
       date: DateTime.parse(data['date']),
     );
   }

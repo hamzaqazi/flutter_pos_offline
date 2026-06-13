@@ -9,6 +9,7 @@ class DashboardController extends GetxController {
   RxInt totalProducts = 0.obs;
   RxInt totalSales = 0.obs;
   RxDouble totalRevenue = 0.0.obs;
+  RxDouble totalProfit = 0.0.obs;
   RxInt lowStockCount = 0.obs;
 
   @override
@@ -33,6 +34,10 @@ class DashboardController extends GetxController {
     totalRevenue.value = salesController.sales.fold<double>(
       0,
       (sum, sale) => sum + sale.total,
+    );
+    totalProfit.value = salesController.sales.fold<double>(
+      0,
+      (sum, sale) => sum + sale.profit,
     );
   }
 }

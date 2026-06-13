@@ -25,6 +25,8 @@ class ProductsController extends GetxController {
           name: e['name'],
           category: e['category'],
           price: e['price'],
+          purchasePrice: (e['purchasePrice'] ?? 0).toDouble(),
+          discount: (e['discount'] ?? 0).toDouble(),
           stock: e['stock'],
         ),
       ),
@@ -32,47 +34,52 @@ class ProductsController extends GetxController {
   }
 
   void addProduct(ProductModel product) {
-    HiveService.productBox.put(product.id, {
-      'id': product.id,
-      'name': product.name,
-      'category': product.category,
-      'price': product.price,
-      'stock': product.stock,
-    });
-
+    HiveService.productBox.put(product.id, _toMap(product));
     products.add(product);
   }
 
+  /// Full update: edit name, category, price, purchasePrice, discount, stock.
+  void updateProduct(ProductModel product) {
+    final index = products.indexWhere((p) => p.id == product.id);
+
+    if (index != -1) {
+      products[index] = product;
+      HiveService.productBox.put(product.id, _toMap(product));
+    }
+  }
+
+  /// Convenience: update stock only (for quick restock).
   void updateStock(String id, int newStock) {
     final index = products.indexWhere((p) => p.id == id);
 
     if (index != -1) {
       final product = products[index];
-
       final updated = product.copyWith(stock: newStock);
-
       products[index] = updated;
-
-      HiveService.productBox.put(id, {
-        'id': updated.id,
-        'name': updated.name,
-        'category': updated.category,
-        'price': updated.price,
-        'stock': updated.stock,
-      });
+      HiveService.productBox.put(id, _toMap(updated));
     }
   }
 
-  void deleteProduct(int id) {
+  void deleteProduct(String id) {
     products.removeWhere((e) => e.id == id);
     HiveService.productBox.delete(id);
   }
 
+  Map<String, dynamic> _toMap(ProductModel p) => {
+        'id': p.id,
+        'name': p.name,
+        'category': p.category,
+        'price': p.price,
+        'purchasePrice': p.purchasePrice,
+        'discount': p.discount,
+        'stock': p.stock,
+      };
+
   List<ProductModel> get filteredProducts {
     return products.where((product) {
       final matchesSearch = product.name.toLowerCase().contains(
-        searchQuery.value.toLowerCase(),
-      );
+            searchQuery.value.toLowerCase(),
+          );
 
       final matchesCategory =
           selectedCategory.value == 'All' ||

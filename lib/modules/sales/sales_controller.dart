@@ -30,6 +30,8 @@ class SalesController extends GetxController {
               id: item['productId'] ?? '',
               name: item['name'] ?? '',
               price: (item['price'] ?? 0).toDouble(),
+              purchasePrice: (item['purchasePrice'] ?? 0).toDouble(),
+              discount: (item['discount'] ?? 0).toDouble(),
               category: '',
               stock: 0,
             ),
@@ -43,6 +45,8 @@ class SalesController extends GetxController {
           total: (e['total'] ?? 0).toDouble(),
           cash: (e['cash'] ?? 0).toDouble(),
           change: (e['change'] ?? 0).toDouble(),
+          discount: (e['discount'] ?? 0).toDouble(),
+          profit: (e['profit'] ?? 0).toDouble(),
           date: DateTime.tryParse(e['date'] ?? '') ?? DateTime.now(),
         );
       }).toList(),
@@ -57,12 +61,24 @@ class SalesController extends GetxController {
 
     final saleId = DateTime.now().microsecondsSinceEpoch.toString();
 
+    final totalDiscount = cart.cartItems.fold<double>(
+      0,
+      (sum, item) => sum + item.savings,
+    );
+
+    final totalProfit = cart.cartItems.fold<double>(
+      0,
+      (sum, item) => sum + item.profit,
+    );
+
     final sale = SaleModel(
       id: saleId,
       items: List.from(cart.cartItems),
       total: cart.totalAmount,
       cash: cash,
       change: change,
+      discount: totalDiscount,
+      profit: totalProfit,
       date: DateTime.now(),
     );
 
@@ -81,6 +97,9 @@ class SalesController extends GetxController {
               'productId': e.product.id,
               'name': e.product.name,
               'price': e.product.price,
+              'purchasePrice': e.product.purchasePrice,
+              'discount': e.product.discount,
+              'discountedPrice': e.product.discountedPrice,
               'qty': e.quantity,
             },
           )
@@ -88,6 +107,8 @@ class SalesController extends GetxController {
       'total': sale.total,
       'cash': sale.cash,
       'change': sale.change,
+      'discount': sale.discount,
+      'profit': sale.profit,
       'date': sale.date.toIso8601String(),
     });
 

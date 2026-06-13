@@ -11,6 +11,7 @@ class InvoicePdfService {
     required double total,
     required double cash,
     required double change,
+    double totalSavings = 0,
   }) async {
     final pdf = pw.Document();
 
@@ -40,20 +41,59 @@ class InvoicePdfService {
               pw.SizedBox(height: 5),
 
               ...items.map(
-                (item) => pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                (item) => pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Expanded(child: pw.Text(item.product.name)),
-                    pw.Text("${item.quantity} x ${item.product.price}"),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Expanded(child: pw.Text(item.product.name)),
+                        pw.Text(
+                            "${item.quantity} x Rs ${item.product.discountedPrice.toStringAsFixed(0)}"),
+                      ],
+                    ),
+                    if (item.product.discount > 0)
+                      pw.Text(
+                        "  Orig: Rs ${item.product.price.toStringAsFixed(0)} (-${item.product.discount.toStringAsFixed(0)}%)",
+                        style: const pw.TextStyle(fontSize: 8),
+                      ),
                   ],
                 ),
               ),
 
               pw.Divider(),
 
-              pw.Text("Total: Rs $total"),
-              pw.Text("Cash: Rs $cash"),
-              pw.Text("Change: Rs $change"),
+              if (totalSavings > 0) ...[
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text("Discount saved"),
+                    pw.Text("-Rs ${totalSavings.toStringAsFixed(0)}"),
+                  ],
+                ),
+                pw.SizedBox(height: 3),
+              ],
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text("Total:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text("Rs ${total.toStringAsFixed(0)}", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text("Cash:"),
+                  pw.Text("Rs ${cash.toStringAsFixed(0)}"),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text("Change:"),
+                  pw.Text("Rs ${change.toStringAsFixed(0)}"),
+                ],
+              ),
 
               pw.SizedBox(height: 20),
 

@@ -34,8 +34,19 @@ class CartController extends GetxController {
     cartItems.refresh();
   }
 
+  /// Total using discounted prices.
   double get totalAmount {
     return cartItems.fold(0, (sum, item) => sum + item.total);
+  }
+
+  /// Total discount savings across all cart items.
+  double get totalSavings {
+    return cartItems.fold(0, (sum, item) => sum + item.savings);
+  }
+
+  /// Total profit across all cart items.
+  double get totalProfit {
+    return cartItems.fold(0, (sum, item) => sum + item.profit);
   }
 
   int get totalItems {
