@@ -136,6 +136,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                             items: sale.items,
                             subtotal: sale.subtotal,
                             checkoutDiscount: sale.checkoutDiscount,
+                            taxAmount: sale.taxAmount,
                             total: sale.total,
                             cash: sale.cash,
                             change: sale.change,

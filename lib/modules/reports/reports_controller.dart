@@ -2,12 +2,14 @@ import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
 import '../../data/models/sale_model.dart';
+import '../expenses/expenses_controller.dart';
 import '../products/products_controller.dart';
 import '../sales/sales_controller.dart';
 
 class ReportsController extends GetxController {
   final ProductsController _productsController = Get.find();
   final SalesController _salesController = Get.find();
+  final ExpensesController _expensesController = Get.find();
 
   // Date range filter
   final startDate = DateTime.now().subtract(const Duration(days: 30)).obs;
@@ -63,6 +65,9 @@ class ReportsController extends GetxController {
   double get totalDiscount =>
       filteredSales.fold(0, (sum, s) => sum + s.discount);
 
+  double get totalTax =>
+      filteredSales.fold(0, (sum, s) => sum + s.taxAmount);
+
   double get totalCOGS =>
       filteredSales.fold(0, (sum, s) {
         return sum + s.items.fold(0, (itemSum, item) {
@@ -82,6 +87,29 @@ class ReportsController extends GetxController {
 
   double get margin =>
       totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+
+  // =================== Expenses ===================
+
+  double get totalExpenses =>
+      _expensesController.totalExpensesInRange(startDate.value, endDate.value);
+
+  Map<String, double> get expensesByCategory =>
+      _expensesController.expensesByCategory(startDate.value, endDate.value);
+
+  /// True profit = Gross profit - Expenses
+  double get netProfit => totalProfit - totalExpenses;
+
+  double get netMargin =>
+      totalRevenue > 0 ? (netProfit / totalRevenue * 100) : 0;
+
+  List<ExpenseCategoryData> get expenseBreakdownList {
+    final map = expensesByCategory;
+    final list = map.entries
+        .map((e) => ExpenseCategoryData(category: e.key, amount: e.value))
+        .toList();
+    list.sort((a, b) => b.amount.compareTo(a.amount));
+    return list;
+  }
 
   // =================== Top Products ===================
 
@@ -225,4 +253,11 @@ class _CategoryData {
     required this.revenue,
     required this.profit,
   });
+}
+
+class ExpenseCategoryData {
+  final String category;
+  final double amount;
+
+  ExpenseCategoryData({required this.category, required this.amount});
 }

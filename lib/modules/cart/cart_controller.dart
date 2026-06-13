@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../../data/models/cart_item_model.dart';
 import '../../data/models/product_model.dart';
+import '../../data/services/settings_service.dart';
 
 class CartController extends GetxController {
   final cartItems = <CartItemModel>[].obs;
@@ -34,9 +35,32 @@ class CartController extends GetxController {
     cartItems.refresh();
   }
 
-  /// Total using discounted prices.
-  double get totalAmount {
+  /// Subtotal using discounted prices (before tax).
+  double get subtotalAmount {
     return cartItems.fold(0, (sum, item) => sum + item.total);
+  }
+
+  /// Tax amount based on settings.
+  double get taxAmount {
+    final settings = SettingsService.getSettings();
+    if (settings.taxRate <= 0) return 0;
+    if (settings.taxInclusive) {
+      // Tax is included in the price, extract it
+      return subtotalAmount - (subtotalAmount / (1 + settings.taxRate / 100));
+    } else {
+      // Tax is added on top
+      return subtotalAmount * settings.taxRate / 100;
+    }
+  }
+
+  /// Total including tax (for tax-exclusive: subtotal + tax; for tax-inclusive: subtotal already includes tax).
+  double get totalAmount {
+    final settings = SettingsService.getSettings();
+    if (settings.taxInclusive) {
+      return subtotalAmount; // tax already included
+    } else {
+      return subtotalAmount + taxAmount;
+    }
   }
 
   /// Total discount savings across all cart items.
@@ -44,7 +68,7 @@ class CartController extends GetxController {
     return cartItems.fold(0, (sum, item) => sum + item.savings);
   }
 
-  /// Total profit across all cart items.
+  /// Total profit across all cart items (before tax).
   double get totalProfit {
     return cartItems.fold(0, (sum, item) => sum + item.profit);
   }

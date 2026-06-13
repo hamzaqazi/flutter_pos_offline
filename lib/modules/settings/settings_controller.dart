@@ -26,4 +26,6 @@ class SettingsController extends GetxController {
   String get phone => settings.value.phone;
   String get receiptFooter => settings.value.receiptFooter;
   String get currencySymbol => settings.value.currencySymbol;
+  double get taxRate => settings.value.taxRate;
+  bool get taxInclusive => settings.value.taxInclusive;
 }

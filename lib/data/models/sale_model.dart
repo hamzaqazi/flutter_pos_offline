@@ -5,9 +5,10 @@ import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 class SaleModel {
   final String id;
   final List<CartItemModel> items;
-  final double subtotal;        // total before checkout discount
+  final double subtotal;        // total before checkout discount & tax
   final double checkoutDiscount; // additional discount applied at checkout (%)
-  final double total;           // final total after all discounts
+  final double taxAmount;       // tax collected on this sale
+  final double total;           // final total after all discounts & tax
   final double cash;
   final double change;
   final double discount;   // total discount amount (product discounts + checkout discount)
@@ -19,6 +20,7 @@ class SaleModel {
     required this.items,
     required this.subtotal,
     this.checkoutDiscount = 0,
+    this.taxAmount = 0,
     required this.total,
     required this.cash,
     required this.change,
@@ -46,6 +48,7 @@ class SaleModel {
           .toList(),
       'subtotal': subtotal,
       'checkoutDiscount': checkoutDiscount,
+      'taxAmount': taxAmount,
       'total': total,
       'cash': cash,
       'change': change,
@@ -61,6 +64,7 @@ class SaleModel {
       items: [], // you can rebuild later if needed
       subtotal: (data['subtotal'] ?? data['total'] ?? 0).toDouble(),
       checkoutDiscount: (data['checkoutDiscount'] ?? 0).toDouble(),
+      taxAmount: (data['taxAmount'] ?? 0).toDouble(),
       total: data['total'],
       cash: data['cash'],
       change: data['change'],

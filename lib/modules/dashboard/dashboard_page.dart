@@ -131,9 +131,17 @@ class DashboardPage extends GetView<DashboardController> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _ActionTile(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: "Expenses",
+                    subtitle: "Track rent, salaries, utilities & more",
+                    color: AppColors.danger,
+                    onTap: () => Get.toNamed('/expenses'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _ActionTile(
                     icon: Icons.settings_outlined,
                     title: "Settings",
-                    subtitle: "Shop info, receipt & currency settings",
+                    subtitle: "Shop info, tax, receipt & currency settings",
                     color: cs.onSurfaceVariant,
                     onTap: () => Get.toNamed('/settings'),
                   ),

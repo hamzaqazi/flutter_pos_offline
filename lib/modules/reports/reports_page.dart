@@ -63,6 +63,7 @@ class ReportsPage extends GetView<ReportsController> {
                       Tab(text: "Summary"),
                       Tab(text: "Top Products"),
                       Tab(text: "Categories"),
+                      Tab(text: "Expenses"),
                       Tab(text: "Inventory"),
                     ],
                   ),
@@ -72,6 +73,7 @@ class ReportsPage extends GetView<ReportsController> {
                         _SummaryTab(),
                         _TopProductsTab(),
                         _CategoriesTab(),
+                        _ExpensesTab(),
                         _InventoryTab(),
                       ],
                     ),
@@ -133,7 +135,7 @@ class _SummaryTab extends GetView<ReportsController> {
                       Expanded(
                         child: _BannerStat(
                           label: "Profit",
-                          value: Formatters.currency(controller.totalProfit),
+                          value: Formatters.currency(controller.netProfit),
                         ),
                       ),
                     ],
@@ -143,8 +145,8 @@ class _SummaryTab extends GetView<ReportsController> {
                     children: [
                       Expanded(
                         child: _BannerStat(
-                          label: "Margin",
-                          value: "${controller.margin.toStringAsFixed(1)}%",
+                          label: "Net Margin",
+                          value: "${controller.netMargin.toStringAsFixed(1)}%",
                         ),
                       ),
                       Container(width: 1, height: 36, color: Colors.white24),
@@ -203,6 +205,28 @@ class _SummaryTab extends GetView<ReportsController> {
                     label: "Cost of goods",
                     value: Formatters.currency(controller.totalCOGS),
                     color: AppColors.warning,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.receipt_outlined,
+                    label: "Tax collected",
+                    value: Formatters.currency(controller.totalTax),
+                    color: AppColors.accent,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.money_off_outlined,
+                    label: "Expenses",
+                    value: Formatters.currency(controller.totalExpenses),
+                    color: const Color(0xFFEF4444),
                   ),
                 ),
               ],
@@ -443,6 +467,148 @@ class _CategoriesTab extends GetView<ReportsController> {
             ),
           );
         },
+      );
+    });
+  }
+}
+
+// =================== Expenses Tab ===================
+
+class _ExpensesTab extends GetView<ReportsController> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Obx(() {
+      final breakdown = controller.expenseBreakdownList;
+      final totalExp = controller.totalExpenses;
+      final totalProf = controller.totalProfit;
+
+      if (totalExp <= 0 && totalProf <= 0) {
+        return _EmptyReport(message: "No expense data for this period");
+      }
+
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // P&L Summary
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    controller.netProfit >= 0 ? AppColors.success : AppColors.danger,
+                    (controller.netProfit >= 0 ? AppColors.success : AppColors.danger)
+                        .withValues(alpha: 0.75),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Gross Profit",
+                          value: Formatters.currency(controller.totalProfit),
+                        ),
+                      ),
+                      Container(width: 1, height: 36, color: Colors.white24),
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Expenses",
+                          value: Formatters.currency(totalExp),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Net Profit",
+                          value: Formatters.currency(controller.netProfit),
+                        ),
+                      ),
+                      Container(width: 1, height: 36, color: Colors.white24),
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Net Margin",
+                          value: "${controller.netMargin.toStringAsFixed(1)}%",
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Expense breakdown by category
+            if (breakdown.isNotEmpty) ...[
+              Text(
+                "Expenses by Category",
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ...breakdown.map((cat) {
+                final pct = totalExp > 0 ? cat.amount / totalExp : 0.0;
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              cat.category,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              Formatters.currency(cat.amount),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          child: LinearProgressIndicator(
+                            value: pct,
+                            minHeight: 6,
+                            backgroundColor: AppColors.danger.withValues(alpha: 0.12),
+                            valueColor: const AlwaysStoppedAnimation(AppColors.danger),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${(pct * 100).toStringAsFixed(1)}% of total expenses",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ],
+        ),
       );
     });
   }
