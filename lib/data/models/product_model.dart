@@ -1,6 +1,7 @@
 class ProductModel {
   final String id;
   final String name;
+  final String brand;
   final String category;
   final double price;
   final double purchasePrice;
@@ -11,6 +12,7 @@ class ProductModel {
   ProductModel({
     required this.id,
     required this.name,
+    this.brand = '',
     required this.category,
     required this.price,
     this.purchasePrice = 0,
@@ -28,9 +30,13 @@ class ProductModel {
   /// Profit per unit (selling price after discount minus purchase price).
   double get profitPerUnit => discountedPrice - purchasePrice;
 
+  /// Whether this product has a brand set.
+  bool get hasBrand => brand.isNotEmpty;
+
   ProductModel copyWith({
     String? id,
     String? name,
+    String? brand,
     String? category,
     double? price,
     double? purchasePrice,
@@ -41,6 +47,7 @@ class ProductModel {
     return ProductModel(
       id: id ?? this.id,
       name: name ?? this.name,
+      brand: brand ?? this.brand,
       category: category ?? this.category,
       price: price ?? this.price,
       purchasePrice: purchasePrice ?? this.purchasePrice,

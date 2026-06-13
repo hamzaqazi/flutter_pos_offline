@@ -40,8 +40,9 @@ class ProductCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
+        // Tap out-of-stock → edit (restock), tap in-stock → add to cart
         onTap: outOfStock
-            ? null
+            ? () => _showEditDialog(context)
             : () {
                 cartController.addToCart(product);
                 Get.snackbar(
@@ -55,6 +56,8 @@ class ProductCard extends StatelessWidget {
                   icon: Icon(Icons.check_circle, color: cs.onInverseSurface),
                 );
               },
+        // Long-press any card → edit
+        onLongPress: () => _showEditDialog(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -129,7 +132,7 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Add button
+                  // Add-to-cart button (only when in stock)
                   if (!outOfStock)
                     Positioned(
                       bottom: AppSpacing.sm,
@@ -148,12 +151,13 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Edit button
+                  // Edit button — always visible, above out-of-stock overlay
                   Positioned(
                     bottom: AppSpacing.sm,
                     left: AppSpacing.sm,
                     child: GestureDetector(
                       onTap: () => _showEditDialog(context),
+                      behavior: HitTestBehavior.opaque,
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -173,26 +177,29 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Out-of-stock overlay — IgnorePointer so edit button still works
                   if (outOfStock)
-                    Container(
-                      color: cs.surface.withValues(alpha: 0.55),
-                      alignment: Alignment.center,
+                    IgnorePointer(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.xs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.danger,
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: const Text(
-                          "Out of stock",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                        color: cs.surface.withValues(alpha: 0.55),
+                        alignment: Alignment.center,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.xs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger,
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: const Text(
+                            "Out of stock",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),
@@ -215,6 +222,18 @@ class ProductCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (product.hasBrand) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      product.brand,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: accent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -261,6 +280,7 @@ class ProductCard extends StatelessWidget {
 
   void _showEditDialog(BuildContext context) {
     final nameController = TextEditingController(text: product.name);
+    final brandController = TextEditingController(text: product.brand);
     final priceController =
         TextEditingController(text: product.price.toStringAsFixed(0));
     final purchasePriceController =
@@ -314,6 +334,15 @@ class ProductCard extends StatelessWidget {
                       decoration: const InputDecoration(
                         labelText: "Product name",
                         prefixIcon: Icon(Icons.label_outline),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      controller: brandController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: "Brand (optional)",
+                        prefixIcon: Icon(Icons.branding_watermark_outlined),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -428,6 +457,7 @@ class ProductCard extends StatelessWidget {
                               controller.updateProduct(
                                 product.copyWith(
                                   name: nameController.text,
+                                  brand: brandController.text,
                                   category: selectedCategory,
                                   price: double.tryParse(
                                           priceController.text) ??

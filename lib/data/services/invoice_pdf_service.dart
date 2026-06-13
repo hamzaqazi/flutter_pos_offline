@@ -47,7 +47,19 @@ class InvoicePdfService {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Expanded(child: pw.Text(item.product.name)),
+                        pw.Expanded(
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(item.product.name),
+                              if (item.product.brand.isNotEmpty)
+                                pw.Text(
+                                  "  ${item.product.brand}",
+                                  style: const pw.TextStyle(fontSize: 8),
+                                ),
+                            ],
+                          ),
+                        ),
                         pw.Text(
                             "${item.quantity} x Rs ${item.product.discountedPrice.toStringAsFixed(0)}"),
                       ],

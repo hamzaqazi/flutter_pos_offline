@@ -29,6 +29,7 @@ class SalesController extends GetxController {
             product: ProductModel(
               id: item['productId'] ?? '',
               name: item['name'] ?? '',
+              brand: item['brand'] ?? '',
               price: (item['price'] ?? 0).toDouble(),
               purchasePrice: (item['purchasePrice'] ?? 0).toDouble(),
               discount: (item['discount'] ?? 0).toDouble(),
@@ -96,6 +97,7 @@ class SalesController extends GetxController {
             (e) => {
               'productId': e.product.id,
               'name': e.product.name,
+              'brand': e.product.brand,
               'price': e.product.price,
               'purchasePrice': e.product.purchasePrice,
               'discount': e.product.discount,
