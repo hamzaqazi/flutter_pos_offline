@@ -115,7 +115,7 @@ class ProductsPage extends GetView<ProductsController> {
                 itemCount: items.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.68,
+                  childAspectRatio: 0.65,
                   crossAxisSpacing: AppSpacing.md,
                   mainAxisSpacing: AppSpacing.md,
                 ),
@@ -148,6 +148,7 @@ class ProductsPage extends GetView<ProductsController> {
 
   void _showAddProductDialog(BuildContext context) {
     final nameController = TextEditingController();
+    final brandController = TextEditingController();
     final priceController = TextEditingController();
     final purchasePriceController = TextEditingController();
     final discountController = TextEditingController();
@@ -195,6 +196,15 @@ class ProductsPage extends GetView<ProductsController> {
                       decoration: const InputDecoration(
                         labelText: "Product name",
                         prefixIcon: Icon(Icons.label_outline),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      controller: brandController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: "Brand (optional)",
+                        prefixIcon: Icon(Icons.branding_watermark_outlined),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -310,6 +320,7 @@ class ProductsPage extends GetView<ProductsController> {
                                 ProductModel(
                                   id: UniqueKey().toString(),
                                   name: nameController.text,
+                                  brand: brandController.text,
                                   category: selectedCategory,
                                   price:
                                       double.tryParse(priceController.text) ??
