@@ -1,4 +1,4 @@
-import 'package:ad_shop_pos/data/services/hive_service.dart';
+import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
 import 'package:flutter/material.dart';
@@ -10,200 +10,331 @@ import 'products_controller.dart';
 class ProductsPage extends GetView<ProductsController> {
   const ProductsPage({super.key});
 
+  static const _categories = ["All", "Watches", "Caps", "Perfumes", "Glasses"];
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Products"),
         actions: [
           GetX<CartController>(
             builder: (cart) {
-              return Stack(
-                children: [
-                  IconButton(
-                    onPressed: () => Get.toNamed('/cart'),
-                    icon: const Icon(Icons.shopping_cart),
-                  ),
-                  if (cart.cartItems.isNotEmpty)
-                    Positioned(
-                      right: 6,
-                      top: 6,
-                      child: CircleAvatar(
-                        radius: 8,
-                        child: Text(
-                          cart.totalItems.toString(),
-                          style: const TextStyle(fontSize: 10),
+              return Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    IconButton.filledTonal(
+                      onPressed: () => Get.toNamed('/cart'),
+                      icon: const Icon(Icons.shopping_cart_outlined),
+                    ),
+                    if (cart.cartItems.isNotEmpty)
+                      Positioned(
+                        right: -2,
+                        top: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cs.surface, width: 1.5),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            cart.totalItems.toString(),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               );
             },
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // await HiveService.salesBox.clear();
-          _showAddProductDialog(context);
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddProductDialog(context),
+        icon: const Icon(Icons.add),
+        label: const Text("Add product"),
       ),
       body: Column(
         children: [
+          // ---------- Search ----------
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
             child: TextField(
               decoration: const InputDecoration(
                 hintText: "Search products...",
                 prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
               ),
-              onChanged: (value) {
-                controller.searchQuery.value = value;
-              },
+              onChanged: (value) => controller.searchQuery.value = value,
             ),
           ),
 
+          // ---------- Category filter ----------
           SizedBox(
-            height: 50,
-            child: ListView(
+            height: 44,
+            child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              children: [
-                _categoryChip("All"),
-                _categoryChip("Watches"),
-                _categoryChip("Caps"),
-                _categoryChip("Perfumes"),
-                _categoryChip("Glasses"),
-              ],
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              itemCount: _categories.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (_, i) => _categoryChip(_categories[i], cs),
             ),
           ),
 
+          // ---------- Grid ----------
           Expanded(
-            child: Obx(
-              () => GridView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: controller.filteredProducts.length,
+            child: Obx(() {
+              final items = controller.filteredProducts;
+              if (items.isEmpty) {
+                return _EmptyState(
+                  hasProducts: controller.products.isNotEmpty,
+                );
+              }
+              return GridView.builder(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                itemCount: items.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: .9,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.72,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
                 ),
-                itemBuilder: (_, index) {
-                  final product = controller.filteredProducts[index];
-
-                  return ProductCard(product: product);
-                },
-              ),
-            ),
+                itemBuilder: (_, index) =>
+                    ProductCard(product: items[index]),
+              );
+            }),
           ),
         ],
       ),
     );
   }
 
-  Widget _categoryChip(String category) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Obx(
-        () => ChoiceChip(
-          label: Text(category),
-          selected: controller.selectedCategory.value == category,
-          onSelected: (_) {
-            controller.selectedCategory.value = category;
-          },
+  Widget _categoryChip(String category, ColorScheme cs) {
+    return Obx(() {
+      final selected = controller.selectedCategory.value == category;
+      return ChoiceChip(
+        label: Text(category),
+        selected: selected,
+        onSelected: (_) => controller.selectedCategory.value = category,
+        labelStyle: TextStyle(
+          color: selected ? cs.onPrimary : cs.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
         ),
-      ),
-    );
+        selectedColor: cs.primary,
+        backgroundColor: cs.surface,
+      );
+    });
   }
 
   void _showAddProductDialog(BuildContext context) {
     final nameController = TextEditingController();
     final priceController = TextEditingController();
     final stockController = TextEditingController();
-
     String selectedCategory = "Watches";
 
     Get.dialog(
-      AlertDialog(
-        title: const Text("Add Product"),
-        content: StatefulBuilder(
-          builder: (context, setState) {
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: "Product Name",
+      Dialog(
+        insetPadding: const EdgeInsets.all(AppSpacing.lg),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              final theme = Theme.of(context);
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.12),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: Icon(
+                            Icons.add_box_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Text("Add Product",
+                            style: theme.textTheme.titleLarge),
+                      ],
                     ),
-                  ),
-                  TextField(
-                    controller: priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "Price"),
-                  ),
-                  TextField(
-                    controller: stockController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: "Stock"),
-                  ),
-                  const SizedBox(height: 10),
-                  DropdownButton<String>(
-                    value: selectedCategory,
-                    isExpanded: true,
-                    items: const [
-                      DropdownMenuItem(
-                        value: "Watches",
-                        child: Text("Watches"),
+                    const SizedBox(height: AppSpacing.xl),
+                    TextField(
+                      controller: nameController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: "Product name",
+                        prefixIcon: Icon(Icons.label_outline),
                       ),
-                      DropdownMenuItem(value: "Caps", child: Text("Caps")),
-                      DropdownMenuItem(
-                        value: "Perfumes",
-                        child: Text("Perfumes"),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: priceController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Price",
+                              prefixIcon: Icon(Icons.payments_outlined),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: TextField(
+                            controller: stockController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Stock",
+                              prefixIcon: Icon(Icons.inventory_2_outlined),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: "Category",
+                        prefixIcon: Icon(Icons.category_outlined),
                       ),
-                      DropdownMenuItem(
-                        value: "Glasses",
-                        child: Text("Glasses"),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategory = value!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          TextButton(onPressed: Get.back, child: const Text("Cancel")),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isEmpty ||
-                  priceController.text.isEmpty ||
-                  stockController.text.isEmpty) {
-                Get.snackbar("Error", "Please fill all fields");
-                return;
-              }
-              controller.addProduct(
-                ProductModel(
-                  id: UniqueKey().toString(),
-                  name: nameController.text,
-                  category: selectedCategory,
-                  price: double.tryParse(priceController.text) ?? 0,
-                  stock: int.tryParse(stockController.text) ?? 0,
+                      items: const [
+                        DropdownMenuItem(
+                            value: "Watches", child: Text("Watches")),
+                        DropdownMenuItem(value: "Caps", child: Text("Caps")),
+                        DropdownMenuItem(
+                            value: "Perfumes", child: Text("Perfumes")),
+                        DropdownMenuItem(
+                            value: "Glasses", child: Text("Glasses")),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => selectedCategory = value!),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: Get.back,
+                            child: const Text("Cancel"),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              if (nameController.text.isEmpty ||
+                                  priceController.text.isEmpty ||
+                                  stockController.text.isEmpty) {
+                                Get.snackbar(
+                                  "Missing info",
+                                  "Please fill all fields",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                return;
+                              }
+                              controller.addProduct(
+                                ProductModel(
+                                  id: UniqueKey().toString(),
+                                  name: nameController.text,
+                                  category: selectedCategory,
+                                  price:
+                                      double.tryParse(priceController.text) ?? 0,
+                                  stock:
+                                      int.tryParse(stockController.text) ?? 0,
+                                ),
+                              );
+                              Get.back();
+                            },
+                            child: const Text("Save"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               );
-
-              Get.back();
             },
-            child: const Text("Save"),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.hasProducts});
+  final bool hasProducts;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                hasProducts ? Icons.search_off : Icons.inventory_2_outlined,
+                size: 48,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              hasProducts ? "No matching products" : "No products yet",
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              hasProducts
+                  ? "Try a different search or category"
+                  : "Tap “Add product” to get started",
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
