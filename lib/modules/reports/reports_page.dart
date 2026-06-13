@@ -31,14 +31,17 @@ class ReportsPage extends GetView<ReportsController> {
               children: [
                 Text("Date range", style: theme.textTheme.titleSmall),
                 const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    _dateChip("Today", controller.setToday),
-                    _dateChip("This week", controller.setThisWeek),
-                    _dateChip("This month", controller.setThisMonth),
-                    _dateChip("Last month", controller.setLastMonth),
-                    _dateChip("All time", controller.setAllTime),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _dateChip("Today", controller.setToday),
+                      _dateChip("This week", controller.setThisWeek),
+                      _dateChip("This month", controller.setThisMonth),
+                      _dateChip("Last month", controller.setLastMonth),
+                      _dateChip("All time", controller.setAllTime),
+                    ],
+                  ),
                 ),
               ],
             ),
