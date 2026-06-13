@@ -21,21 +21,25 @@ class ReportsPage extends GetView<ReportsController> {
           // ---------- Date range filter ----------
           Container(
             padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.sm,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Date range", style: theme.textTheme.titleSmall),
                 const SizedBox(height: AppSpacing.sm),
-                Obx(() => Row(
-                      children: [
-                        _dateChip("Today", controller.setToday),
-                        _dateChip("This week", controller.setThisWeek),
-                        _dateChip("This month", controller.setThisMonth),
-                        _dateChip("Last month", controller.setLastMonth),
-                        _dateChip("All time", controller.setAllTime),
-                      ],
-                    )),
+                Row(
+                  children: [
+                    _dateChip("Today", controller.setToday),
+                    _dateChip("This week", controller.setThisWeek),
+                    _dateChip("This month", controller.setThisMonth),
+                    _dateChip("Last month", controller.setLastMonth),
+                    _dateChip("All time", controller.setAllTime),
+                  ],
+                ),
               ],
             ),
           ),
@@ -81,10 +85,7 @@ class ReportsPage extends GetView<ReportsController> {
   Widget _dateChip(String label, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: AppSpacing.sm),
-      child: ActionChip(
-        label: Text(label),
-        onPressed: onTap,
-      ),
+      child: ActionChip(label: Text(label), onPressed: onTap),
     );
   }
 }
@@ -97,113 +98,116 @@ class _SummaryTab extends GetView<ReportsController> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    return Obx(() => SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Revenue & Profit banner
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.seed,
-                      AppColors.seed.withValues(alpha: 0.75),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _BannerStat(
-                            label: "Revenue",
-                            value: Formatters.currency(controller.totalRevenue),
-                          ),
-                        ),
-                        Container(width: 1, height: 36, color: Colors.white24),
-                        Expanded(
-                          child: _BannerStat(
-                            label: "Profit",
-                            value: Formatters.currency(controller.totalProfit),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _BannerStat(
-                            label: "Margin",
-                            value: "${controller.margin.toStringAsFixed(1)}%",
-                          ),
-                        ),
-                        Container(width: 1, height: 36, color: Colors.white24),
-                        Expanded(
-                          child: _BannerStat(
-                            label: "Avg. Sale",
-                            value:
-                                Formatters.currency(controller.averageTransaction),
-                          ),
-                        ),
-                      ],
-                    ),
+    return Obx(
+      () => SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Revenue & Profit banner
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.seed,
+                    AppColors.seed.withValues(alpha: 0.75),
                   ],
                 ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              const SizedBox(height: AppSpacing.lg),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Revenue",
+                          value: Formatters.currency(controller.totalRevenue),
+                        ),
+                      ),
+                      Container(width: 1, height: 36, color: Colors.white24),
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Profit",
+                          value: Formatters.currency(controller.totalProfit),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Margin",
+                          value: "${controller.margin.toStringAsFixed(1)}%",
+                        ),
+                      ),
+                      Container(width: 1, height: 36, color: Colors.white24),
+                      Expanded(
+                        child: _BannerStat(
+                          label: "Avg. Sale",
+                          value: Formatters.currency(
+                            controller.averageTransaction,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
 
-              // Stats grid
-              Row(
-                children: [
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.receipt_long_outlined,
-                      label: "Transactions",
-                      value: controller.totalTransactions.toString(),
-                      color: AppColors.accent,
-                    ),
+            // Stats grid
+            Row(
+              children: [
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.receipt_long_outlined,
+                    label: "Transactions",
+                    value: controller.totalTransactions.toString(),
+                    color: AppColors.accent,
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.shopping_bag_outlined,
-                      label: "Items sold",
-                      value: controller.totalItemsSold.toString(),
-                      color: AppColors.seed,
-                    ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.shopping_bag_outlined,
+                    label: "Items sold",
+                    value: controller.totalItemsSold.toString(),
+                    color: AppColors.seed,
                   ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.discount_outlined,
-                      label: "Discounts given",
-                      value: Formatters.currency(controller.totalDiscount),
-                      color: AppColors.danger,
-                    ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.discount_outlined,
+                    label: "Discounts given",
+                    value: Formatters.currency(controller.totalDiscount),
+                    color: AppColors.danger,
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.account_balance_wallet_outlined,
-                      label: "Cost of goods",
-                      value: Formatters.currency(controller.totalCOGS),
-                      color: AppColors.warning,
-                    ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: "Cost of goods",
+                    value: Formatters.currency(controller.totalCOGS),
+                    color: AppColors.warning,
                   ),
-                ],
-              ),
-            ],
-          ),
-        ));
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -247,8 +251,11 @@ class _TopProductsTab extends GetView<ReportsController> {
                     ),
                     child: Center(
                       child: rank <= 3
-                          ? Icon(Icons.emoji_events_outlined,
-                              size: 18, color: AppColors.warning)
+                          ? Icon(
+                              Icons.emoji_events_outlined,
+                              size: 18,
+                              color: AppColors.warning,
+                            )
                           : Text(
                               "$rank",
                               style: theme.textTheme.titleSmall?.copyWith(
@@ -276,11 +283,14 @@ class _TopProductsTab extends GetView<ReportsController> {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.xs, vertical: 1),
+                                horizontal: AppSpacing.xs,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: accent.withValues(alpha: 0.12),
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusSm),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusSm,
+                                ),
                               ),
                               child: Text(
                                 p.category,
@@ -443,108 +453,116 @@ class _InventoryTab extends GetView<ReportsController> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    return Obx(() => SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Inventory valuation cards
+    return Obx(
+      () => SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Inventory valuation cards
+            Row(
+              children: [
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.inventory_2_outlined,
+                    label: "Total units",
+                    value: controller.totalStockUnits.toString(),
+                    color: AppColors.seed,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.sell_outlined,
+                    label: "Retail value",
+                    value: Formatters.currency(controller.inventoryRetailValue),
+                    color: AppColors.success,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.payments_outlined,
+                    label: "Cost value",
+                    value: Formatters.currency(controller.inventoryCostValue),
+                    color: AppColors.warning,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.trending_up_outlined,
+                    label: "Potential profit",
+                    value: Formatters.currency(
+                      controller.inventoryPotentialProfit,
+                    ),
+                    color: const Color(0xFF8B5CF6),
+                  ),
+                ),
+              ],
+            ),
+
+            // Out of stock
+            if (controller.outOfStockProducts.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xl),
               Row(
                 children: [
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.inventory_2_outlined,
-                      label: "Total units",
-                      value: controller.totalStockUnits.toString(),
-                      color: AppColors.seed,
-                    ),
+                  Icon(
+                    Icons.cancel_outlined,
+                    color: AppColors.danger,
+                    size: 18,
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.sell_outlined,
-                      label: "Retail value",
-                      value: Formatters.currency(controller.inventoryRetailValue),
-                      color: AppColors.success,
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    "Out of Stock (${controller.outOfStockProducts.length})",
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.danger,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
+              ...controller.outOfStockProducts.map(
+                (p) => _InventoryTile(product: p, theme: theme, cs: cs),
+              ),
+            ],
+
+            // Low stock
+            if (controller.lowStockProducts
+                .where((p) => p.stock > 0)
+                .isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xl),
               Row(
                 children: [
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.payments_outlined,
-                      label: "Cost value",
-                      value: Formatters.currency(controller.inventoryCostValue),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.warning,
+                    size: 18,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    "Low Stock (${controller.lowStockProducts.where((p) => p.stock > 0).length})",
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                       color: AppColors.warning,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _StatBox(
-                      icon: Icons.trending_up_outlined,
-                      label: "Potential profit",
-                      value:
-                          Formatters.currency(controller.inventoryPotentialProfit),
-                      color: const Color(0xFF8B5CF6),
-                    ),
-                  ),
                 ],
               ),
-
-              // Out of stock
-              if (controller.outOfStockProducts.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.xl),
-                Row(
-                  children: [
-                    Icon(Icons.cancel_outlined, color: AppColors.danger, size: 18),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      "Out of Stock (${controller.outOfStockProducts.length})",
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.danger,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ...controller.outOfStockProducts.map(
-                  (p) => _InventoryTile(product: p, theme: theme, cs: cs),
-                ),
-              ],
-
-              // Low stock
-              if (controller.lowStockProducts
+              const SizedBox(height: AppSpacing.sm),
+              ...controller.lowStockProducts
                   .where((p) => p.stock > 0)
-                  .isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.xl),
-                Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded,
-                        color: AppColors.warning, size: 18),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      "Low Stock (${controller.lowStockProducts.where((p) => p.stock > 0).length})",
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.warning,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ...controller.lowStockProducts
-                    .where((p) => p.stock > 0)
-                    .map(
-                      (p) => _InventoryTile(product: p, theme: theme, cs: cs),
-                    ),
-              ],
+                  .map((p) => _InventoryTile(product: p, theme: theme, cs: cs)),
             ],
-          ),
-        ));
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -650,7 +668,10 @@ class _BannerStat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
       ],
     );
   }
@@ -716,8 +737,11 @@ class _EmptyReport extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.bar_chart_outlined,
-                size: 48, color: theme.colorScheme.primary.withValues(alpha: 0.4)),
+            Icon(
+              Icons.bar_chart_outlined,
+              size: 48,
+              color: theme.colorScheme.primary.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(message, style: theme.textTheme.bodyMedium),
           ],
