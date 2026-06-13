@@ -158,35 +158,73 @@ class SalesHistoryPage extends GetView<SalesController> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              decoration: BoxDecoration(
-                                color: AppColors.success
-                                    .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusSm),
-                              ),
-                              child: const Icon(
-                                Icons.receipt_long,
-                                color: AppColors.success,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
+                            // Top row: amount + item count + arrow
+                            Row(
+                              children: [
+                                // Receipt icon
+                                Container(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm),
+                                  ),
+                                  child: const Icon(
+                                    Icons.receipt_long,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                // Amount
+                                Expanded(
+                                  child: Text(
                                     Formatters.currency(sale.total),
                                     style:
                                         theme.textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Row(
+                                ),
+                                if (itemCount > 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.sm,
+                                      vertical: AppSpacing.xs,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: cs.surfaceContainerHighest
+                                          .withValues(alpha: 0.6),
+                                      borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusSm),
+                                    ),
+                                    child: Text(
+                                      "$itemCount item${itemCount == 1 ? '' : 's'}",
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 14,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            // Bottom row: date + profit badge + refund badge + return button
+                            Row(
+                              children: [
+                                // Date + profit
+                                Expanded(
+                                  child: Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: AppSpacing.sm,
+                                    runSpacing: AppSpacing.xs,
                                     children: [
                                       Text(
                                         Formatters.dateTime(sale.date),
@@ -195,8 +233,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                                           color: cs.onSurfaceVariant,
                                         ),
                                       ),
-                                      if (sale.profit > 0) ...[
-                                        const SizedBox(width: AppSpacing.sm),
+                                      if (sale.profit > 0)
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: AppSpacing.xs,
@@ -217,97 +254,56 @@ class SalesHistoryPage extends GetView<SalesController> {
                                             ),
                                           ),
                                         ),
-                                      ],
+                                      if (totalRefund > 0)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.xs,
+                                            vertical: 1,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.warning
+                                                .withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(
+                                                AppSpacing.radiusSm),
+                                          ),
+                                          child: Text(
+                                            "Refunded: ${Formatters.currency(totalRefund)}",
+                                            style: const TextStyle(
+                                              color: AppColors.warning,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
-                                  // Show refund badge if sale has returns
-                                  if (totalRefund > 0) ...[
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSpacing.xs,
-                                        vertical: 1,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.warning
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(
-                                            AppSpacing.radiusSm),
-                                      ),
-                                      child: Text(
-                                        "Refunded: ${Formatters.currency(totalRefund)}",
-                                        style: const TextStyle(
-                                          color: AppColors.warning,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            // Return button
-                            Column(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
+                                ),
+                                // Return button — compact
+                                IconButton.outlined(
+                                  onPressed: () => showReturnDialog(sale),
+                                  icon: const Icon(
+                                    Icons.assignment_return_outlined,
+                                    size: 18,
+                                  ),
+                                  color: AppColors.warning,
+                                  tooltip: "Process return",
+                                  padding: const EdgeInsets.all(AppSpacing.xs),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 32,
+                                    minHeight: 32,
+                                  ),
+                                  style: IconButton.styleFrom(
+                                    side: BorderSide(
                                       color: AppColors.warning
                                           .withValues(alpha: 0.4),
                                     ),
-                                    borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusSm),
-                                  ),
-                                  child: IconButton(
-                                    onPressed: () => showReturnDialog(sale),
-                                    icon: const Icon(
-                                      Icons.assignment_return_outlined,
-                                      size: 20,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusSm),
                                     ),
-                                    color: AppColors.warning,
-                                    tooltip: "Process return",
-                                    padding: const EdgeInsets.all(AppSpacing.sm),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 36,
-                                      minHeight: 36,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "Return",
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.warning,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            if (itemCount > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.sm,
-                                  vertical: AppSpacing.xs,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: cs.surfaceContainerHighest
-                                      .withValues(alpha: 0.6),
-                                  borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusSm),
-                                ),
-                                child: Text(
-                                  "$itemCount item${itemCount == 1 ? '' : 's'}",
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 14,
-                              color: cs.onSurfaceVariant,
                             ),
                           ],
                         ),
