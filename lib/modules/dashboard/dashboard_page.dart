@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
+import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -120,6 +121,22 @@ class DashboardPage extends GetView<DashboardController> {
                     color: AppColors.success,
                     onTap: () => Get.toNamed('/sales'),
                   ),
+                  const SizedBox(height: AppSpacing.md),
+                  _ActionTile(
+                    icon: Icons.bar_chart_outlined,
+                    title: "Reports",
+                    subtitle: "Sales, products & inventory analytics",
+                    color: const Color(0xFF8B5CF6),
+                    onTap: () => Get.toNamed('/reports'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _ActionTile(
+                    icon: Icons.settings_outlined,
+                    title: "Settings",
+                    subtitle: "Shop info, receipt & currency settings",
+                    color: cs.onSurfaceVariant,
+                    onTap: () => Get.toNamed('/settings'),
+                  ),
                 ]),
               ),
             ),
@@ -169,14 +186,17 @@ class _Header extends StatelessWidget {
                 child: const Icon(Icons.point_of_sale, color: Colors.white),
               ),
               const SizedBox(width: AppSpacing.md),
-              const Text(
-                "Shop POS",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              Obx(() {
+                final settings = Get.find<SettingsController>();
+                return Text(
+                  settings.shopName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                );
+              }),
               const Spacer(),
               Obx(
                 () => IconButton(
