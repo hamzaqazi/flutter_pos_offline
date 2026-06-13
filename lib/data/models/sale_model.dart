@@ -13,6 +13,7 @@ class SaleModel {
   final double change;
   final double discount;   // total discount amount (product discounts + checkout discount)
   final double profit;     // total profit for this sale
+  final String customerId; // linked customer (optional)
   final DateTime date;
 
   SaleModel({
@@ -26,8 +27,12 @@ class SaleModel {
     required this.change,
     this.discount = 0,
     this.profit = 0,
+    this.customerId = '',
     required this.date,
   });
+
+  /// Whether this sale is linked to a customer.
+  bool get hasCustomer => customerId.isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {
@@ -55,6 +60,7 @@ class SaleModel {
       'change': change,
       'discount': discount,
       'profit': profit,
+      'customerId': customerId,
       'date': date.toIso8601String(),
     };
   }
@@ -71,6 +77,7 @@ class SaleModel {
       change: data['change'],
       discount: (data['discount'] ?? 0).toDouble(),
       profit: (data['profit'] ?? 0).toDouble(),
+      customerId: data['customerId'] ?? '',
       date: DateTime.parse(data['date']),
     );
   }

@@ -1,8 +1,10 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
+import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
+import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +79,7 @@ class CartPage extends GetView<CartController> {
     final cart = Get.find<CartController>();
     final cashController = TextEditingController();
     final checkoutDiscountController = TextEditingController();
+    String? selectedCustomerId;
 
     Get.dialog(
       Dialog(
@@ -282,6 +285,34 @@ class CartPage extends GetView<CartController> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
+                    // ---------- Customer selector ----------
+                    Obx(() {
+                      final customersController = Get.find<CustomersController>();
+                      final customers = customersController.customers;
+                      return DropdownButtonFormField<String>(
+                        value: selectedCustomerId,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: "Customer (optional)",
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        items: [
+                          const DropdownMenuItem<String>(
+                            value: null,
+                            child: Text("Walk-in customer"),
+                          ),
+                          ...customers.map((c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.name),
+                          )),
+                        ],
+                        onChanged: (value) =>
+                            setState(() => selectedCustomerId = value),
+                      );
+                    }),
+
+                    const SizedBox(height: AppSpacing.lg),
+
                     // ---------- Cash field ----------
                     TextField(
                       controller: cashController,
@@ -355,6 +386,7 @@ class CartPage extends GetView<CartController> {
                                         cash: cash,
                                         change: change,
                                         totalSavings: totalAllSavings,
+                                        customerId: selectedCustomerId ?? '',
                                       ),
                                     );
                                   }

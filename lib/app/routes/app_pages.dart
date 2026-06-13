@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/modules/cart/cart_page.dart';
+import 'package:ad_shop_pos/modules/customers/customers_page.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_page.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_page.dart';
 import 'package:ad_shop_pos/modules/products/products_page.dart';
@@ -22,5 +23,6 @@ class AppPages {
     GetPage(name: Routes.settings, page: () => const SettingsPage()),
     GetPage(name: Routes.expenses, page: () => const ExpensesPage()),
     GetPage(name: Routes.returns, page: () => const ReturnsPage()),
+    GetPage(name: Routes.customers, page: () => const CustomersPage()),
   ];
 }

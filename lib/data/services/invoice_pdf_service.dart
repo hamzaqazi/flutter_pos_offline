@@ -19,6 +19,7 @@ class InvoicePdfService {
     required double cash,
     required double change,
     double totalSavings = 0,
+    String customerName = '',
   }) async {
     final pdf = pw.Document();
     final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
@@ -61,6 +62,8 @@ class InvoicePdfService {
 
               pw.SizedBox(height: 10),
               pw.Text("Date: ${DateTime.now()}"),
+              if (customerName.isNotEmpty)
+                pw.Text("Customer: $customerName"),
               pw.Divider(),
 
               pw.Text("Items:"),
