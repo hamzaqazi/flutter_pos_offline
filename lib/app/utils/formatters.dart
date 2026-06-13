@@ -1,3 +1,5 @@
+import 'package:hive/hive.dart';
+
 /// Lightweight formatting helpers (no extra packages required).
 class Formatters {
   /// Formats a number with thousands separators, e.g. 12345 -> "12,345".
@@ -11,10 +13,19 @@ class Formatters {
   }
 
   /// Formats an amount as "Rs 12,345" (no decimals).
+  /// Uses the currency symbol from shop settings if available.
   static String currency(num value) {
     final rounded = value.round().abs();
     final sign = value < 0 ? '-' : '';
-    return 'Rs $sign${_thousands(rounded.toString())}';
+    String symbol = 'Rs';
+    try {
+      final box = Hive.box('settings');
+      final data = box.get('shop');
+      if (data != null && data['currencySymbol'] != null) {
+        symbol = data['currencySymbol'];
+      }
+    } catch (_) {}
+    return '$symbol $sign${_thousands(rounded.toString())}';
   }
 
   static const List<String> _months = [

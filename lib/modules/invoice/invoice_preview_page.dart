@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
+import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -80,14 +81,40 @@ class InvoicePreviewPage extends StatelessWidget {
                                 color: cs.primary, size: 28),
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          Text(
-                            "SHOP RECEIPT",
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
+                          Obx(() {
+                            final settings = Get.find<SettingsController>();
+                            return Column(
+                              children: [
+                                Text(
+                                  settings.shopName.toUpperCase(),
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                if (settings.address.isNotEmpty) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    settings.address,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                                if (settings.phone.isNotEmpty) ...[
+                                  const SizedBox(height: 1),
+                                  Text(
+                                    settings.phone,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 4),
                           Text(
                             Formatters.dateTime(DateTime.now()),
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -217,12 +244,15 @@ class InvoicePreviewPage extends StatelessWidget {
                     const _DashedDivider(),
                     const SizedBox(height: AppSpacing.lg),
                     Center(
-                      child: Text(
-                        "Thank you for shopping! 🙏",
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
+                      child: Obx(() {
+                        final settings = Get.find<SettingsController>();
+                        return Text(
+                          settings.receiptFooter,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        );
+                      }),
                     ),
                   ],
                 ),
