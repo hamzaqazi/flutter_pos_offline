@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
@@ -10,6 +11,7 @@ class ReportsController extends GetxController {
   final ProductsController _productsController = Get.find();
   final SalesController _salesController = Get.find();
   final ExpensesController _expensesController = Get.find();
+  final ReturnsController _returnsController = Get.find();
 
   // Date range filter
   final startDate = DateTime.now().subtract(const Duration(days: 30)).obs;
@@ -59,7 +61,7 @@ class ReportsController extends GetxController {
   double get totalRevenue =>
       filteredSales.fold(0, (sum, s) => sum + s.total);
 
-  double get totalProfit =>
+  double get totalGrossProfit =>
       filteredSales.fold(0, (sum, s) => sum + s.profit);
 
   double get totalDiscount =>
@@ -88,6 +90,19 @@ class ReportsController extends GetxController {
   double get margin =>
       totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
 
+  // =================== Returns / Refunds ===================
+
+  double get totalRefunds =>
+      _returnsController.totalRefundsInRange(startDate.value, endDate.value);
+
+  double get totalProfitReversed =>
+      _returnsController.totalProfitReversedInRange(startDate.value, endDate.value);
+
+  int get totalReturnTransactions =>
+      _returnsController.returnCountInRange(startDate.value, endDate.value);
+
+  double get totalProfit => totalGrossProfit - totalProfitReversed;
+
   // =================== Expenses ===================
 
   double get totalExpenses =>
@@ -96,7 +111,7 @@ class ReportsController extends GetxController {
   Map<String, double> get expensesByCategory =>
       _expensesController.expensesByCategory(startDate.value, endDate.value);
 
-  /// True profit = Gross profit - Expenses
+  /// True profit = Gross profit - Profit reversed from returns - Expenses
   double get netProfit => totalProfit - totalExpenses;
 
   double get netMargin =>

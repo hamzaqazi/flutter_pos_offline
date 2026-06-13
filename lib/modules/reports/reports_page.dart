@@ -231,6 +231,28 @@ class _SummaryTab extends GetView<ReportsController> {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.assignment_return_outlined,
+                    label: "Refunds",
+                    value: Formatters.currency(controller.totalRefunds),
+                    color: AppColors.warning,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _StatBox(
+                    icon: Icons.undo_outlined,
+                    label: "Return transactions",
+                    value: controller.totalReturnTransactions.toString(),
+                    color: const Color(0xFF8B5CF6),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

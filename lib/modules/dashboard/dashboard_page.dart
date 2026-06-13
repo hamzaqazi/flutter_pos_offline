@@ -90,6 +90,22 @@ class DashboardPage extends GetView<DashboardController> {
                           icon: Icons.pie_chart_outline,
                           color: const Color(0xFFEC4899), // Pink
                         ),
+                        _StatCard(
+                          label: "Refunds",
+                          value: Formatters.currency(
+                            controller.totalRefunds.value,
+                          ),
+                          icon: Icons.assignment_return_outlined,
+                          color: AppColors.warning,
+                          onTap: () => Get.toNamed('/returns'),
+                        ),
+                        _StatCard(
+                          label: "Returns",
+                          value: controller.totalReturnCount.value.toString(),
+                          icon: Icons.undo_outlined,
+                          color: const Color(0xFF8B5CF6),
+                          onTap: () => Get.toNamed('/returns'),
+                        ),
                       ],
                     ),
                   ),
@@ -144,6 +160,14 @@ class DashboardPage extends GetView<DashboardController> {
                     subtitle: "Shop info, tax, receipt & currency settings",
                     color: cs.onSurfaceVariant,
                     onTap: () => Get.toNamed('/settings'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _ActionTile(
+                    icon: Icons.assignment_return_outlined,
+                    title: "Returns",
+                    subtitle: "View refund history & processed returns",
+                    color: AppColors.warning,
+                    onTap: () => Get.toNamed('/returns'),
                   ),
                 ]),
               ),

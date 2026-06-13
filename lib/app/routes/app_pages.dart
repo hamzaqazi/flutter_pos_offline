@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/modules/expenses/expenses_page.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_page.dart';
 import 'package:ad_shop_pos/modules/products/products_page.dart';
 import 'package:ad_shop_pos/modules/reports/reports_page.dart';
+import 'package:ad_shop_pos/modules/returns/returns_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_history_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_page.dart';
@@ -20,5 +21,6 @@ class AppPages {
     GetPage(name: Routes.reports, page: () => const ReportsPage()),
     GetPage(name: Routes.settings, page: () => const SettingsPage()),
     GetPage(name: Routes.expenses, page: () => const ExpensesPage()),
+    GetPage(name: Routes.returns, page: () => const ReturnsPage()),
   ];
 }

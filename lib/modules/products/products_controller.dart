@@ -29,6 +29,7 @@ class ProductsController extends GetxController {
           purchasePrice: (e['purchasePrice'] ?? 0).toDouble(),
           discount: (e['discount'] ?? 0).toDouble(),
           stock: e['stock'],
+          sku: e['sku'] ?? '',
         ),
       ),
     );
@@ -39,7 +40,7 @@ class ProductsController extends GetxController {
     products.add(product);
   }
 
-  /// Full update: edit name, brand, category, price, purchasePrice, discount, stock.
+  /// Full update: edit name, brand, category, price, purchasePrice, discount, stock, sku.
   void updateProduct(ProductModel product) {
     final index = products.indexWhere((p) => p.id == product.id);
 
@@ -66,6 +67,49 @@ class ProductsController extends GetxController {
     HiveService.productBox.delete(id);
   }
 
+  /// Generate an auto SKU from category prefix + sequential number.
+  String generateSku(String category) {
+    final prefix = _categoryPrefix(category);
+    // Find the highest existing number for this prefix
+    int maxNum = 0;
+    for (final p in products) {
+      if (p.sku.startsWith(prefix)) {
+        final numPart = p.sku.substring(prefix.length);
+        final num = int.tryParse(numPart) ?? 0;
+        if (num > maxNum) maxNum = num;
+      }
+    }
+    final nextNum = maxNum + 1;
+    return '$prefix${nextNum.toString().padLeft(4, '0')}';
+  }
+
+  String _categoryPrefix(String category) {
+    switch (category) {
+      case 'Watches':
+        return 'W';
+      case 'Caps':
+        return 'C';
+      case 'Perfumes':
+        return 'P';
+      case 'Glasses':
+        return 'G';
+      default:
+        return 'X';
+    }
+  }
+
+  /// Find a product by SKU (exact match, case-insensitive).
+  ProductModel? findBySku(String sku) {
+    if (sku.isEmpty) return null;
+    try {
+      return products.firstWhere(
+        (p) => p.sku.toLowerCase() == sku.toLowerCase(),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Map<String, dynamic> _toMap(ProductModel p) => {
         'id': p.id,
         'name': p.name,
@@ -75,16 +119,17 @@ class ProductsController extends GetxController {
         'purchasePrice': p.purchasePrice,
         'discount': p.discount,
         'stock': p.stock,
+        'sku': p.sku,
       };
 
   List<ProductModel> get filteredProducts {
     return products.where((product) {
-      final matchesSearch = product.name.toLowerCase().contains(
-            searchQuery.value.toLowerCase(),
-          );
+      final query = searchQuery.value.toLowerCase();
+      final matchesSearch = product.name.toLowerCase().contains(query) ||
+          product.brand.toLowerCase().contains(query) ||
+          product.sku.toLowerCase().contains(query);
 
-      final matchesCategory =
-          selectedCategory.value == 'All' ||
+      final matchesCategory = selectedCategory.value == 'All' ||
           product.category == selectedCategory.value;
 
       return matchesSearch && matchesCategory;

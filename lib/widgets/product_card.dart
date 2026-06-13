@@ -132,6 +132,42 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  // SKU badge
+                  if (product.hasSku)
+                    Positioned(
+                      top: AppSpacing.sm,
+                      right: hasDiscount ? 60 : AppSpacing.sm,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.qr_code,
+                              color: Colors.white70,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              product.sku,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   // Add-to-cart button (only when in stock)
                   if (!outOfStock)
                     Positioned(
@@ -281,6 +317,7 @@ class ProductCard extends StatelessWidget {
   void _showEditDialog(BuildContext context) {
     final nameController = TextEditingController(text: product.name);
     final brandController = TextEditingController(text: product.brand);
+    final skuController = TextEditingController(text: product.sku);
     final priceController =
         TextEditingController(text: product.price.toStringAsFixed(0));
     final purchasePriceController =
@@ -344,6 +381,31 @@ class ProductCard extends StatelessWidget {
                         labelText: "Brand (optional)",
                         prefixIcon: Icon(Icons.branding_watermark_outlined),
                       ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: skuController,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: const InputDecoration(
+                              labelText: "SKU / Barcode",
+                              prefixIcon: Icon(Icons.qr_code_outlined),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: () {
+                            skuController.text = controller.generateSku(selectedCategory);
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.autorenew, size: 20),
+                          tooltip: "Auto-generate SKU",
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Row(
@@ -469,6 +531,7 @@ class ProductCard extends StatelessWidget {
                                   stock: int.tryParse(
                                           stockController.text) ??
                                       product.stock,
+                                  sku: skuController.text.trim(),
                                 ),
                               );
                               Get.back();
