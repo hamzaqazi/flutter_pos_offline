@@ -115,7 +115,7 @@ class ProductsPage extends GetView<ProductsController> {
                 itemCount: items.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.72,
+                  childAspectRatio: 0.68,
                   crossAxisSpacing: AppSpacing.md,
                   mainAxisSpacing: AppSpacing.md,
                 ),
@@ -149,6 +149,8 @@ class ProductsPage extends GetView<ProductsController> {
   void _showAddProductDialog(BuildContext context) {
     final nameController = TextEditingController();
     final priceController = TextEditingController();
+    final purchasePriceController = TextEditingController();
+    final discountController = TextEditingController();
     final stockController = TextEditingController();
     String selectedCategory = "Watches";
 
@@ -203,8 +205,35 @@ class ProductsPage extends GetView<ProductsController> {
                             controller: priceController,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: "Price",
+                              labelText: "Sell price",
+                              prefixIcon: Icon(Icons.sell_outlined),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: TextField(
+                            controller: purchasePriceController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Purchase price",
                               prefixIcon: Icon(Icons.payments_outlined),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: discountController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Discount %",
+                              prefixIcon: Icon(Icons.discount_outlined),
+                              suffixText: "%",
                             ),
                           ),
                         ),
@@ -259,18 +288,36 @@ class ProductsPage extends GetView<ProductsController> {
                                   stockController.text.isEmpty) {
                                 Get.snackbar(
                                   "Missing info",
-                                  "Please fill all fields",
+                                  "Please fill all required fields",
                                   snackPosition: SnackPosition.BOTTOM,
                                 );
                                 return;
                               }
+
+                              final discountVal =
+                                  double.tryParse(discountController.text) ??
+                                      0;
+                              if (discountVal < 0 || discountVal > 100) {
+                                Get.snackbar(
+                                  "Invalid discount",
+                                  "Discount must be between 0 and 100",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                return;
+                              }
+
                               controller.addProduct(
                                 ProductModel(
                                   id: UniqueKey().toString(),
                                   name: nameController.text,
                                   category: selectedCategory,
                                   price:
-                                      double.tryParse(priceController.text) ?? 0,
+                                      double.tryParse(priceController.text) ??
+                                          0,
+                                  purchasePrice: double.tryParse(
+                                          purchasePriceController.text) ??
+                                      0,
+                                  discount: discountVal,
                                   stock:
                                       int.tryParse(stockController.text) ?? 0,
                                 ),
@@ -327,7 +374,7 @@ class _EmptyState extends StatelessWidget {
             Text(
               hasProducts
                   ? "Try a different search or category"
-                  : "Tap “Add product” to get started",
+                  : "Tap \"Add product\" to get started",
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,

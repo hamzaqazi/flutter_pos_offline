@@ -67,11 +67,27 @@ class DashboardPage extends GetView<DashboardController> {
                           color: AppColors.success,
                         ),
                         _StatCard(
+                          label: "Profit",
+                          value: Formatters.currency(
+                            controller.totalProfit.value,
+                          ),
+                          icon: Icons.trending_up_outlined,
+                          color: const Color(0xFF8B5CF6), // Violet
+                        ),
+                        _StatCard(
                           label: "Low stock",
                           value: controller.lowStockCount.value.toString(),
                           icon: Icons.warning_amber_rounded,
                           color: AppColors.warning,
                           onTap: () => Get.toNamed('/products'),
+                        ),
+                        _StatCard(
+                          label: "Margin",
+                          value: controller.totalRevenue.value > 0
+                              ? "${(controller.totalProfit.value / controller.totalRevenue.value * 100).toStringAsFixed(1)}%"
+                              : "0%",
+                          icon: Icons.pie_chart_outline,
+                          color: const Color(0xFFEC4899), // Pink
                         ),
                       ],
                     ),
@@ -100,7 +116,7 @@ class DashboardPage extends GetView<DashboardController> {
                   _ActionTile(
                     icon: Icons.history,
                     title: "Sales history",
-                    subtitle: "Past receipts & totals",
+                    subtitle: "Past receipts & profit reports",
                     color: AppColors.success,
                     onTap: () => Get.toNamed('/sales'),
                   ),

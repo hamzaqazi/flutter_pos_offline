@@ -13,6 +13,7 @@ class InvoicePreviewPage extends StatelessWidget {
   final double total;
   final double cash;
   final double change;
+  final double totalSavings;
 
   /// When true, this is a past receipt being viewed (no sale completion).
   final bool readOnly;
@@ -23,6 +24,7 @@ class InvoicePreviewPage extends StatelessWidget {
     required this.total,
     required this.cash,
     required this.change,
+    this.totalSavings = 0,
     this.readOnly = false,
   });
 
@@ -32,6 +34,7 @@ class InvoicePreviewPage extends StatelessWidget {
       total: total,
       cash: cash,
       change: change,
+      totalSavings: totalSavings,
     );
     await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   }
@@ -108,27 +111,44 @@ class InvoicePreviewPage extends StatelessWidget {
                         (item) => Padding(
                           padding: const EdgeInsets.symmetric(
                               vertical: AppSpacing.sm),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  item.product.name,
-                                  style: theme.textTheme.bodyMedium,
-                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.product.name,
+                                      style: theme.textTheme.bodyMedium,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${item.quantity} × ${Formatters.currency(item.product.discountedPrice)}",
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Text(
+                                    Formatters.currency(item.total),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                "${item.quantity} × ${Formatters.currency(item.product.price)}",
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
+                              if (item.product.discount > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      top: 2, left: AppSpacing.xs),
+                                  child: Text(
+                                    "Original: ${Formatters.currency(item.product.price)} each (-${item.product.discount.toStringAsFixed(0)}%)",
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppColors.success,
+                                      fontSize: 10,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Text(
-                                Formatters.currency(item.total),
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -139,6 +159,12 @@ class InvoicePreviewPage extends StatelessWidget {
                     const SizedBox(height: AppSpacing.md),
 
                     // ---------- Totals ----------
+                    if (totalSavings > 0) ...[
+                      _row(theme, "Discount saved",
+                          "-${Formatters.currency(totalSavings)}",
+                          valueColor: AppColors.success),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
                     _row(theme, "Total", Formatters.currency(total),
                         emphasize: true),
                     const SizedBox(height: AppSpacing.sm),
@@ -206,7 +232,7 @@ class InvoicePreviewPage extends StatelessWidget {
   }
 
   Widget _row(ThemeData theme, String label, String value,
-      {bool emphasize = false}) {
+      {bool emphasize = false, Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -223,10 +249,11 @@ class InvoicePreviewPage extends StatelessWidget {
           style: emphasize
               ? theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: theme.colorScheme.primary,
+                  color: valueColor ?? theme.colorScheme.primary,
                 )
               : theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: valueColor,
                 ),
         ),
       ],

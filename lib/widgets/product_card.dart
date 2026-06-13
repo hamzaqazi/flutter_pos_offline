@@ -1,5 +1,6 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
+import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -34,6 +35,7 @@ class ProductCard extends StatelessWidget {
     final accent = AppColors.forCategory(product.category);
     final outOfStock = product.stock <= 0;
     final lowStock = product.stock > 0 && product.stock <= 5;
+    final hasDiscount = product.discount > 0;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -103,6 +105,30 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Discount badge
+                  if (hasDiscount)
+                    Positioned(
+                      top: AppSpacing.sm,
+                      right: AppSpacing.sm,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.danger,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Text(
+                          "-${product.discount.toStringAsFixed(0)}%",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
                   // Add button
                   if (!outOfStock)
                     Positioned(
@@ -122,6 +148,31 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  // Edit button
+                  Positioned(
+                    bottom: AppSpacing.sm,
+                    left: AppSpacing.sm,
+                    child: GestureDetector(
+                      onTap: () => _showEditDialog(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: cs.surface.withValues(alpha: 0.9),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusSm),
+                          border: Border.all(
+                            color: cs.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
                   if (outOfStock)
                     Container(
                       color: cs.surface.withValues(alpha: 0.55),
@@ -168,11 +219,28 @@ class ProductCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        Formatters.currency(product.price),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: cs.primary,
-                          fontWeight: FontWeight.w800,
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (hasDiscount) ...[
+                              Text(
+                                Formatters.currency(product.price),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                            ],
+                            Text(
+                              Formatters.currency(product.discountedPrice),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: cs.primary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       _StockChip(
@@ -186,6 +254,205 @@ class ProductCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context) {
+    final nameController = TextEditingController(text: product.name);
+    final priceController =
+        TextEditingController(text: product.price.toStringAsFixed(0));
+    final purchasePriceController =
+        TextEditingController(text: product.purchasePrice.toStringAsFixed(0));
+    final discountController =
+        TextEditingController(text: product.discount.toStringAsFixed(0));
+    final stockController =
+        TextEditingController(text: product.stock.toString());
+    String selectedCategory = product.category;
+
+    final controller = Get.find<ProductsController>();
+
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.all(AppSpacing.lg),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              final theme = Theme.of(context);
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.12),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: Icon(
+                            Icons.edit_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Text("Edit Product",
+                            style: theme.textTheme.titleLarge),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    TextField(
+                      controller: nameController,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: "Product name",
+                        prefixIcon: Icon(Icons.label_outline),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: priceController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Sell price",
+                              prefixIcon: Icon(Icons.sell_outlined),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: TextField(
+                            controller: purchasePriceController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Purchase price",
+                              prefixIcon: Icon(Icons.payments_outlined),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: discountController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Discount %",
+                              prefixIcon: Icon(Icons.discount_outlined),
+                              suffixText: "%",
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: TextField(
+                            controller: stockController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Stock",
+                              prefixIcon: Icon(Icons.inventory_2_outlined),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: "Category",
+                        prefixIcon: Icon(Icons.category_outlined),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                            value: "Watches", child: Text("Watches")),
+                        DropdownMenuItem(value: "Caps", child: Text("Caps")),
+                        DropdownMenuItem(
+                            value: "Perfumes", child: Text("Perfumes")),
+                        DropdownMenuItem(
+                            value: "Glasses", child: Text("Glasses")),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => selectedCategory = value!),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: Get.back,
+                            child: const Text("Cancel"),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              if (nameController.text.isEmpty ||
+                                  priceController.text.isEmpty ||
+                                  stockController.text.isEmpty) {
+                                Get.snackbar(
+                                  "Missing info",
+                                  "Please fill all required fields",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                return;
+                              }
+
+                              final discountVal =
+                                  double.tryParse(discountController.text) ??
+                                      0;
+                              if (discountVal < 0 || discountVal > 100) {
+                                Get.snackbar(
+                                  "Invalid discount",
+                                  "Discount must be between 0 and 100",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                return;
+                              }
+
+                              controller.updateProduct(
+                                product.copyWith(
+                                  name: nameController.text,
+                                  category: selectedCategory,
+                                  price: double.tryParse(
+                                          priceController.text) ??
+                                      product.price,
+                                  purchasePrice: double.tryParse(
+                                          purchasePriceController.text) ??
+                                      0,
+                                  discount: discountVal,
+                                  stock: int.tryParse(
+                                          stockController.text) ??
+                                      product.stock,
+                                ),
+                              );
+                              Get.back();
+                            },
+                            child: const Text("Save"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
