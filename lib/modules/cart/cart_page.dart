@@ -1,8 +1,10 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
+import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
+import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -39,6 +41,8 @@ class CartPage extends GetView<CartController> {
 
         return Column(
           children: [
+            // SKU quick-add bar
+            _SkuQuickAdd(),
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -702,5 +706,97 @@ class _EmptyCart extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _SkuQuickAdd extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final skuController = TextEditingController();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        0,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: skuController,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                hintText: "Scan / enter SKU to add...",
+                prefixIcon: const Icon(Icons.qr_code_scanner, size: 20),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                filled: true,
+              ),
+              onSubmitted: (value) => _addBySku(skuController),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          FilledButton.tonal(
+            onPressed: () => _addBySku(skuController),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+            child: const Icon(Icons.add, size: 22),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addBySku(TextEditingController controller) {
+    final sku = controller.text.trim();
+    if (sku.isEmpty) return;
+
+    final productsController = Get.find<ProductsController>();
+    final cartController = Get.find<CartController>();
+
+    final product = productsController.findBySku(sku);
+    if (product != null) {
+      if (product.stock <= 0) {
+        Get.snackbar(
+          "Out of stock",
+          "${product.name} is out of stock",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.danger,
+          colorText: Colors.white,
+        );
+      } else {
+        cartController.addToCart(product);
+        Get.snackbar(
+          "Added to cart",
+          "${product.name} (SKU: $sku)",
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(AppSpacing.md),
+          duration: const Duration(milliseconds: 1200),
+        );
+      }
+    } else {
+      Get.snackbar(
+        "Not found",
+        "No product with SKU \"$sku\"",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+
+    controller.clear();
   }
 }

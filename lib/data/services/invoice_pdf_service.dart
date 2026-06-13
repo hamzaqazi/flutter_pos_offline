@@ -83,6 +83,11 @@ class InvoicePdfService {
                                   "  ${item.product.brand}",
                                   style: const pw.TextStyle(fontSize: 8),
                                 ),
+                              if (item.product.sku.isNotEmpty)
+                                pw.Text(
+                                  "  SKU: ${item.product.sku}",
+                                  style: const pw.TextStyle(fontSize: 7),
+                                ),
                             ],
                           ),
                         ),

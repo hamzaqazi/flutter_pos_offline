@@ -72,7 +72,7 @@ class ProductsPage extends GetView<ProductsController> {
       ),
       body: Column(
         children: [
-          // ---------- Search ----------
+          // ---------- Search with SKU scan icon ----------
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -81,9 +81,17 @@ class ProductsPage extends GetView<ProductsController> {
               AppSpacing.sm,
             ),
             child: TextField(
-              decoration: const InputDecoration(
-                hintText: "Search products...",
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                hintText: "Search by name, brand or SKU...",
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: Obx(() {
+                  final query = controller.searchQuery.value;
+                  if (query.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    onPressed: () => controller.searchQuery.value = '',
+                  );
+                }),
               ),
               onChanged: (value) => controller.searchQuery.value = value,
             ),
@@ -149,11 +157,19 @@ class ProductsPage extends GetView<ProductsController> {
   void _showAddProductDialog(BuildContext context) {
     final nameController = TextEditingController();
     final brandController = TextEditingController();
+    final skuController = TextEditingController();
     final priceController = TextEditingController();
     final purchasePriceController = TextEditingController();
     final discountController = TextEditingController();
     final stockController = TextEditingController();
     String selectedCategory = "Watches";
+
+    // Auto-generate SKU when category changes
+    void updateAutoSku(String category) {
+      skuController.text = controller.generateSku(category);
+    }
+
+    updateAutoSku(selectedCategory);
 
     Get.dialog(
       Dialog(
@@ -206,6 +222,31 @@ class ProductsPage extends GetView<ProductsController> {
                         labelText: "Brand (optional)",
                         prefixIcon: Icon(Icons.branding_watermark_outlined),
                       ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: skuController,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: const InputDecoration(
+                              labelText: "SKU / Barcode",
+                              prefixIcon: Icon(Icons.qr_code_outlined),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: () {
+                            updateAutoSku(selectedCategory);
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.autorenew, size: 20),
+                          tooltip: "Auto-generate SKU",
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Row(
@@ -277,8 +318,10 @@ class ProductsPage extends GetView<ProductsController> {
                         DropdownMenuItem(
                             value: "Glasses", child: Text("Glasses")),
                       ],
-                      onChanged: (value) =>
-                          setState(() => selectedCategory = value!),
+                      onChanged: (value) {
+                        setState(() => selectedCategory = value!);
+                        updateAutoSku(value!);
+                      },
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     Row(
@@ -331,6 +374,7 @@ class ProductsPage extends GetView<ProductsController> {
                                   discount: discountVal,
                                   stock:
                                       int.tryParse(stockController.text) ?? 0,
+                                  sku: skuController.text.trim(),
                                 ),
                               );
                               Get.back();

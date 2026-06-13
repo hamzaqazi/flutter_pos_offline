@@ -1,16 +1,20 @@
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
   final ProductsController productsController = Get.find();
   final SalesController salesController = Get.find();
+  final ReturnsController returnsController = Get.find();
 
   RxInt totalProducts = 0.obs;
   RxInt totalSales = 0.obs;
   RxDouble totalRevenue = 0.0.obs;
   RxDouble totalProfit = 0.0.obs;
   RxInt lowStockCount = 0.obs;
+  RxDouble totalRefunds = 0.0.obs;
+  RxInt totalReturnCount = 0.obs;
 
   @override
   void onInit() {
@@ -18,6 +22,7 @@ class DashboardController extends GetxController {
 
     ever(productsController.products, (_) => _recalcProducts());
     ever(salesController.sales, (_) => _recalcSales());
+    ever(returnsController.returns, (_) => _recalcSales());
 
     _recalcProducts();
     _recalcSales();
@@ -39,5 +44,10 @@ class DashboardController extends GetxController {
       0,
       (sum, sale) => sum + sale.profit,
     );
+    // Deduct refunds from profit
+    totalProfit.value -= returnsController.totalProfitReversed;
+    // Total refunds
+    totalRefunds.value = returnsController.totalRefunds;
+    totalReturnCount.value = returnsController.returns.length;
   }
 }

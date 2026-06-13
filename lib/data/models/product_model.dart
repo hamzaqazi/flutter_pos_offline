@@ -8,6 +8,7 @@ class ProductModel {
   final double discount;
   final int stock;
   final String? image;
+  final String sku; // auto-generated or manual SKU/barcode
 
   ProductModel({
     required this.id,
@@ -19,6 +20,7 @@ class ProductModel {
     this.discount = 0,
     required this.stock,
     this.image,
+    this.sku = '',
   });
 
   /// Selling price after applying discount percentage.
@@ -33,6 +35,9 @@ class ProductModel {
   /// Whether this product has a brand set.
   bool get hasBrand => brand.isNotEmpty;
 
+  /// Whether this product has an SKU set.
+  bool get hasSku => sku.isNotEmpty;
+
   ProductModel copyWith({
     String? id,
     String? name,
@@ -43,6 +48,7 @@ class ProductModel {
     double? discount,
     int? stock,
     String? image,
+    String? sku,
   }) {
     return ProductModel(
       id: id ?? this.id,
@@ -54,6 +60,7 @@ class ProductModel {
       discount: discount ?? this.discount,
       stock: stock ?? this.stock,
       image: image ?? this.image,
+      sku: sku ?? this.sku,
     );
   }
 }

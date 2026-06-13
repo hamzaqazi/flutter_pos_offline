@@ -1,5 +1,7 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
+import 'package:ad_shop_pos/modules/returns/return_dialog.dart';
+import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -127,6 +129,15 @@ class SalesHistoryPage extends GetView<SalesController> {
                   final sale = sales[index];
                   final itemCount =
                       sale.items.fold<int>(0, (s, i) => s + i.quantity);
+
+                  // Check if there are returns for this sale
+                  final returnsController = Get.find<ReturnsController>();
+                  final saleReturns = returnsController.returnsForSale(sale.id);
+                  final totalRefund = saleReturns.fold<double>(
+                    0,
+                    (sum, r) => sum + r.refundAmount,
+                  );
+
                   return Card(
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
@@ -209,9 +220,72 @@ class SalesHistoryPage extends GetView<SalesController> {
                                       ],
                                     ],
                                   ),
+                                  // Show refund badge if sale has returns
+                                  if (totalRefund > 0) ...[
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSpacing.xs,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.warning
+                                            .withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusSm),
+                                      ),
+                                      child: Text(
+                                        "Refunded: ${Formatters.currency(totalRefund)}",
+                                        style: const TextStyle(
+                                          color: AppColors.warning,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
+                            // Return button
+                            Column(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColors.warning
+                                          .withValues(alpha: 0.4),
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm),
+                                  ),
+                                  child: IconButton(
+                                    onPressed: () => showReturnDialog(sale),
+                                    icon: const Icon(
+                                      Icons.assignment_return_outlined,
+                                      size: 20,
+                                    ),
+                                    color: AppColors.warning,
+                                    tooltip: "Process return",
+                                    padding: const EdgeInsets.all(AppSpacing.sm),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 36,
+                                      minHeight: 36,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Return",
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.warning,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
                             if (itemCount > 0)
                               Container(
                                 padding: const EdgeInsets.symmetric(

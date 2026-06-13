@@ -178,6 +178,16 @@ class InvoicePreviewPage extends StatelessWidget {
                                               fontSize: 10,
                                             ),
                                           ),
+                                        if (item.product.hasSku)
+                                          Text(
+                                            "SKU: ${item.product.sku}",
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                              fontSize: 9,
+                                              fontFamily: 'monospace',
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
