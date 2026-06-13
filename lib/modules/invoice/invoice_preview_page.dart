@@ -117,9 +117,22 @@ class InvoicePreviewPage extends StatelessWidget {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      item.product.name,
-                                      style: theme.textTheme.bodyMedium,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.product.name,
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                        if (item.product.hasBrand)
+                                          Text(
+                                            item.product.brand,
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
                                   Text(

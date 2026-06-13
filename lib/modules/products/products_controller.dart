@@ -23,6 +23,7 @@ class ProductsController extends GetxController {
         (e) => ProductModel(
           id: e['id'],
           name: e['name'],
+          brand: e['brand'] ?? '',
           category: e['category'],
           price: e['price'],
           purchasePrice: (e['purchasePrice'] ?? 0).toDouble(),
@@ -38,7 +39,7 @@ class ProductsController extends GetxController {
     products.add(product);
   }
 
-  /// Full update: edit name, category, price, purchasePrice, discount, stock.
+  /// Full update: edit name, brand, category, price, purchasePrice, discount, stock.
   void updateProduct(ProductModel product) {
     final index = products.indexWhere((p) => p.id == product.id);
 
@@ -68,6 +69,7 @@ class ProductsController extends GetxController {
   Map<String, dynamic> _toMap(ProductModel p) => {
         'id': p.id,
         'name': p.name,
+        'brand': p.brand,
         'category': p.category,
         'price': p.price,
         'purchasePrice': p.purchasePrice,

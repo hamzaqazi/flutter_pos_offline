@@ -31,6 +31,7 @@ class SaleModel {
             (e) => {
               'productId': e.product.id,
               'name': e.product.name,
+              'brand': e.product.brand,
               'price': e.product.price,
               'purchasePrice': e.product.purchasePrice,
               'discount': e.product.discount,
