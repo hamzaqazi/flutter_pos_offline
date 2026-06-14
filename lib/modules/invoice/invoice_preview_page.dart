@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
+import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -22,6 +23,7 @@ class InvoicePreviewPage extends StatelessWidget {
   final double change;
   final double totalSavings;
   final String customerId;      // linked customer
+  final String cashierId;       // staff who processed this sale
 
   /// When true, this is a past receipt being viewed (no sale completion).
   final bool readOnly;
@@ -39,6 +41,7 @@ class InvoicePreviewPage extends StatelessWidget {
     required this.change,
     this.totalSavings = 0,
     this.customerId = '',
+    this.cashierId = '',
     this.readOnly = false,
   });
 
@@ -49,6 +52,13 @@ class InvoicePreviewPage extends StatelessWidget {
     final controller = Get.find<CustomersController>();
     final customer = controller.findById(customerId);
     return customer?.name ?? '';
+  }
+
+  String get _cashierName {
+    if (cashierId.isEmpty) return '';
+    final controller = Get.find<StaffController>();
+    final staff = controller.findById(cashierId);
+    return staff?.name ?? '';
   }
 
   Future<void> _printInvoice() async {
@@ -64,6 +74,7 @@ class InvoicePreviewPage extends StatelessWidget {
       change: change,
       totalSavings: totalSavings,
       customerName: _customerName,
+      cashierName: _cashierName,
     );
     await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   }
@@ -157,6 +168,26 @@ class InvoicePreviewPage extends StatelessWidget {
                           const SizedBox(width: AppSpacing.sm),
                           Text(
                             "Customer: $_customerName",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      const _DashedDivider(),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+
+                    // ---------- Cashier ----------
+                    if (cashierId.isNotEmpty && _cashierName.isNotEmpty) ...[
+                      Row(
+                        children: [
+                          Icon(Icons.badge_outlined,
+                              size: 16, color: cs.onSurfaceVariant),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            "Cashier: $_cashierName",
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -355,6 +386,7 @@ class InvoicePreviewPage extends StatelessWidget {
                             checkoutDiscount: checkoutDiscount,
                             taxAmount: taxAmount,
                             customerId: customerId,
+                            cashierId: cashierId,
                           );
                           Get.offAllNamed('/');
                         },

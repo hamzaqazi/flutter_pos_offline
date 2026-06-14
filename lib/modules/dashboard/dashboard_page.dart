@@ -2,7 +2,9 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
+import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
+import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -177,6 +179,69 @@ class DashboardPage extends GetView<DashboardController> {
                     color: AppColors.seed,
                     onTap: () => Get.toNamed('/customers'),
                   ),
+                  const SizedBox(height: AppSpacing.md),
+                  _ActionTile(
+                    icon: Icons.badge_outlined,
+                    title: "Staff",
+                    subtitle: "Manage cashiers & track staff performance",
+                    color: AppColors.accent,
+                    onTap: () => Get.toNamed('/staff'),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+                  Text("Notifications", style: theme.textTheme.titleMedium),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Low stock notification
+                  Obx(() {
+                    final productsCtrl = Get.find<ProductsController>();
+                    final lowStock = productsCtrl.products.where((p) => p.stock <= 5).toList();
+                    final outOfStock = lowStock.where((p) => p.stock <= 0).length;
+                    final low = lowStock.where((p) => p.stock > 0).length;
+
+                    if (lowStock.isEmpty) {
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle_outline, color: AppColors.success),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Text(
+                                  "All products are well-stocked",
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: [
+                        if (outOfStock > 0)
+                          _NotificationTile(
+                            icon: Icons.cancel_outlined,
+                            title: "$outOfStock out of stock",
+                            subtitle: "Products need restocking immediately",
+                            color: AppColors.danger,
+                            onTap: () => Get.toNamed('/products'),
+                          ),
+                        if (outOfStock > 0 && low > 0)
+                          const SizedBox(height: AppSpacing.md),
+                        if (low > 0)
+                          _NotificationTile(
+                            icon: Icons.warning_amber_rounded,
+                            title: "$low low stock",
+                            subtitle: "Products running low (≤5 units)",
+                            color: AppColors.warning,
+                            onTap: () => Get.toNamed('/products'),
+                          ),
+                      ],
+                    );
+                  }),
                 ]),
               ),
             ),
@@ -373,6 +438,69 @@ class _ActionTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title, style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationTile extends StatelessWidget {
+  const _NotificationTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,

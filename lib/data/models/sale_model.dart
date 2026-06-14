@@ -1,19 +1,18 @@
-// import 'cart_item_model.dart';
-
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 
 class SaleModel {
   final String id;
   final List<CartItemModel> items;
-  final double subtotal;        // total before checkout discount & tax
-  final double checkoutDiscount; // additional discount applied at checkout (%)
-  final double taxAmount;       // tax collected on this sale
-  final double total;           // final total after all discounts & tax
+  final double subtotal;
+  final double checkoutDiscount;
+  final double taxAmount;
+  final double total;
   final double cash;
   final double change;
-  final double discount;   // total discount amount (product discounts + checkout discount)
-  final double profit;     // total profit for this sale
-  final String customerId; // linked customer (optional)
+  final double discount;
+  final double profit;
+  final String customerId;
+  final String cashierId; // staff member who processed this sale
   final DateTime date;
 
   SaleModel({
@@ -28,11 +27,12 @@ class SaleModel {
     this.discount = 0,
     this.profit = 0,
     this.customerId = '',
+    this.cashierId = '',
     required this.date,
   });
 
-  /// Whether this sale is linked to a customer.
   bool get hasCustomer => customerId.isNotEmpty;
+  bool get hasCashier => cashierId.isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {
@@ -61,6 +61,7 @@ class SaleModel {
       'discount': discount,
       'profit': profit,
       'customerId': customerId,
+      'cashierId': cashierId,
       'date': date.toIso8601String(),
     };
   }
@@ -68,7 +69,7 @@ class SaleModel {
   factory SaleModel.fromMap(Map data) {
     return SaleModel(
       id: data['id'],
-      items: [], // you can rebuild later if needed
+      items: [],
       subtotal: (data['subtotal'] ?? data['total'] ?? 0).toDouble(),
       checkoutDiscount: (data['checkoutDiscount'] ?? 0).toDouble(),
       taxAmount: (data['taxAmount'] ?? 0).toDouble(),
@@ -78,6 +79,7 @@ class SaleModel {
       discount: (data['discount'] ?? 0).toDouble(),
       profit: (data['profit'] ?? 0).toDouble(),
       customerId: data['customerId'] ?? '',
+      cashierId: data['cashierId'] ?? '',
       date: DateTime.parse(data['date']),
     );
   }

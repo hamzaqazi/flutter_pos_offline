@@ -21,6 +21,7 @@ void main() async {
   await Hive.openBox('expenses');
   await Hive.openBox('returns');
   await Hive.openBox('customers');
+  await Hive.openBox('staff');
   runApp(const PosApp());
 }
 
@@ -39,7 +40,6 @@ class PosApp extends StatelessWidget {
       initialRoute: Routes.dashboard,
       getPages: AppPages.pages,
       builder: (context, child) {
-        // Keep system status bar icons readable against the scaffold.
         final brightness = Theme.of(context).brightness;
         SystemChrome.setSystemUIOverlayStyle(
           SystemUiOverlayStyle(

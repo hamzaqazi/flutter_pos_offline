@@ -8,6 +8,7 @@ import 'package:ad_shop_pos/modules/reports/reports_controller.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
+import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:get/get.dart';
 
 class InitialBinding extends Bindings {
@@ -18,6 +19,7 @@ class InitialBinding extends Bindings {
     Get.put(ExpensesController(), permanent: true);
     Get.put(ReturnsController(), permanent: true);
     Get.put(CustomersController(), permanent: true);
+    Get.put(StaffController(), permanent: true);
     Get.lazyPut(() => DashboardController(), fenix: true);
     Get.lazyPut(() => ProductsController(), fenix: true);
     Get.lazyPut(() => CartController(), fenix: true);

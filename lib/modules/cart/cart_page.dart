@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -387,6 +388,7 @@ class CartPage extends GetView<CartController> {
                                         change: change,
                                         totalSavings: totalAllSavings,
                                         customerId: selectedCustomerId ?? '',
+                                        cashierId: Get.find<StaffController>().activeCashierId.value ?? '',
                                       ),
                                     );
                                   }

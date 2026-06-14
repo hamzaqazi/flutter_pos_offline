@@ -53,6 +53,7 @@ class SalesController extends GetxController {
           discount: (e['discount'] ?? 0).toDouble(),
           profit: (e['profit'] ?? 0).toDouble(),
           customerId: e['customerId'] ?? '',
+          cashierId: e['cashierId'] ?? '',
           date: DateTime.tryParse(e['date'] ?? '') ?? DateTime.now(),
         );
       }).toList(),
@@ -65,6 +66,7 @@ class SalesController extends GetxController {
     double checkoutDiscount = 0,
     double taxAmount = 0,
     String customerId = '',
+    String cashierId = '',
   }) {
     final cart = Get.find<CartController>();
     final products = Get.find<ProductsController>();
@@ -101,6 +103,7 @@ class SalesController extends GetxController {
       discount: totalDiscount,
       profit: totalProfit,
       customerId: customerId,
+      cashierId: cashierId,
       date: DateTime.now(),
     );
 
@@ -137,6 +140,7 @@ class SalesController extends GetxController {
       'discount': sale.discount,
       'profit': sale.profit,
       'customerId': sale.customerId,
+      'cashierId': sale.cashierId,
       'date': sale.date.toIso8601String(),
     });
 
