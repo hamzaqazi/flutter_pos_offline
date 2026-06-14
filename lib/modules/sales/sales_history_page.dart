@@ -212,7 +212,10 @@ class SalesHistoryPage extends GetView<SalesController> {
                                       return const SizedBox.shrink();
                                     }),
                                   const SizedBox(height: 2),
-                                  Row(
+                                  Wrap(
+                                    spacing: AppSpacing.sm,
+                                    runSpacing: AppSpacing.xs,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
                                       Text(
                                         Formatters.dateTime(sale.date),
@@ -221,8 +224,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                                           color: cs.onSurfaceVariant,
                                         ),
                                       ),
-                                      if (sale.profit > 0) ...[
-                                        const SizedBox(width: AppSpacing.sm),
+                                      if (sale.profit > 0)
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: AppSpacing.xs,
@@ -243,7 +245,6 @@ class SalesHistoryPage extends GetView<SalesController> {
                                             ),
                                           ),
                                         ),
-                                      ],
                                     ],
                                   ),
                                   // Show refund badge if sale has returns
