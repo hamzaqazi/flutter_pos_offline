@@ -54,11 +54,13 @@ class SettingsPage extends GetView<SettingsController> {
               subtitle: "Paper size, font, visibility & preview",
               color: AppColors.seed,
               children: [
-                Obx(() => _ReceiptCustomizationWithPreview(
-                      receiptSettings: controller.receiptSettings.value,
-                      shopSettings: controller.settings.value,
-                      onChanged: (s) => controller.updateReceiptSettings(s),
-                    )),
+                Obx(
+                  () => _ReceiptCustomizationWithPreview(
+                    receiptSettings: controller.receiptSettings.value,
+                    shopSettings: controller.settings.value,
+                    onChanged: (s) => controller.updateReceiptSettings(s),
+                  ),
+                ),
               ],
             ),
 
@@ -70,9 +72,7 @@ class SettingsPage extends GetView<SettingsController> {
               title: "Thermal Printer",
               subtitle: "Scan, pair & test your printer",
               color: AppColors.accent,
-              children: [
-                _PrinterSettingsSection(),
-              ],
+              children: [_PrinterSettingsSection()],
             ),
 
             const SizedBox(height: AppSpacing.md),
@@ -130,7 +130,8 @@ class SettingsPage extends GetView<SettingsController> {
                 _ImportTile(
                   icon: Icons.restore_outlined,
                   title: "Restore from Backup",
-                  subtitle: "Import data from a previously exported backup file",
+                  subtitle:
+                      "Import data from a previously exported backup file",
                   color: AppColors.warning,
                   onTap: () => _showImportDialog(context),
                 ),
@@ -147,14 +148,17 @@ class SettingsPage extends GetView<SettingsController> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, size: 16, color: AppColors.danger),
+                      Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: AppColors.danger,
+                      ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           "Restoring a backup will replace all current data. Export a backup first to keep your data.",
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.danger,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.danger),
                         ),
                       ),
                     ],
@@ -301,11 +305,21 @@ class _ShopInfoForm extends StatefulWidget {
 }
 
 class _ShopInfoFormState extends State<_ShopInfoForm> {
-  late final _shopNameController = TextEditingController(text: widget.settings.shopName);
-  late final _addressController = TextEditingController(text: widget.settings.address);
-  late final _phoneController = TextEditingController(text: widget.settings.phone);
-  late final _footerController = TextEditingController(text: widget.settings.receiptFooter);
-  late final _currencyController = TextEditingController(text: widget.settings.currencySymbol);
+  late final _shopNameController = TextEditingController(
+    text: widget.settings.shopName,
+  );
+  late final _addressController = TextEditingController(
+    text: widget.settings.address,
+  );
+  late final _phoneController = TextEditingController(
+    text: widget.settings.phone,
+  );
+  late final _footerController = TextEditingController(
+    text: widget.settings.receiptFooter,
+  );
+  late final _currencyController = TextEditingController(
+    text: widget.settings.currencySymbol,
+  );
 
   @override
   void dispose() {
@@ -374,23 +388,28 @@ class _ShopInfoFormState extends State<_ShopInfoForm> {
           width: double.infinity,
           child: FilledButton.icon(
             onPressed: () {
-              controller.updateSettings(ShopSettingsModel(
-                shopName: _shopNameController.text.trim().isEmpty
-                    ? 'My Shop'
-                    : _shopNameController.text.trim(),
-                address: _addressController.text.trim(),
-                phone: _phoneController.text.trim(),
-                receiptFooter: _footerController.text.trim().isEmpty
-                    ? 'Thank you for shopping!'
-                    : _footerController.text.trim(),
-                currencySymbol: _currencyController.text.trim().isEmpty
-                    ? 'Rs'
-                    : _currencyController.text.trim(),
-                taxRate: controller.settings.value.taxRate,
-                taxInclusive: controller.settings.value.taxInclusive,
-              ));
-              Get.snackbar("Saved", "Shop information updated",
-                  snackPosition: SnackPosition.BOTTOM);
+              controller.updateSettings(
+                ShopSettingsModel(
+                  shopName: _shopNameController.text.trim().isEmpty
+                      ? 'My Shop'
+                      : _shopNameController.text.trim(),
+                  address: _addressController.text.trim(),
+                  phone: _phoneController.text.trim(),
+                  receiptFooter: _footerController.text.trim().isEmpty
+                      ? 'Thank you for shopping!'
+                      : _footerController.text.trim(),
+                  currencySymbol: _currencyController.text.trim().isEmpty
+                      ? 'Rs'
+                      : _currencyController.text.trim(),
+                  taxRate: controller.settings.value.taxRate,
+                  taxInclusive: controller.settings.value.taxInclusive,
+                ),
+              );
+              Get.snackbar(
+                "Saved",
+                "Shop information updated",
+                snackPosition: SnackPosition.BOTTOM,
+              );
             },
             icon: const Icon(Icons.save_outlined, size: 18),
             label: const Text("Save Shop Info"),
@@ -413,7 +432,8 @@ class _TaxForm extends StatefulWidget {
 
 class _TaxFormState extends State<_TaxForm> {
   late final _taxRateController = TextEditingController(
-      text: widget.settings.taxRate.toStringAsFixed(1));
+    text: widget.settings.taxRate.toStringAsFixed(1),
+  );
   late bool _taxInclusive = widget.settings.taxInclusive;
 
   @override
@@ -456,7 +476,9 @@ class _TaxFormState extends State<_TaxForm> {
                 ),
               ),
               secondary: Icon(
-                _taxInclusive ? Icons.check_circle_outline : Icons.add_circle_outline,
+                _taxInclusive
+                    ? Icons.check_circle_outline
+                    : Icons.add_circle_outline,
                 color: _taxInclusive ? AppColors.success : AppColors.warning,
               ),
             );
@@ -467,12 +489,17 @@ class _TaxFormState extends State<_TaxForm> {
           width: double.infinity,
           child: FilledButton.icon(
             onPressed: () {
-              controller.updateSettings(controller.settings.value.copyWith(
-                taxRate: double.tryParse(_taxRateController.text) ?? 0,
-                taxInclusive: _taxInclusive,
-              ));
-              Get.snackbar("Saved", "Tax settings updated",
-                  snackPosition: SnackPosition.BOTTOM);
+              controller.updateSettings(
+                controller.settings.value.copyWith(
+                  taxRate: double.tryParse(_taxRateController.text) ?? 0,
+                  taxInclusive: _taxInclusive,
+                ),
+              );
+              Get.snackbar(
+                "Saved",
+                "Tax settings updated",
+                snackPosition: SnackPosition.BOTTOM,
+              );
             },
             icon: const Icon(Icons.save_outlined, size: 18),
             label: const Text("Save Tax Settings"),
@@ -550,10 +577,7 @@ class _ReceiptCustomizationWithPreview extends StatelessWidget {
         // Show/hide toggles grouped
         _SettingLabel("Show on Receipt"),
         const SizedBox(height: AppSpacing.xs),
-        _ToggleGroup(
-          settings: receiptSettings,
-          onChanged: onChanged,
-        ),
+        _ToggleGroup(settings: receiptSettings, onChanged: onChanged),
         const SizedBox(height: AppSpacing.lg),
 
         // Preview
@@ -576,9 +600,9 @@ class _SettingLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }
@@ -614,51 +638,104 @@ class _ToggleGroup extends StatelessWidget {
     return Column(
       children: [
         // Header section
-        _ToggleRow(Icons.store_outlined, "Shop name", settings.showShopName,
-            (v) => onChanged(settings.copyWith(showShopName: v))),
-        _ToggleRow(Icons.location_on_outlined, "Address", settings.showAddress,
-            (v) => onChanged(settings.copyWith(showAddress: v))),
-        _ToggleRow(Icons.phone_outlined, "Phone", settings.showPhone,
-            (v) => onChanged(settings.copyWith(showPhone: v))),
-        _ToggleRow(Icons.access_time, "Date & Time", settings.showDate,
-            (v) => onChanged(settings.copyWith(showDate: v))),
+        _ToggleRow(
+          Icons.store_outlined,
+          "Shop name",
+          settings.showShopName,
+          (v) => onChanged(settings.copyWith(showShopName: v)),
+        ),
+        _ToggleRow(
+          Icons.location_on_outlined,
+          "Address",
+          settings.showAddress,
+          (v) => onChanged(settings.copyWith(showAddress: v)),
+        ),
+        _ToggleRow(
+          Icons.phone_outlined,
+          "Phone",
+          settings.showPhone,
+          (v) => onChanged(settings.copyWith(showPhone: v)),
+        ),
+        _ToggleRow(
+          Icons.access_time,
+          "Date & Time",
+          settings.showDate,
+          (v) => onChanged(settings.copyWith(showDate: v)),
+        ),
 
         const Divider(height: AppSpacing.lg),
 
         // Transaction section
-        _ToggleRow(Icons.badge_outlined, "Cashier name", settings.showCashier,
-            (v) => onChanged(settings.copyWith(showCashier: v))),
-        _ToggleRow(Icons.person_outline, "Customer name", settings.showCustomer,
-            (v) => onChanged(settings.copyWith(showCustomer: v))),
+        _ToggleRow(
+          Icons.badge_outlined,
+          "Cashier name",
+          settings.showCashier,
+          (v) => onChanged(settings.copyWith(showCashier: v)),
+        ),
+        _ToggleRow(
+          Icons.person_outline,
+          "Customer name",
+          settings.showCustomer,
+          (v) => onChanged(settings.copyWith(showCustomer: v)),
+        ),
 
         const Divider(height: AppSpacing.lg),
 
         // Product details section
-        _ToggleRow(Icons.tag, "SKU", settings.showSku,
-            (v) => onChanged(settings.copyWith(showSku: v))),
-        _ToggleRow(Icons.branding_watermark, "Brand", settings.showBrand,
-            (v) => onChanged(settings.copyWith(showBrand: v))),
-        _ToggleRow(Icons.qr_code, "Barcode", settings.showBarcode,
-            (v) => onChanged(settings.copyWith(showBarcode: v))),
+        _ToggleRow(
+          Icons.tag,
+          "SKU",
+          settings.showSku,
+          (v) => onChanged(settings.copyWith(showSku: v)),
+        ),
+        _ToggleRow(
+          Icons.branding_watermark,
+          "Brand",
+          settings.showBrand,
+          (v) => onChanged(settings.copyWith(showBrand: v)),
+        ),
+        _ToggleRow(
+          Icons.qr_code,
+          "Barcode",
+          settings.showBarcode,
+          (v) => onChanged(settings.copyWith(showBarcode: v)),
+        ),
 
         const Divider(height: AppSpacing.lg),
 
         // Pricing section
-        _ToggleRow(Icons.local_offer_outlined, "Discount details", settings.showDiscountDetails,
-            (v) => onChanged(settings.copyWith(showDiscountDetails: v))),
-        _ToggleRow(Icons.percent_outlined, "Tax details", settings.showTaxDetails,
-            (v) => onChanged(settings.copyWith(showTaxDetails: v))),
+        _ToggleRow(
+          Icons.local_offer_outlined,
+          "Discount details",
+          settings.showDiscountDetails,
+          (v) => onChanged(settings.copyWith(showDiscountDetails: v)),
+        ),
+        _ToggleRow(
+          Icons.percent_outlined,
+          "Tax details",
+          settings.showTaxDetails,
+          (v) => onChanged(settings.copyWith(showTaxDetails: v)),
+        ),
 
         const Divider(height: AppSpacing.lg),
 
         // Footer
-        _ToggleRow(Icons.description_outlined, "Footer message", settings.showFooter,
-            (v) => onChanged(settings.copyWith(showFooter: v))),
+        _ToggleRow(
+          Icons.description_outlined,
+          "Footer message",
+          settings.showFooter,
+          (v) => onChanged(settings.copyWith(showFooter: v)),
+        ),
       ],
     );
   }
 
-  Widget _ToggleRow(IconData icon, String label, bool value, ValueChanged<bool> onChanged) {
+  Widget _ToggleRow(
+    IconData icon,
+    String label,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return SwitchListTile(
       value: value,
       onChanged: onChanged,
@@ -690,7 +767,11 @@ class _ReceiptPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = receiptSettings.paperWidth == 58 ? 220.0 : 300.0;
-    final scale = receiptSettings.fontSize == 0 ? 0.85 : receiptSettings.fontSize == 2 ? 1.15 : 1.0;
+    final scale = receiptSettings.fontSize == 0
+        ? 0.85
+        : receiptSettings.fontSize == 2
+        ? 1.15
+        : 1.0;
     final cur = shopSettings.currencySymbol;
 
     return Center(
@@ -730,16 +811,11 @@ class _ReceiptPreview extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                if (receiptSettings.showAddress && shopSettings.address.isNotEmpty)
-                  Text(
-                    shopSettings.address,
-                    textAlign: TextAlign.center,
-                  ),
+                if (receiptSettings.showAddress &&
+                    shopSettings.address.isNotEmpty)
+                  Text(shopSettings.address, textAlign: TextAlign.center),
                 if (receiptSettings.showPhone && shopSettings.phone.isNotEmpty)
-                  Text(
-                    shopSettings.phone,
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(shopSettings.phone, textAlign: TextAlign.center),
                 const _PreviewDivider(),
 
                 // Date
@@ -748,11 +824,11 @@ class _ReceiptPreview extends StatelessWidget {
                     "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} 14:30",
                     textAlign: TextAlign.left,
                   ),
-                if (receiptSettings.showCashier)
-                  const Text("Cashier: Ali"),
-                if (receiptSettings.showCustomer)
-                  const Text("Customer: Ahmed"),
-                if (receiptSettings.showDate || receiptSettings.showCashier || receiptSettings.showCustomer)
+                if (receiptSettings.showCashier) const Text("Cashier: Ali"),
+                if (receiptSettings.showCustomer) const Text("Customer: Ahmed"),
+                if (receiptSettings.showDate ||
+                    receiptSettings.showCashier ||
+                    receiptSettings.showCustomer)
                   const _PreviewDivider(),
 
                 // Sample items
@@ -798,7 +874,10 @@ class _ReceiptPreview extends StatelessWidget {
                   Text("Tax (16%): $cur 1,328"),
                 Text(
                   "TOTAL: $cur 8,513",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12 * scale),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12 * scale,
+                  ),
                 ),
                 Text("Cash: $cur 9,000"),
                 Text("Change: $cur 487"),
@@ -831,7 +910,9 @@ class _PreviewDivider extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final dashWidth = constraints.maxWidth > 0 ? constraints.maxWidth : 200.0;
+          final dashWidth = constraints.maxWidth > 0
+              ? constraints.maxWidth
+              : 200.0;
           return Row(
             children: List.generate(
               (dashWidth / 6).floor(),
@@ -883,7 +964,9 @@ class _PreviewItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final discountedPrice = discount > 0 ? (price * (1 - discount / 100)).round() : price;
+    final discountedPrice = discount > 0
+        ? (price * (1 - discount / 100)).round()
+        : price;
     final total = qty * discountedPrice;
 
     return Padding(
@@ -893,15 +976,26 @@ class _PreviewItem extends StatelessWidget {
         children: [
           Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
           if (showBrand && brand.isNotEmpty)
-            Text("  Brand: $brand", style: TextStyle(fontSize: 9 * scale, color: Colors.black54)),
+            Text(
+              "  Brand: $brand",
+              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+            ),
           if (showSku && sku.isNotEmpty)
-            Text("  SKU: $sku", style: TextStyle(fontSize: 9 * scale, color: Colors.black54)),
+            Text(
+              "  SKU: $sku",
+              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+            ),
           if (showBarcode && barcode.isNotEmpty)
-            Text("  Barcode: $barcode", style: TextStyle(fontSize: 9 * scale, color: Colors.black54)),
+            Text(
+              "  Barcode: $barcode",
+              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+            ),
           Text("  $qty x $cur $discountedPrice = $cur $total"),
           if (showDiscount && discount > 0)
-            Text("  Orig: $cur $price (-${discount.toStringAsFixed(0)}%)",
-                style: TextStyle(fontSize: 9 * scale, color: Colors.black54)),
+            Text(
+              "  Orig: $cur $price (-${discount.toStringAsFixed(0)}%)",
+              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+            ),
         ],
       ),
     );
@@ -912,7 +1006,8 @@ class _PreviewItem extends StatelessWidget {
 
 class _PrinterSettingsSection extends StatefulWidget {
   @override
-  State<_PrinterSettingsSection> createState() => _PrinterSettingsSectionState();
+  State<_PrinterSettingsSection> createState() =>
+      _PrinterSettingsSectionState();
 }
 
 class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
@@ -968,24 +1063,39 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
     final receiptSettings = controller.receiptSettings.value;
 
     if (!receiptSettings.hasPrinter) {
-      Get.snackbar("No printer", "Please pair a printer first",
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "No printer",
+        "Please pair a printer first",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
-    final connected = await ThermalPrinterService.connect(receiptSettings.pairedPrinterMac);
+    final connected = await ThermalPrinterService.connect(
+      receiptSettings.pairedPrinterMac,
+    );
     if (!connected) {
-      Get.snackbar("Error", "Could not connect to printer",
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Error",
+        "Could not connect to printer",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
-    Get.snackbar("Test Print", "Sending test receipt...",
-        snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 2));
+    Get.snackbar(
+      "Test Print",
+      "Sending test receipt...",
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
 
     await ThermalPrinterService.disconnect();
-    Get.snackbar("Test Print", "Test completed",
-        snackPosition: SnackPosition.BOTTOM);
+    Get.snackbar(
+      "Test Print",
+      "Test completed",
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 
   @override
@@ -1023,7 +1133,9 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
               decoration: BoxDecoration(
                 color: AppColors.warning.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -1031,7 +1143,9 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     "No printer paired yet",
-                    style: theme.textTheme.bodySmall?.copyWith(color: AppColors.warning),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.warning,
+                    ),
                   ),
                 ],
               ),
@@ -1043,11 +1157,17 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
             decoration: BoxDecoration(
               color: AppColors.success.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.check_circle_outline, size: 18, color: AppColors.success),
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 18,
+                  color: AppColors.success,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -1073,10 +1193,16 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
                 IconButton(
                   onPressed: () {
                     controller.updateReceiptSettings(
-                      controller.receiptSettings.value.copyWith(pairedPrinterMac: ''),
+                      controller.receiptSettings.value.copyWith(
+                        pairedPrinterMac: '',
+                      ),
                     );
                   },
-                  icon: Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: AppColors.danger,
+                  ),
                   tooltip: "Remove printer",
                 ),
               ],
@@ -1088,32 +1214,44 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
 
         // Discovered printers
         if (_printers.isNotEmpty) ...[
-          Text("Discovered Printers",
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            "Discovered Printers",
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: AppSpacing.sm),
-          ..._printers.map((printer) => Card(
-                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: ListTile(
-                  dense: true,
-                  leading: Icon(Icons.print, color: AppColors.accent, size: 20),
-                  title: Text(printer.name, style: theme.textTheme.bodyMedium),
-                  subtitle: Text(printer.mac,
-                      style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace')),
-                  trailing: SizedBox(
-                    width: 72,
-                    child: FilledButton.tonal(
-                      onPressed: () => _pairPrinter(printer.mac),
-                      child: const Text("Pair"),
-                    ),
+          ..._printers.map(
+            (printer) => Card(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.print, color: AppColors.accent, size: 20),
+                title: Text(printer.name, style: theme.textTheme.bodyMedium),
+                subtitle: Text(
+                  printer.mac,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
                   ),
                 ),
-              )),
+                trailing: SizedBox(
+                  width: 82,
+                  child: FilledButton.tonal(
+                    onPressed: () => _pairPrinter(printer.mac),
+                    child: const Text("Pair", style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ] else if (!_scanning) ...[
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               "No printers found. Make sure your thermal printer is turned on and Bluetooth is enabled.",
-              style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -1124,7 +1262,8 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
         // Test print
         Obx(() {
           final controller = Get.find<SettingsController>();
-          if (!controller.receiptSettings.value.hasPrinter) return const SizedBox.shrink();
+          if (!controller.receiptSettings.value.hasPrinter)
+            return const SizedBox.shrink();
           return SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -1184,12 +1323,18 @@ class _ExportTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                    Text(subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        )),
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1245,12 +1390,18 @@ class _ImportTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                    Text(subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        )),
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1345,19 +1496,47 @@ class _ImportConfirmDialog extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 if (summary.productCount > 0)
-                  _SummaryRow(icon: Icons.inventory_2_outlined, label: "Products", value: "${summary.productCount}"),
+                  _SummaryRow(
+                    icon: Icons.inventory_2_outlined,
+                    label: "Products",
+                    value: "${summary.productCount}",
+                  ),
                 if (summary.saleCount > 0)
-                  _SummaryRow(icon: Icons.receipt_long_outlined, label: "Sales", value: "${summary.saleCount}"),
+                  _SummaryRow(
+                    icon: Icons.receipt_long_outlined,
+                    label: "Sales",
+                    value: "${summary.saleCount}",
+                  ),
                 if (summary.expenseCount > 0)
-                  _SummaryRow(icon: Icons.account_balance_wallet_outlined, label: "Expenses", value: "${summary.expenseCount}"),
+                  _SummaryRow(
+                    icon: Icons.account_balance_wallet_outlined,
+                    label: "Expenses",
+                    value: "${summary.expenseCount}",
+                  ),
                 if (summary.returnCount > 0)
-                  _SummaryRow(icon: Icons.undo_outlined, label: "Returns", value: "${summary.returnCount}"),
+                  _SummaryRow(
+                    icon: Icons.undo_outlined,
+                    label: "Returns",
+                    value: "${summary.returnCount}",
+                  ),
                 if (summary.customerCount > 0)
-                  _SummaryRow(icon: Icons.person_outline, label: "Customers", value: "${summary.customerCount}"),
+                  _SummaryRow(
+                    icon: Icons.person_outline,
+                    label: "Customers",
+                    value: "${summary.customerCount}",
+                  ),
                 if (summary.staffCount > 0)
-                  _SummaryRow(icon: Icons.badge_outlined, label: "Staff", value: "${summary.staffCount}"),
+                  _SummaryRow(
+                    icon: Icons.badge_outlined,
+                    label: "Staff",
+                    value: "${summary.staffCount}",
+                  ),
                 if (summary.hasSettings)
-                  _SummaryRow(icon: Icons.settings_outlined, label: "Settings", value: "Included"),
+                  _SummaryRow(
+                    icon: Icons.settings_outlined,
+                    label: "Settings",
+                    value: "Included",
+                  ),
                 if (summary.totalRecords == 0 && !summary.hasSettings)
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.sm),
@@ -1445,9 +1624,9 @@ class _SummaryRow extends StatelessWidget {
           const Spacer(),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
