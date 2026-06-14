@@ -30,6 +30,7 @@ class ProductsController extends GetxController {
           discount: (e['discount'] ?? 0).toDouble(),
           stock: e['stock'],
           sku: e['sku'] ?? '',
+          barcode: e['barcode'] ?? '',
         ),
       ),
     );
@@ -40,7 +41,7 @@ class ProductsController extends GetxController {
     products.add(product);
   }
 
-  /// Full update: edit name, brand, category, price, purchasePrice, discount, stock, sku.
+  /// Full update: edit name, brand, category, price, purchasePrice, discount, stock, sku, barcode.
   void updateProduct(ProductModel product) {
     final index = products.indexWhere((p) => p.id == product.id);
 
@@ -110,6 +111,25 @@ class ProductsController extends GetxController {
     }
   }
 
+  /// Find a product by barcode (exact match).
+  /// This is the primary lookup for camera scanner results.
+  ProductModel? findByBarcode(String code) {
+    if (code.isEmpty) return null;
+    try {
+      return products.firstWhere(
+        (p) => p.barcode == code,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Find a product by barcode first, then fallback to SKU.
+  /// Used by the barcode scanner for maximum flexibility.
+  ProductModel? findByBarcodeOrSku(String code) {
+    return findByBarcode(code) ?? findBySku(code);
+  }
+
   Map<String, dynamic> _toMap(ProductModel p) => {
         'id': p.id,
         'name': p.name,
@@ -120,6 +140,7 @@ class ProductsController extends GetxController {
         'discount': p.discount,
         'stock': p.stock,
         'sku': p.sku,
+        'barcode': p.barcode,
       };
 
   List<ProductModel> get filteredProducts {
@@ -127,7 +148,8 @@ class ProductsController extends GetxController {
       final query = searchQuery.value.toLowerCase();
       final matchesSearch = product.name.toLowerCase().contains(query) ||
           product.brand.toLowerCase().contains(query) ||
-          product.sku.toLowerCase().contains(query);
+          product.sku.toLowerCase().contains(query) ||
+          product.barcode.toLowerCase().contains(query);
 
       final matchesCategory = selectedCategory.value == 'All' ||
           product.category == selectedCategory.value;

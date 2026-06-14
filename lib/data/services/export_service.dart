@@ -26,11 +26,11 @@ class ExportService {
     final products = controller.products;
 
     final buffer = StringBuffer();
-    buffer.writeln('SKU,Name,Brand,Category,Price,Purchase Price,Discount %,Stock');
+    buffer.writeln('SKU,Barcode,Name,Brand,Category,Price,Purchase Price,Discount %,Stock');
 
     for (final p in products) {
       buffer.writeln(
-        '"${p.sku}","${p.name}","${p.brand}","${p.category}",'
+        '"${p.sku}","${p.barcode}","${p.name}","${p.brand}","${p.category}",'
         '${p.price},${p.purchasePrice},${p.discount},${p.stock}',
       );
     }
@@ -113,6 +113,7 @@ class ExportService {
                 'discount': p.discount,
                 'stock': p.stock,
                 'sku': p.sku,
+                'barcode': p.barcode,
               })
           .toList();
 

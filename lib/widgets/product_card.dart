@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -150,7 +151,7 @@ class ProductCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.qr_code,
+                              Icons.tag,
                               color: Colors.white70,
                               size: 10,
                             ),
@@ -160,6 +161,44 @@ class ProductCard extends StatelessWidget {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // Barcode badge (shown below SKU badge if both exist)
+                  if (product.hasBarcode)
+                    Positioned(
+                      top: product.hasSku ? 28 : AppSpacing.sm,
+                      right: hasDiscount ? 60 : AppSpacing.sm,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.qr_code,
+                              color: Colors.white70,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              product.barcode.length > 8
+                                  ? '${product.barcode.substring(0, 4)}...${product.barcode.substring(product.barcode.length - 4)}'
+                                  : product.barcode,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
                                 fontWeight: FontWeight.w600,
                                 fontFamily: 'monospace',
                               ),
@@ -318,6 +357,7 @@ class ProductCard extends StatelessWidget {
     final nameController = TextEditingController(text: product.name);
     final brandController = TextEditingController(text: product.brand);
     final skuController = TextEditingController(text: product.sku);
+    final barcodeController = TextEditingController(text: product.barcode);
     final priceController =
         TextEditingController(text: product.price.toStringAsFixed(0));
     final purchasePriceController =
@@ -383,6 +423,7 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    // SKU field (internal code)
                     Row(
                       children: [
                         Expanded(
@@ -390,8 +431,9 @@ class ProductCard extends StatelessWidget {
                             controller: skuController,
                             textCapitalization: TextCapitalization.characters,
                             decoration: const InputDecoration(
-                              labelText: "SKU / Barcode",
-                              prefixIcon: Icon(Icons.qr_code_outlined),
+                              labelText: "SKU",
+                              hintText: "e.g. W0001",
+                              prefixIcon: Icon(Icons.tag_outlined),
                               isDense: true,
                             ),
                           ),
@@ -404,6 +446,35 @@ class ProductCard extends StatelessWidget {
                           },
                           icon: const Icon(Icons.autorenew, size: 20),
                           tooltip: "Auto-generate SKU",
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // Barcode field (real-world barcode from product packaging)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: barcodeController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Barcode",
+                              hintText: "e.g. 8901234567890",
+                              prefixIcon: Icon(Icons.qr_code_outlined),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: () async {
+                            final result = await BarcodeScannerHelper.scanAndLookupRaw();
+                            if (result != null && result.isNotEmpty) {
+                              setState(() => barcodeController.text = result);
+                            }
+                          },
+                          icon: const Icon(Icons.qr_code_scanner, size: 20),
+                          tooltip: "Scan barcode with camera",
                         ),
                       ],
                     ),
@@ -532,6 +603,7 @@ class ProductCard extends StatelessWidget {
                                           stockController.text) ??
                                       product.stock,
                                   sku: skuController.text.trim(),
+                                  barcode: barcodeController.text.trim(),
                                 ),
                               );
                               Get.back();

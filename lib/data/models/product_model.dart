@@ -8,7 +8,8 @@ class ProductModel {
   final double discount;
   final int stock;
   final String? image;
-  final String sku; // auto-generated or manual SKU/barcode
+  final String sku; // internal SKU code (e.g. W0001, P0002)
+  final String barcode; // real-world barcode from product packaging (EAN, UPC, etc.)
 
   ProductModel({
     required this.id,
@@ -21,6 +22,7 @@ class ProductModel {
     required this.stock,
     this.image,
     this.sku = '',
+    this.barcode = '',
   });
 
   /// Selling price after applying discount percentage.
@@ -38,6 +40,9 @@ class ProductModel {
   /// Whether this product has an SKU set.
   bool get hasSku => sku.isNotEmpty;
 
+  /// Whether this product has a barcode set (real-world barcode for scanning).
+  bool get hasBarcode => barcode.isNotEmpty;
+
   ProductModel copyWith({
     String? id,
     String? name,
@@ -49,6 +54,7 @@ class ProductModel {
     int? stock,
     String? image,
     String? sku,
+    String? barcode,
   }) {
     return ProductModel(
       id: id ?? this.id,
@@ -61,6 +67,7 @@ class ProductModel {
       stock: stock ?? this.stock,
       image: image ?? this.image,
       sku: sku ?? this.sku,
+      barcode: barcode ?? this.barcode,
     );
   }
 }

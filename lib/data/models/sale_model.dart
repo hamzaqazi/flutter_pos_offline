@@ -44,6 +44,7 @@ class SaleModel {
               'name': e.product.name,
               'brand': e.product.brand,
               'sku': e.product.sku,
+              'barcode': e.product.barcode,
               'price': e.product.price,
               'purchasePrice': e.product.purchasePrice,
               'discount': e.product.discount,

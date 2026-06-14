@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -759,13 +760,34 @@ class _SkuQuickAdd extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Camera scan button
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: IconButton(
+              onPressed: () => BarcodeScannerHelper.scanAndLookup(
+                onScanned: (code) => BarcodeScannerHelper.addSkuToCart(code),
+              ),
+              icon: Icon(Icons.qr_code_scanner, color: AppColors.accent, size: 24),
+              tooltip: "Scan barcode",
+              style: IconButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: TextField(
               controller: skuController,
               textCapitalization: TextCapitalization.characters,
               decoration: InputDecoration(
-                hintText: "Scan / enter SKU to add...",
-                prefixIcon: const Icon(Icons.qr_code_scanner, size: 20),
+                hintText: "Enter barcode or SKU...",
+                prefixIcon: const Icon(Icons.search, size: 20),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
@@ -776,12 +798,12 @@ class _SkuQuickAdd extends StatelessWidget {
                 ),
                 filled: true,
               ),
-              onSubmitted: (value) => _addBySku(skuController),
+              onSubmitted: (value) => _addByCode(skuController),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           FilledButton.tonal(
-            onPressed: () => _addBySku(skuController),
+            onPressed: () => _addByCode(skuController),
             style: FilledButton.styleFrom(
               minimumSize: const Size(48, 48),
               padding: EdgeInsets.zero,
@@ -796,41 +818,10 @@ class _SkuQuickAdd extends StatelessWidget {
     );
   }
 
-  void _addBySku(TextEditingController controller) {
-    final sku = controller.text.trim();
-    if (sku.isEmpty) return;
-
-    final productsController = Get.find<ProductsController>();
-    final cartController = Get.find<CartController>();
-
-    final product = productsController.findBySku(sku);
-    if (product != null) {
-      if (product.stock <= 0) {
-        Get.snackbar(
-          "Out of stock",
-          "${product.name} is out of stock",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppColors.danger,
-          colorText: Colors.white,
-        );
-      } else {
-        cartController.addToCart(product);
-        Get.snackbar(
-          "Added to cart",
-          "${product.name} (SKU: $sku)",
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(AppSpacing.md),
-          duration: const Duration(milliseconds: 1200),
-        );
-      }
-    } else {
-      Get.snackbar(
-        "Not found",
-        "No product with SKU \"$sku\"",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-
+  void _addByCode(TextEditingController controller) {
+    final code = controller.text.trim();
+    if (code.isEmpty) return;
     controller.clear();
+    BarcodeScannerHelper.addSkuToCart(code);
   }
 }
