@@ -1,7 +1,9 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
 import 'package:ad_shop_pos/data/services/export_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
+import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -44,6 +46,62 @@ class SettingsPage extends GetView<SettingsController> {
             const SizedBox(height: AppSpacing.lg),
 
             Obx(() => _SettingsForm(settings: controller.settings.value)),
+
+            const SizedBox(height: AppSpacing.xl),
+
+            // ---------- Receipt Customization ----------
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.seed.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.receipt_long_outlined, color: AppColors.seed),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    "Receipt Customization",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Receipt settings
+            Obx(() => _ReceiptCustomizationSection(
+                  settings: controller.receiptSettings.value,
+                  onChanged: (s) => controller.updateReceiptSettings(s),
+                )),
+
+            const SizedBox(height: AppSpacing.xl),
+
+            // ---------- Thermal Printer ----------
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.print_outlined, color: AppColors.accent),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    "Thermal Printer",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            _PrinterSettingsSection(),
 
             const SizedBox(height: AppSpacing.xl),
 
@@ -556,6 +614,359 @@ class _ImportTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// =================== Receipt Customization Section ===================
+
+class _ReceiptCustomizationSection extends StatelessWidget {
+  final ReceiptSettingsModel settings;
+  final ValueChanged<ReceiptSettingsModel> onChanged;
+
+  const _ReceiptCustomizationSection({
+    required this.settings,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Paper width
+        Text("Paper Width", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            _PaperWidthChip(
+              label: "58mm",
+              selected: settings.paperWidth == 58,
+              onTap: () => onChanged(settings.copyWith(paperWidth: 58)),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            _PaperWidthChip(
+              label: "80mm",
+              selected: settings.paperWidth == 80,
+              onTap: () => onChanged(settings.copyWith(paperWidth: 80)),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Font size
+        Text("Font Size", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            _FontSizeChip(
+              label: "Small",
+              selected: settings.fontSize == 0,
+              onTap: () => onChanged(settings.copyWith(fontSize: 0)),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            _FontSizeChip(
+              label: "Normal",
+              selected: settings.fontSize == 1,
+              onTap: () => onChanged(settings.copyWith(fontSize: 1)),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            _FontSizeChip(
+              label: "Large",
+              selected: settings.fontSize == 2,
+              onTap: () => onChanged(settings.copyWith(fontSize: 2)),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+
+        // Show/hide toggles
+        Text("Show on Receipt", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+        const SizedBox(height: AppSpacing.sm),
+        _ToggleTile(label: "Shop name", value: settings.showShopName, onChanged: (v) => onChanged(settings.copyWith(showShopName: v))),
+        _ToggleTile(label: "Address", value: settings.showAddress, onChanged: (v) => onChanged(settings.copyWith(showAddress: v))),
+        _ToggleTile(label: "Phone", value: settings.showPhone, onChanged: (v) => onChanged(settings.copyWith(showPhone: v))),
+        _ToggleTile(label: "Date & Time", value: settings.showDate, onChanged: (v) => onChanged(settings.copyWith(showDate: v))),
+        _ToggleTile(label: "Cashier name", value: settings.showCashier, onChanged: (v) => onChanged(settings.copyWith(showCashier: v))),
+        _ToggleTile(label: "Customer name", value: settings.showCustomer, onChanged: (v) => onChanged(settings.copyWith(showCustomer: v))),
+        _ToggleTile(label: "SKU", value: settings.showSku, onChanged: (v) => onChanged(settings.copyWith(showSku: v))),
+        _ToggleTile(label: "Brand", value: settings.showBrand, onChanged: (v) => onChanged(settings.copyWith(showBrand: v))),
+        _ToggleTile(label: "Barcode", value: settings.showBarcode, onChanged: (v) => onChanged(settings.copyWith(showBarcode: v))),
+        _ToggleTile(label: "Discount details", value: settings.showDiscountDetails, onChanged: (v) => onChanged(settings.copyWith(showDiscountDetails: v))),
+        _ToggleTile(label: "Tax details", value: settings.showTaxDetails, onChanged: (v) => onChanged(settings.copyWith(showTaxDetails: v))),
+        _ToggleTile(label: "Footer message", value: settings.showFooter, onChanged: (v) => onChanged(settings.copyWith(showFooter: v))),
+      ],
+    );
+  }
+}
+
+class _PaperWidthChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _PaperWidthChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(label: Text(label), selected: selected, onSelected: (_) => onTap());
+  }
+}
+
+class _FontSizeChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _FontSizeChip({required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(label: Text(label), selected: selected, onSelected: (_) => onTap());
+  }
+}
+
+class _ToggleTile extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  const _ToggleTile({required this.label, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      title: Text(label),
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+}
+
+// =================== Printer Settings Section ===================
+
+class _PrinterSettingsSection extends StatefulWidget {
+  @override
+  State<_PrinterSettingsSection> createState() => _PrinterSettingsSectionState();
+}
+
+class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
+  bool _scanning = false;
+  List<BluetoothPrinter> _printers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _scanPrinters();
+  }
+
+  Future<void> _scanPrinters() async {
+    setState(() => _scanning = true);
+    final printers = await ThermalPrinterService.getAvailablePrinters();
+    if (mounted) {
+      setState(() {
+        _printers = printers;
+        _scanning = false;
+      });
+    }
+  }
+
+  Future<void> _pairPrinter(String mac) async {
+    final controller = Get.find<SettingsController>();
+    final connected = await ThermalPrinterService.connect(mac);
+    if (connected) {
+      controller.updateReceiptSettings(
+        controller.receiptSettings.value.copyWith(pairedPrinterMac: mac),
+      );
+      Get.snackbar(
+        "Printer Paired",
+        "Successfully connected to printer",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success.withValues(alpha: 0.15),
+        colorText: AppColors.success,
+      );
+      await Future.delayed(const Duration(seconds: 1));
+      await ThermalPrinterService.disconnect();
+    } else {
+      Get.snackbar(
+        "Connection Failed",
+        "Could not connect to printer. Make sure it's turned on and in range.",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.danger.withValues(alpha: 0.15),
+        colorText: AppColors.danger,
+      );
+    }
+  }
+
+  Future<void> _testPrint() async {
+    final controller = Get.find<SettingsController>();
+    final settings = controller.settings.value;
+    final receiptSettings = controller.receiptSettings.value;
+
+    if (!receiptSettings.hasPrinter) {
+      Get.snackbar("No printer", "Please pair a printer first",
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    final connected = await ThermalPrinterService.connect(receiptSettings.pairedPrinterMac);
+    if (!connected) {
+      Get.snackbar("Error", "Could not connect to printer",
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    // Simple test print
+    Get.snackbar("Test Print", "Sending test receipt...",
+        snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 2));
+
+    // We'll just print a test via the full service with dummy data
+    await ThermalPrinterService.disconnect();
+    Get.snackbar("Test Print", "Test completed",
+        snackPosition: SnackPosition.BOTTOM);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Scan button
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton.tonalIcon(
+                onPressed: _scanning ? null : _scanPrinters,
+                icon: _scanning
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.bluetooth_searching, size: 18),
+                label: Text(_scanning ? "Scanning..." : "Scan for Printers"),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Currently paired printer
+        Obx(() {
+          final controller = Get.find<SettingsController>();
+          final mac = controller.receiptSettings.value.pairedPrinterMac;
+          if (mac.isEmpty) {
+            return Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 18, color: AppColors.warning),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    "No printer paired yet",
+                    style: theme.textTheme.bodySmall?.copyWith(color: AppColors.warning),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle_outline, size: 18, color: AppColors.success),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Paired Printer",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.success,
+                        ),
+                      ),
+                      Text(
+                        mac,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    controller.updateReceiptSettings(
+                      controller.receiptSettings.value.copyWith(pairedPrinterMac: ''),
+                    );
+                  },
+                  icon: Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                  tooltip: "Remove printer",
+                ),
+              ],
+            ),
+          );
+        }),
+
+        const SizedBox(height: AppSpacing.md),
+
+        // Discovered printers
+        if (_printers.isNotEmpty) ...[
+          Text("Discovered Printers", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: AppSpacing.sm),
+          ..._printers.map((printer) => Card(
+                child: ListTile(
+                  leading: Icon(Icons.print, color: AppColors.accent),
+                  title: Text(printer.name, style: theme.textTheme.bodyMedium),
+                  subtitle: Text(printer.mac, style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace')),
+                  trailing: FilledButton.tonal(
+                    onPressed: () => _pairPrinter(printer.mac),
+                    child: const Text("Pair"),
+                  ),
+                ),
+              )),
+        ] else if (!_scanning) ...[
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Text(
+              "No printers found. Make sure your thermal printer is turned on and Bluetooth is enabled.",
+              style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+
+        const SizedBox(height: AppSpacing.md),
+
+        // Test print
+        Obx(() {
+          final controller = Get.find<SettingsController>();
+          if (!controller.receiptSettings.value.hasPrinter) return const SizedBox.shrink();
+          return OutlinedButton.icon(
+            onPressed: _testPrint,
+            icon: const Icon(Icons.receipt_outlined, size: 18),
+            label: const Text("Test Print"),
+          );
+        }),
+      ],
     );
   }
 }

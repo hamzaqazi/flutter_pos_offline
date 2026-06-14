@@ -145,6 +145,9 @@ class ExportService {
       // Settings
       backup['settings'] = settingsController.settings.value.toMap();
 
+      // Receipt settings
+      backup['receiptSettings'] = settingsController.receiptSettings.value.toMap();
+
       // Active cashier
       if (staffController.activeCashierId.value != null) {
         backup['activeCashierId'] = staffController.activeCashierId.value;

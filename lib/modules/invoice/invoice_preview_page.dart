@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
+import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
@@ -358,39 +359,120 @@ class InvoicePreviewPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: readOnly
-              ? OutlinedButton.icon(
-                  icon: const Icon(Icons.print_outlined),
-                  label: const Text("Reprint receipt"),
-                  onPressed: _printInvoice,
-                )
-              : Row(
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.print_outlined),
-                        label: const Text("Print"),
-                        onPressed: _printInvoice,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.print_outlined),
+                            label: const Text("Print PDF"),
+                            onPressed: _printInvoice,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Obx(() {
+                            final settings = Get.find<SettingsController>();
+                            final hasPrinter = settings.receiptSettings.value.hasPrinter;
+                            return FilledButton.tonalIcon(
+                              icon: Icon(
+                                Icons.bluetooth,
+                                color: hasPrinter ? AppColors.accent : null,
+                              ),
+                              label: Text(hasPrinter ? "Thermal Print" : "Pair Printer"),
+                              onPressed: () async {
+                                if (!hasPrinter) {
+                                  Get.toNamed('/settings');
+                                  return;
+                                }
+                                await ThermalPrinterService.printReceipt(
+                                  items: items,
+                                  subtotal: subtotal,
+                                  checkoutDiscount: checkoutDiscount,
+                                  taxRate: taxRate,
+                                  taxInclusive: taxInclusive,
+                                  taxAmount: taxAmount,
+                                  total: total,
+                                  cash: cash,
+                                  change: change,
+                                  totalSavings: totalSavings,
+                                  customerName: _customerName,
+                                  cashierName: _cashierName,
+                                );
+                              },
+                            );
+                          }),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      flex: 2,
-                      child: FilledButton.icon(
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text("Complete sale"),
-                        onPressed: () async {
-                          await _printInvoice();
-                          Get.find<SalesController>().completeSale(
-                            cash: cash,
-                            change: change,
-                            checkoutDiscount: checkoutDiscount,
-                            taxAmount: taxAmount,
-                            customerId: customerId,
-                            cashierId: cashierId,
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.print_outlined),
+                            label: const Text("PDF"),
+                            onPressed: _printInvoice,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Obx(() {
+                          final settings = Get.find<SettingsController>();
+                          final hasPrinter = settings.receiptSettings.value.hasPrinter;
+                          return Expanded(
+                            child: FilledButton.tonalIcon(
+                              icon: Icon(
+                                Icons.bluetooth,
+                                color: hasPrinter ? AppColors.accent : null,
+                                size: 18,
+                              ),
+                              label: Text(hasPrinter ? "Thermal" : "Pair"),
+                              onPressed: () async {
+                                if (!hasPrinter) {
+                                  Get.toNamed('/settings');
+                                  return;
+                                }
+                                await ThermalPrinterService.printReceipt(
+                                  items: items,
+                                  subtotal: subtotal,
+                                  checkoutDiscount: checkoutDiscount,
+                                  taxRate: taxRate,
+                                  taxInclusive: taxInclusive,
+                                  taxAmount: taxAmount,
+                                  total: total,
+                                  cash: cash,
+                                  change: change,
+                                  totalSavings: totalSavings,
+                                  customerName: _customerName,
+                                  cashierName: _cashierName,
+                                );
+                              },
+                            ),
                           );
-                          Get.offAllNamed('/');
-                        },
-                      ),
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text("Complete sale"),
+                      onPressed: () {
+                        Get.find<SalesController>().completeSale(
+                          cash: cash,
+                          change: change,
+                          checkoutDiscount: checkoutDiscount,
+                          taxAmount: taxAmount,
+                          customerId: customerId,
+                          cashierId: cashierId,
+                        );
+                        Get.offAllNamed('/');
+                      },
                     ),
                   ],
                 ),

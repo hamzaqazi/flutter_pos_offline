@@ -149,6 +149,12 @@ class ImportService {
         settingsBox.put('shop', Map<String, dynamic>.from(data['settings']));
       }
 
+      // Import receipt settings
+      if (data['receiptSettings'] != null) {
+        final settingsBox = Hive.box('settings');
+        settingsBox.put('receipt', Map<String, dynamic>.from(data['receiptSettings']));
+      }
+
       // Reload all controllers
       await _reloadAllControllers();
 
