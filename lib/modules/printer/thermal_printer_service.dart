@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
-import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:get/get.dart';
 
 /// Service for printing receipts to Bluetooth thermal printers.
@@ -13,16 +13,13 @@ class ThermalPrinterService {
   /// Discover available Bluetooth printers.
   static Future<List<BluetoothPrinter>> getAvailablePrinters() async {
     try {
-      final result = await BluetoothThermalPrinter.getBluetooths;
-      if (result == null || result.isEmpty) return [];
-      return result
-          .map((e) {
-            final parts = e.split('#');
-            return BluetoothPrinter(
-              name: parts.isNotEmpty ? parts[0] : 'Unknown',
-              mac: parts.length > 1 ? parts[1] : '',
-            );
-          })
+      final listResult = await PrintBluetoothThermal.pairedBluetooths;
+      if (listResult.isEmpty) return [];
+      return listResult
+          .map((bluetooth) => BluetoothPrinter(
+                name: bluetooth.name,
+                mac: bluetooth.macAdress,
+              ))
           .where((p) => p.mac.isNotEmpty)
           .toList();
     } catch (e) {
@@ -33,8 +30,8 @@ class ThermalPrinterService {
   /// Connect to a Bluetooth printer by MAC address.
   static Future<bool> connect(String mac) async {
     try {
-      final result = await BluetoothThermalPrinter.connect(mac);
-      return result == "true";
+      final result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
+      return result;
     } catch (e) {
       return false;
     }
@@ -42,17 +39,16 @@ class ThermalPrinterService {
 
   /// Disconnect from the current printer.
   static Future<void> disconnect() async {
-    // try {
-    //   await BluetoothThermalPrinter.disconnect();
-    // } catch (_) {}
-    // No-op: plugin does not expose disconnect
+    try {
+      await PrintBluetoothThermal.disconnect;
+    } catch (_) {}
   }
 
   /// Check if currently connected to a printer.
   static Future<bool> isConnected() async {
     try {
-      final result = await BluetoothThermalPrinter.connectionStatus;
-      return result == "true";
+      final result = await PrintBluetoothThermal.connectionStatus;
+      return result;
     } catch (_) {
       return false;
     }
@@ -116,7 +112,7 @@ class ThermalPrinterService {
       );
 
       // Send to printer
-      final result = await BluetoothThermalPrinter.writeBytes(bytes);
+      final result = await PrintBluetoothThermal.writeBytes(bytes);
 
       // Disconnect after printing
       await Future.delayed(const Duration(seconds: 1));
