@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/modules/reports/reports_page.dart';
 import 'package:ad_shop_pos/modules/returns/returns_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_history_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_page.dart';
+import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_page.dart';
 import 'package:ad_shop_pos/modules/staff/staff_page.dart';
 import 'package:get/get.dart';
@@ -26,5 +27,6 @@ class AppPages {
     GetPage(name: Routes.returns, page: () => const ReturnsPage()),
     GetPage(name: Routes.customers, page: () => const CustomersPage()),
     GetPage(name: Routes.staff, page: () => const StaffPage()),
+    GetPage(name: Routes.scanner, page: () => const BarcodeScannerPage()),
   ];
 }

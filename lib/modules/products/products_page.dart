@@ -1,5 +1,6 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
+import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -21,6 +22,14 @@ class ProductsPage extends GetView<ProductsController> {
       appBar: AppBar(
         title: const Text("Products"),
         actions: [
+          // Barcode scanner button
+          IconButton(
+            onPressed: () => BarcodeScannerHelper.scanAndLookup(
+              onScanned: (code) => BarcodeScannerHelper.addSkuToCart(code),
+            ),
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: "Scan barcode",
+          ),
           GetX<CartController>(
             builder: (cart) {
               return Padding(
