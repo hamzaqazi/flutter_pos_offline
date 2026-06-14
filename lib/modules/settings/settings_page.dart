@@ -937,9 +937,12 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
                   leading: Icon(Icons.print, color: AppColors.accent),
                   title: Text(printer.name, style: theme.textTheme.bodyMedium),
                   subtitle: Text(printer.mac, style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace')),
-                  trailing: FilledButton.tonal(
-                    onPressed: () => _pairPrinter(printer.mac),
-                    child: const Text("Pair"),
+                  trailing: SizedBox(
+                    width: 80,
+                    child: FilledButton.tonal(
+                      onPressed: () => _pairPrinter(printer.mac),
+                      child: const Text("Pair"),
+                    ),
                   ),
                 ),
               )),
