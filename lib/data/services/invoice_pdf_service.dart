@@ -35,7 +35,7 @@ class InvoicePdfService {
     pdf.addPage(
       pw.Page(
         pageFormat: receiptSettings.paperWidth == 58
-            ? PdfPageFormat.roll58
+            ? PdfPageFormat.roll57
             : PdfPageFormat.roll80,
         build: (context) {
           return pw.Column(
@@ -79,8 +79,7 @@ class InvoicePdfService {
                 ),
 
               pw.SizedBox(height: 10),
-              if (receiptSettings.showDate)
-                pw.Text("Date: ${DateTime.now()}"),
+              if (receiptSettings.showDate) pw.Text("Date: ${DateTime.now()}"),
               if (receiptSettings.showCustomer && customerName.isNotEmpty)
                 pw.Text("Customer: $customerName"),
               if (receiptSettings.showCashier && cashierName.isNotEmpty)
@@ -124,7 +123,8 @@ class InvoicePdfService {
                           ),
                         ),
                         pw.Text(
-                            "$currency ${item.product.discountedPrice.toStringAsFixed(0)}"),
+                          "$currency ${item.product.discountedPrice.toStringAsFixed(0)}",
+                        ),
                       ],
                     ),
                     if (receiptSettings.showDiscountDetails &&
@@ -156,7 +156,9 @@ class InvoicePdfService {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text("Product discounts:"),
-                    pw.Text("-$currency ${productDiscountAmount.toStringAsFixed(0)}"),
+                    pw.Text(
+                      "-$currency ${productDiscountAmount.toStringAsFixed(0)}",
+                    ),
                   ],
                 ),
               ],
@@ -165,8 +167,12 @@ class InvoicePdfService {
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text("Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%):"),
-                    pw.Text("-$currency ${checkoutDiscountAmount.toStringAsFixed(0)}"),
+                    pw.Text(
+                      "Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%):",
+                    ),
+                    pw.Text(
+                      "-$currency ${checkoutDiscountAmount.toStringAsFixed(0)}",
+                    ),
                   ],
                 ),
               ],
@@ -175,9 +181,11 @@ class InvoicePdfService {
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text(taxInclusive
-                        ? "Tax incl. (${taxRate.toStringAsFixed(1)}%):"
-                        : "Tax (${taxRate.toStringAsFixed(1)}%):"),
+                    pw.Text(
+                      taxInclusive
+                          ? "Tax incl. (${taxRate.toStringAsFixed(1)}%):"
+                          : "Tax (${taxRate.toStringAsFixed(1)}%):",
+                    ),
                     pw.Text("$currency ${taxAmount.toStringAsFixed(0)}"),
                   ],
                 ),
@@ -186,8 +194,14 @@ class InvoicePdfService {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text("Total:", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Text("$currency ${total.toStringAsFixed(0)}", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    "Total:",
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Text(
+                    "$currency ${total.toStringAsFixed(0)}",
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
                 ],
               ),
               pw.Row(
@@ -209,7 +223,10 @@ class InvoicePdfService {
 
               if (receiptSettings.showFooter)
                 pw.Center(
-                  child: pw.Text(settings.receiptFooter, style: pw.TextStyle(fontSize: 12)),
+                  child: pw.Text(
+                    settings.receiptFooter,
+                    style: pw.TextStyle(fontSize: 12),
+                  ),
                 ),
             ],
           );

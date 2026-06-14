@@ -42,9 +42,10 @@ class ThermalPrinterService {
 
   /// Disconnect from the current printer.
   static Future<void> disconnect() async {
-    try {
-      await BluetoothThermalPrinter.disconnect;
-    } catch (_) {}
+    // try {
+    //   await BluetoothThermalPrinter.disconnect();
+    // } catch (_) {}
+    // No-op: plugin does not expose disconnect
   }
 
   /// Check if currently connected to a printer.
@@ -58,7 +59,7 @@ class ThermalPrinterService {
   }
 
   /// Print a receipt to the connected thermal printer.
-  static Future<bool> printReceipt({
+  static Future<Object?> printReceipt({
     required List<CartItemModel> items,
     double subtotal = 0,
     double checkoutDiscount = 0,
@@ -77,16 +78,22 @@ class ThermalPrinterService {
       final shopSettings = SettingsService.getSettings();
 
       if (!receiptSettings.hasPrinter) {
-        Get.snackbar("No printer", "Please pair a printer in Settings",
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          "No printer",
+          "Please pair a printer in Settings",
+          snackPosition: SnackPosition.BOTTOM,
+        );
         return false;
       }
 
       // Connect
       final connected = await connect(receiptSettings.pairedPrinterMac);
       if (!connected) {
-        Get.snackbar("Connection failed", "Could not connect to printer",
-            snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar(
+          "Connection failed",
+          "Could not connect to printer",
+          snackPosition: SnackPosition.BOTTOM,
+        );
         return false;
       }
 
@@ -117,8 +124,11 @@ class ThermalPrinterService {
 
       return result;
     } catch (e) {
-      Get.snackbar("Print error", "Failed to print: $e",
-          snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+        "Print error",
+        "Failed to print: $e",
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return false;
     }
   }
@@ -141,7 +151,9 @@ class ThermalPrinterService {
     required shopSettings,
   }) async {
     final profile = await CapabilityProfile.load();
-    final paperSize = receiptSettings.paperWidth == 58 ? PaperSize.mm58 : PaperSize.mm80;
+    final paperSize = receiptSettings.paperWidth == 58
+        ? PaperSize.mm58
+        : PaperSize.mm80;
     final generator = Generator(paperSize, profile);
     List<int> bytes = [];
 
@@ -228,16 +240,12 @@ class ThermalPrinterService {
 
       // SKU
       if (receiptSettings.showSku && item.product.hasSku) {
-        bytes += generator.text(
-          '  SKU: ${item.product.sku}',
-        );
+        bytes += generator.text('  SKU: ${item.product.sku}');
       }
 
       // Barcode
       if (receiptSettings.showBarcode && item.product.hasBarcode) {
-        bytes += generator.text(
-          '  Barcode: ${item.product.barcode}',
-        );
+        bytes += generator.text('  Barcode: ${item.product.barcode}');
       }
 
       // Qty x Price = Total
@@ -257,9 +265,7 @@ class ThermalPrinterService {
     bytes += generator.hr();
 
     // --- Totals ---
-    bytes += generator.text(
-      'Subtotal: $cur ${subtotal.toStringAsFixed(0)}',
-    );
+    bytes += generator.text('Subtotal: $cur ${subtotal.toStringAsFixed(0)}');
 
     final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
     final productDiscountAmount = totalSavings - checkoutDiscountAmount;
@@ -281,12 +287,18 @@ class ThermalPrinterService {
       final taxLabel = taxInclusive
           ? 'Tax incl. (${taxRate.toStringAsFixed(1)}%)'
           : 'Tax (${taxRate.toStringAsFixed(1)}%)';
-      bytes += generator.text('$taxLabel: $cur ${taxAmount.toStringAsFixed(0)}');
+      bytes += generator.text(
+        '$taxLabel: $cur ${taxAmount.toStringAsFixed(0)}',
+      );
     }
 
     bytes += generator.text(
       'TOTAL: $cur ${total.toStringAsFixed(0)}',
-      styles: const PosStyles(bold: true, height: PosTextSize.size2, width: PosTextSize.size2),
+      styles: const PosStyles(
+        bold: true,
+        height: PosTextSize.size2,
+        width: PosTextSize.size2,
+      ),
     );
 
     bytes += generator.text('Cash: $cur ${cash.toStringAsFixed(0)}');
