@@ -20,11 +20,24 @@ class SalesController extends GetxController {
   void loadSales() {
     final data = HiveService.salesBox.values.toList();
 
+    final productsController = Get.find<ProductsController>();
+
     sales.assignAll(
       data.map((e) {
         final rawItems = (e['items'] as List?) ?? [];
 
         final items = rawItems.map((item) {
+          // Try to load category from the sale item; fall back to
+          // looking it up from the current products list (for old sales
+          // that were saved before the category field was added).
+          String category = item['category'] ?? '';
+          if (category.isEmpty && (item['productId'] ?? '').isNotEmpty) {
+            final product = productsController.products.firstWhereOrNull(
+              (p) => p.id == item['productId'],
+            );
+            if (product != null) category = product.category;
+          }
+
           return CartItemModel(
             product: ProductModel(
               id: item['productId'] ?? '',
@@ -34,7 +47,7 @@ class SalesController extends GetxController {
               price: (item['price'] ?? 0).toDouble(),
               purchasePrice: (item['purchasePrice'] ?? 0).toDouble(),
               discount: (item['discount'] ?? 0).toDouble(),
-              category: '',
+              category: category,
               stock: 0,
             ),
             quantity: item['qty'] ?? 1,
@@ -128,6 +141,7 @@ class SalesController extends GetxController {
               'discount': e.product.discount,
               'discountedPrice': e.product.discountedPrice,
               'qty': e.quantity,
+              'category': e.product.category,
             },
           )
           .toList(),
