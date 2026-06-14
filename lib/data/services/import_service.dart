@@ -135,10 +135,7 @@ class ImportService {
       final staffBox = HiveService.staffBox;
       for (final s in staff) {
         final map = Map<String, dynamic>.from(s);
-        // Skip the activeCashierId entry — handle separately
-        if (map['id'] != null && map['id'] != 'activeCashierId') {
-          staffBox.put(map['id'], map);
-        }
+        staffBox.put(map['id'], map);
       }
 
       // Import active cashier

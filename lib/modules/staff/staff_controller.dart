@@ -16,7 +16,7 @@ class StaffController extends GetxController {
   void loadStaff() {
     final data = HiveService.staffBox.values.toList();
     staff.assignAll(
-      data.where((e) => e['id'] != null && e['id'] != 'activeCashierId').map(
+      data.whereType<Map>().map(
             (e) => StaffModel.fromMap(Map<dynamic, dynamic>.from(e)),
           ),
     );
