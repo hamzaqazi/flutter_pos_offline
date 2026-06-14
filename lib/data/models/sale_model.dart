@@ -49,6 +49,7 @@ class SaleModel {
               'discount': e.product.discount,
               'discountedPrice': e.product.discountedPrice,
               'qty': e.quantity,
+              'category': e.product.category,
             },
           )
           .toList(),
