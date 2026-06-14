@@ -4,7 +4,8 @@ import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:bluetooth_thermal_printer/bluetooth_thermal_printer.dart';
-import 'package:esc_pos_utils/esc_pos_utils.dart';
+import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
+import 'package:image/image.dart' as img;
 import 'package:get/get.dart';
 
 /// Service for printing receipts to Bluetooth thermal printers.
@@ -140,8 +141,8 @@ class ThermalPrinterService {
     required shopSettings,
   }) async {
     final profile = await CapabilityProfile.load();
-    final paperWidthMm = receiptSettings.paperWidth == 58 ? 58.0 : 80.0;
-    final generator = Generator(paperWidthMm, profile);
+    final paperSize = receiptSettings.paperWidth == 58 ? PaperSize.mm58 : PaperSize.mm80;
+    final generator = Generator(paperSize, profile);
     List<int> bytes = [];
 
     final cur = shopSettings.currencySymbol;
@@ -152,8 +153,11 @@ class ThermalPrinterService {
         final file = File(receiptSettings.logoPath);
         if (await file.exists()) {
           final imageBytes = await file.readAsBytes();
-          bytes += generator.image(imageBytes);
-          bytes += generator.feed(1);
+          final decoded = img.decodeImage(imageBytes);
+          if (decoded != null) {
+            bytes += generator.image(decoded);
+            bytes += generator.feed(1);
+          }
         }
       } catch (_) {}
     }
@@ -218,7 +222,7 @@ class ThermalPrinterService {
       if (receiptSettings.showBrand && item.product.hasBrand) {
         bytes += generator.text(
           '  Brand: ${item.product.brand}',
-          styles: const PosStyles(italic: true),
+          styles: const PosStyles(underline: true),
         );
       }
 
@@ -245,7 +249,7 @@ class ThermalPrinterService {
       if (receiptSettings.showDiscountDetails && item.product.discount > 0) {
         bytes += generator.text(
           '  Orig: $cur ${item.product.price.toStringAsFixed(0)} (-${item.product.discount.toStringAsFixed(0)}%)',
-          styles: const PosStyles(italic: true),
+          styles: const PosStyles(underline: true),
         );
       }
     }
