@@ -8,6 +8,7 @@ import 'package:ad_shop_pos/modules/returns/returns_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_history_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_page.dart';
+import 'package:ad_shop_pos/modules/staff/staff_page.dart';
 import 'package:get/get.dart';
 
 import '../../modules/dashboard/dashboard_page.dart';
@@ -24,5 +25,6 @@ class AppPages {
     GetPage(name: Routes.expenses, page: () => const ExpensesPage()),
     GetPage(name: Routes.returns, page: () => const ReturnsPage()),
     GetPage(name: Routes.customers, page: () => const CustomersPage()),
+    GetPage(name: Routes.staff, page: () => const StaffPage()),
   ];
 }

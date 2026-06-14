@@ -5,4 +5,5 @@ class HiveService {
   static final salesBox = Hive.box('sales');
   static final returnsBox = Hive.box('returns');
   static final customersBox = Hive.box('customers');
+  static final staffBox = Hive.box('staff');
 }

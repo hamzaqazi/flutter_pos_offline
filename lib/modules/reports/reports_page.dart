@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
+import 'package:ad_shop_pos/modules/reports/charts_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -51,7 +52,7 @@ class ReportsPage extends GetView<ReportsController> {
           // ---------- Report tabs ----------
           Expanded(
             child: DefaultTabController(
-              length: 5,
+              length: 6,
               child: Column(
                 children: [
                   TabBar(
@@ -61,6 +62,7 @@ class ReportsPage extends GetView<ReportsController> {
                     indicatorColor: cs.primary,
                     tabs: const [
                       Tab(text: "Summary"),
+                      Tab(text: "Charts"),
                       Tab(text: "Top Products"),
                       Tab(text: "Categories"),
                       Tab(text: "Expenses"),
@@ -71,6 +73,7 @@ class ReportsPage extends GetView<ReportsController> {
                     child: TabBarView(
                       children: [
                         _SummaryTab(),
+                        ChartsTab(),
                         _TopProductsTab(),
                         _CategoriesTab(),
                         _ExpensesTab(),

@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/returns/return_dialog.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
+import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -154,6 +155,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                             change: sale.change,
                             totalSavings: sale.discount,
                             customerId: sale.customerId,
+                            cashierId: sale.cashierId,
                             readOnly: true,
                           ),
                         );
