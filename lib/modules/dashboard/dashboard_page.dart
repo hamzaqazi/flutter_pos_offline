@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
@@ -130,6 +131,16 @@ class DashboardPage extends GetView<DashboardController> {
                     subtitle: "Review items & checkout",
                     color: AppColors.accent,
                     onTap: () => Get.toNamed('/cart'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _ActionTile(
+                    icon: Icons.qr_code_scanner,
+                    title: "Scan barcode",
+                    subtitle: "Scan product barcode to quickly add to cart",
+                    color: AppColors.accent,
+                    onTap: () => BarcodeScannerHelper.scanAndLookup(
+                      onScanned: (code) => BarcodeScannerHelper.addSkuToCart(code),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _ActionTile(

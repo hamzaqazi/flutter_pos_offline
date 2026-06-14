@@ -1,5 +1,6 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
+import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -21,6 +22,14 @@ class ProductsPage extends GetView<ProductsController> {
       appBar: AppBar(
         title: const Text("Products"),
         actions: [
+          // Barcode scanner button
+          IconButton(
+            onPressed: () => BarcodeScannerHelper.scanAndLookup(
+              onScanned: (code) => BarcodeScannerHelper.addSkuToCart(code),
+            ),
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: "Scan barcode",
+          ),
           GetX<CartController>(
             builder: (cart) {
               return Padding(
@@ -82,7 +91,7 @@ class ProductsPage extends GetView<ProductsController> {
             ),
             child: TextField(
               decoration: InputDecoration(
-                hintText: "Search by name, brand or SKU...",
+                hintText: "Search by name, brand, SKU or barcode...",
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: Obx(() {
                   final query = controller.searchQuery.value;
@@ -158,6 +167,7 @@ class ProductsPage extends GetView<ProductsController> {
     final nameController = TextEditingController();
     final brandController = TextEditingController();
     final skuController = TextEditingController();
+    final barcodeController = TextEditingController();
     final priceController = TextEditingController();
     final purchasePriceController = TextEditingController();
     final discountController = TextEditingController();
@@ -224,6 +234,7 @@ class ProductsPage extends GetView<ProductsController> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    // SKU field (internal code)
                     Row(
                       children: [
                         Expanded(
@@ -231,8 +242,9 @@ class ProductsPage extends GetView<ProductsController> {
                             controller: skuController,
                             textCapitalization: TextCapitalization.characters,
                             decoration: const InputDecoration(
-                              labelText: "SKU / Barcode",
-                              prefixIcon: Icon(Icons.qr_code_outlined),
+                              labelText: "SKU",
+                              hintText: "e.g. W0001",
+                              prefixIcon: Icon(Icons.tag_outlined),
                               isDense: true,
                             ),
                           ),
@@ -245,6 +257,35 @@ class ProductsPage extends GetView<ProductsController> {
                           },
                           icon: const Icon(Icons.autorenew, size: 20),
                           tooltip: "Auto-generate SKU",
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    // Barcode field (real-world barcode from product packaging)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: barcodeController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Barcode",
+                              hintText: "e.g. 8901234567890",
+                              prefixIcon: Icon(Icons.qr_code_outlined),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: () async {
+                            final result = await BarcodeScannerHelper.scanAndLookupRaw();
+                            if (result != null && result.isNotEmpty) {
+                              setState(() => barcodeController.text = result);
+                            }
+                          },
+                          icon: const Icon(Icons.qr_code_scanner, size: 20),
+                          tooltip: "Scan barcode with camera",
                         ),
                       ],
                     ),
@@ -375,6 +416,7 @@ class ProductsPage extends GetView<ProductsController> {
                                   stock:
                                       int.tryParse(stockController.text) ?? 0,
                                   sku: skuController.text.trim(),
+                                  barcode: barcodeController.text.trim(),
                                 ),
                               );
                               Get.back();
