@@ -49,7 +49,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     HapticFeedback.mediumImpact();
 
     // Return the scanned value
-    Get.back(result: barcode.rawValue);
+    Navigator.of(context).pop(barcode.rawValue);
   }
 
   @override
@@ -153,31 +153,33 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Enter Code"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "Enter the barcode number or SKU from the product",
-              style: Get.textTheme.bodySmall?.copyWith(
-                color: Get.theme.colorScheme.onSurfaceVariant,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Enter the barcode number or SKU from the product",
+                style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            TextField(
-              controller: controller,
-              textCapitalization: TextCapitalization.characters,
-              autofocus: true,
-              decoration: const InputDecoration(
-                hintText: "e.g. 8901234567890 or W0001",
-                prefixIcon: Icon(Icons.qr_code),
+              const SizedBox(height: AppSpacing.lg),
+              TextField(
+                controller: controller,
+                textCapitalization: TextCapitalization.characters,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: "e.g. 8901234567890 or W0001",
+                  prefixIcon: Icon(Icons.qr_code),
+                ),
+                onSubmitted: (value) {
+                  if (value.trim().isNotEmpty) {
+                    Navigator.of(ctx).pop(value.trim());
+                  }
+                },
               ),
-              onSubmitted: (value) {
-                if (value.trim().isNotEmpty) {
-                  Navigator.of(ctx).pop(value.trim());
-                }
-              },
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -198,10 +200,10 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
 
     controller.dispose();
 
-    if (result != null && result.isNotEmpty) {
+    if (result != null && result.isNotEmpty && mounted) {
       _hasScanned = true;
       _controller.stop();
-      Get.back(result: result); // close scanner with result
+      Navigator.of(context).pop(result); // close scanner with result
     }
   }
 }
