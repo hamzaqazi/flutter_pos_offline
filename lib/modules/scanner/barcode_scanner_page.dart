@@ -147,72 +147,62 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     );
   }
 
-  void _showManualEntry() {
+  void _showManualEntry() async {
     final controller = TextEditingController();
-    Get.dialog(
-      Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Enter Code", style: Get.textTheme.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                "Enter the barcode number or SKU from the product",
-                style: Get.textTheme.bodySmall?.copyWith(
-                  color: Get.theme.colorScheme.onSurfaceVariant,
-                ),
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Enter Code"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Enter the barcode number or SKU from the product",
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: Get.theme.colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              TextField(
-                controller: controller,
-                textCapitalization: TextCapitalization.characters,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: "e.g. 8901234567890 or W0001",
-                  prefixIcon: Icon(Icons.qr_code),
-                ),
-                onSubmitted: (value) {
-                  if (value.trim().isNotEmpty) {
-                    Get.back(); // close dialog
-                    _hasScanned = true;
-                    _controller.stop();
-                    Get.back(result: value.trim()); // close scanner with result
-                  }
-                },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            TextField(
+              controller: controller,
+              textCapitalization: TextCapitalization.characters,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: "e.g. 8901234567890 or W0001",
+                prefixIcon: Icon(Icons.qr_code),
               ),
-              const SizedBox(height: AppSpacing.lg),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextButton(
-                      onPressed: () => Get.back(), // just close dialog
-                      child: const Text("Cancel"),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    FilledButton(
-                      onPressed: () {
-                        if (controller.text.trim().isNotEmpty) {
-                          Get.back(); // close dialog
-                          _hasScanned = true;
-                          _controller.stop();
-                          Get.back(result: controller.text.trim()); // close scanner with result
-                        }
-                      },
-                      child: const Text("Find"),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              onSubmitted: (value) {
+                if (value.trim().isNotEmpty) {
+                  Navigator.of(ctx).pop(value.trim());
+                }
+              },
+            ),
+          ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text("Cancel"),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.of(ctx).pop(controller.text.trim());
+              }
+            },
+            child: const Text("Find"),
+          ),
+        ],
       ),
     );
+
+    controller.dispose();
+
+    if (result != null && result.isNotEmpty) {
+      _hasScanned = true;
+      _controller.stop();
+      Get.back(result: result); // close scanner with result
+    }
   }
 }
 
