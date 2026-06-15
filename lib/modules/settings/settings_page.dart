@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
@@ -6,6 +8,7 @@ import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 import 'settings_controller.dart';
@@ -1025,13 +1028,24 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
     setState(() => _scanning = true);
 
     // Request Bluetooth permission (required on Android 12+)
-    final permissionGranted = await PrintBluetoothThermal.isPermissionBluetoothGranted;
-    if (!permissionGranted) {
+    // First check if already granted
+    var status = await Permission.bluetoothConnect.status;
+    if (!status.isGranted) {
+      // Actually request the permission from the user
+      status = await Permission.bluetoothConnect.request();
+      if (Platform.isAndroid) {
+        // Also request nearby devices / location for Bluetooth scanning
+        await Permission.bluetoothScan.request();
+        await Permission.location.request();
+      }
+    }
+
+    if (!status.isGranted) {
       if (mounted) {
         setState(() => _scanning = false);
         Get.snackbar(
           "Permission Required",
-          "Please grant Bluetooth/Nearby Devices permission to scan for printers",
+          "Please grant Bluetooth permission to scan for printers. You can enable it in Settings.",
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 4),
           backgroundColor: AppColors.warning.withValues(alpha: 0.15),
