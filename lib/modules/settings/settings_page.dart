@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 import 'settings_controller.dart';
 
@@ -1022,6 +1023,41 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
 
   Future<void> _scanPrinters() async {
     setState(() => _scanning = true);
+
+    // Request Bluetooth permission (required on Android 12+)
+    final permissionGranted = await PrintBluetoothThermal.isPermissionBluetoothGranted;
+    if (!permissionGranted) {
+      if (mounted) {
+        setState(() => _scanning = false);
+        Get.snackbar(
+          "Permission Required",
+          "Please grant Bluetooth/Nearby Devices permission to scan for printers",
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 4),
+          backgroundColor: AppColors.warning.withValues(alpha: 0.15),
+          colorText: AppColors.warning,
+        );
+      }
+      return;
+    }
+
+    // Check if Bluetooth is enabled
+    final btEnabled = await PrintBluetoothThermal.bluetoothEnabled;
+    if (btEnabled == false) {
+      if (mounted) {
+        setState(() => _scanning = false);
+        Get.snackbar(
+          "Bluetooth Off",
+          "Please turn on Bluetooth to scan for printers",
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 4),
+          backgroundColor: AppColors.warning.withValues(alpha: 0.15),
+          colorText: AppColors.warning,
+        );
+      }
+      return;
+    }
+
     final printers = await ThermalPrinterService.getAvailablePrinters();
     if (mounted) {
       setState(() {
