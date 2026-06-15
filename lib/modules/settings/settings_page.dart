@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
@@ -1027,25 +1025,21 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
   Future<void> _scanPrinters() async {
     setState(() => _scanning = true);
 
-    // Request Bluetooth permission (required on Android 12+)
-    // First check if already granted
-    var status = await Permission.bluetoothConnect.status;
-    if (!status.isGranted) {
-      // Actually request the permission from the user
-      status = await Permission.bluetoothConnect.request();
-      if (Platform.isAndroid) {
-        // Also request nearby devices / location for Bluetooth scanning
-        await Permission.bluetoothScan.request();
-        await Permission.location.request();
-      }
-    }
+    // Request necessary permissions before scanning
+    final statuses = await [
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+      Permission.location,
+    ].request();
 
-    if (!status.isGranted) {
+    final allGranted = statuses.values.every((s) => s.isGranted);
+
+    if (!allGranted) {
       if (mounted) {
         setState(() => _scanning = false);
         Get.snackbar(
           "Permission Required",
-          "Please grant Bluetooth permission to scan for printers. You can enable it in Settings.",
+          "Please grant Bluetooth and Location permissions to scan for printers",
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 4),
           backgroundColor: AppColors.warning.withValues(alpha: 0.15),
