@@ -554,6 +554,54 @@ class ProductCard extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xl),
                     Row(
                       children: [
+                        // Delete button
+                        IconButton.outlined(
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Row(
+                                  children: [
+                                    Icon(Icons.warning_amber_rounded, color: AppColors.danger),
+                                    SizedBox(width: AppSpacing.sm),
+                                    Text("Delete Product"),
+                                  ],
+                                ),
+                                content: Text(
+                                  "Are you sure you want to delete \"${product.name}\"? This action cannot be undone.",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.danger,
+                                    ),
+                                    child: const Text("Delete"),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirmed == true) {
+                              controller.deleteProduct(product.id);
+                              Get.back(); // Close edit dialog
+                              Get.snackbar(
+                                "Deleted",
+                                "\"${product.name}\" has been removed",
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: AppColors.danger.withValues(alpha: 0.15),
+                                colorText: AppColors.danger,
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.delete_outline, size: 20),
+                          color: AppColors.danger,
+                          tooltip: "Delete product",
+                        ),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: OutlinedButton(
                             onPressed: Get.back,
