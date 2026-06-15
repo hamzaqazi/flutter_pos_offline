@@ -151,6 +151,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     final controller = TextEditingController();
     Get.dialog(
       Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
@@ -183,26 +184,29 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Get.back(), // just close dialog
-                    child: const Text("Cancel"),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  FilledButton(
-                    onPressed: () {
-                      if (controller.text.trim().isNotEmpty) {
-                        Get.back(); // close dialog
-                        _hasScanned = true;
-                        _controller.stop();
-                        Get.back(result: controller.text.trim()); // close scanner with result
-                      }
-                    },
-                    child: const Text("Find"),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton(
+                      onPressed: () => Get.back(), // just close dialog
+                      child: const Text("Cancel"),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    FilledButton(
+                      onPressed: () {
+                        if (controller.text.trim().isNotEmpty) {
+                          Get.back(); // close dialog
+                          _hasScanned = true;
+                          _controller.stop();
+                          Get.back(result: controller.text.trim()); // close scanner with result
+                        }
+                      },
+                      child: const Text("Find"),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
