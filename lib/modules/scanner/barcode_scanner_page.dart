@@ -198,8 +198,6 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
       ),
     );
 
-    controller.dispose();
-
     if (result != null && result.isNotEmpty && mounted) {
       _hasScanned = true;
       _controller.stop();
