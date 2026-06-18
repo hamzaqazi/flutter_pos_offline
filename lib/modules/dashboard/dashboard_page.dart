@@ -33,7 +33,57 @@ class DashboardPage extends GetView<DashboardController> {
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  Text("Overview", style: theme.textTheme.titleMedium),
+                  // ---------- Today's Summary ----------
+                  Text("Today's Summary", style: theme.textTheme.titleMedium),
+                  const SizedBox(height: AppSpacing.md),
+
+                  Obx(
+                    () => Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.success,
+                            AppColors.success.withValues(alpha: 0.75),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _TodayStat(
+                              icon: Icons.receipt_long_outlined,
+                              label: "Sales",
+                              value: controller.todaySales.value.toString(),
+                            ),
+                          ),
+                          Container(width: 1, height: 40, color: Colors.white24),
+                          Expanded(
+                            child: _TodayStat(
+                              icon: Icons.payments_outlined,
+                              label: "Revenue",
+                              value: Formatters.currency(controller.todayRevenue.value),
+                            ),
+                          ),
+                          Container(width: 1, height: 40, color: Colors.white24),
+                          Expanded(
+                            child: _TodayStat(
+                              icon: Icons.trending_up_outlined,
+                              label: "Profit",
+                              value: Formatters.currency(controller.todayProfit.value),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  Text("All-Time Overview", style: theme.textTheme.titleMedium),
                   const SizedBox(height: AppSpacing.md),
 
                   // ---------- Stat cards ----------
@@ -546,6 +596,44 @@ class _NotificationTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TodayStat extends StatelessWidget {
+  const _TodayStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white70, size: 20),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
+      ],
     );
   }
 }
