@@ -186,7 +186,11 @@ class ThermalPrinterService {
             final maxWidth = is58mm ? 280 : 500;
             if (decoded.width > maxWidth) {
               final ratio = maxWidth / decoded.width;
-              final resized = img.copyResize(decoded, width: maxWidth, height: (decoded.height * ratio).round());
+              final resized = img.copyResize(
+                decoded,
+                width: maxWidth,
+                height: (decoded.height * ratio).round(),
+              );
               bytes += generator.image(resized);
             } else {
               bytes += generator.image(decoded);
@@ -201,10 +205,7 @@ class ThermalPrinterService {
     if (receiptSettings.showShopName) {
       bytes += generator.text(
         shopSettings.shopName.toUpperCase(),
-        styles: const PosStyles(
-          align: PosAlign.center,
-          bold: true,
-        ),
+        styles: const PosStyles(align: PosAlign.center, bold: true),
       );
     }
 
@@ -216,6 +217,7 @@ class ThermalPrinterService {
           align: PosAlign.center,
           height: PosTextSize.size1,
           width: PosTextSize.size1,
+          fontType: PosFontType.fontB,
         ),
       );
     }
@@ -239,7 +241,7 @@ class ThermalPrinterService {
       final now = DateTime.now();
       bytes += generator.text(
         '${now.day}/${now.month}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
-        styles: const PosStyles(align: PosAlign.left),
+        styles: const PosStyles(align: PosAlign.center),
       );
     }
 
@@ -335,15 +337,19 @@ class ThermalPrinterService {
       );
     }
 
+    bytes += generator.hr();
+
     // TOTAL in bold only (not double-size, fits 58mm)
     bytes += generator.text(
       'TOTAL: $cur ${total.toStringAsFixed(0)}',
       styles: const PosStyles(
         bold: true,
         height: PosTextSize.size2,
-        width: PosTextSize.size1,
+        width: PosTextSize.size2,
       ),
     );
+
+    bytes += generator.hr();
 
     bytes += generator.text('Cash: $cur ${cash.toStringAsFixed(0)}');
     bytes += generator.text('Change: $cur ${change.toStringAsFixed(0)}');
@@ -361,18 +367,27 @@ class ThermalPrinterService {
     bytes += generator.feed(1);
     bytes += generator.text(
       'Powered by Codynest.com',
-      styles: const PosStyles(align: PosAlign.center),
+      styles: const PosStyles(
+        align: PosAlign.center,
+        fontType: PosFontType.fontB,
+      ),
     );
     bytes += generator.text(
-      'Support / WhatsApp:',
-      styles: const PosStyles(align: PosAlign.center),
+      'Support & WhatsApp:',
+      styles: const PosStyles(
+        align: PosAlign.center,
+        fontType: PosFontType.fontB,
+      ),
     );
     bytes += generator.text(
       '0315-3507075 / 0345-3333316',
-      styles: const PosStyles(align: PosAlign.center),
+      styles: const PosStyles(
+        align: PosAlign.center,
+        fontType: PosFontType.fontB,
+      ),
     );
 
-    bytes += generator.feed(3);
+    bytes += generator.feed(1);
     bytes += generator.cut();
 
     return Uint8List.fromList(bytes);
