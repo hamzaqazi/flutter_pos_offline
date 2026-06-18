@@ -183,7 +183,7 @@ class ThermalPrinterService {
           final decoded = img.decodeImage(imageBytes);
           if (decoded != null) {
             // Resize logo to fit paper width (58mm ≈ 384px, 80mm ≈ 576px)
-            final maxWidth = is58mm ? 280 : 500;
+            final maxWidth = is58mm ? 180 : 500;
             if (decoded.width > maxWidth) {
               final ratio = maxWidth / decoded.width;
               final resized = img.copyResize(
@@ -205,7 +205,11 @@ class ThermalPrinterService {
     if (receiptSettings.showShopName) {
       bytes += generator.text(
         shopSettings.shopName.toUpperCase(),
-        styles: const PosStyles(align: PosAlign.center, bold: true),
+        styles: const PosStyles(
+          align: PosAlign.center,
+          bold: true,
+          underline: true,
+        ),
       );
     }
 
@@ -217,7 +221,7 @@ class ThermalPrinterService {
           align: PosAlign.center,
           height: PosTextSize.size1,
           width: PosTextSize.size1,
-          fontType: PosFontType.fontB,
+          // fontType: PosFontType.fontB,
         ),
       );
     }
@@ -244,6 +248,8 @@ class ThermalPrinterService {
         styles: const PosStyles(align: PosAlign.center),
       );
     }
+
+    bytes += generator.hr();
 
     if (receiptSettings.showCustomer && customerName.isNotEmpty) {
       bytes += generator.text('Customer: $customerName');
@@ -354,6 +360,7 @@ class ThermalPrinterService {
     bytes += generator.text('Cash: $cur ${cash.toStringAsFixed(0)}');
     bytes += generator.text('Change: $cur ${change.toStringAsFixed(0)}');
 
+    bytes += generator.hr();
     // --- Footer ---
     if (receiptSettings.showFooter) {
       bytes += generator.feed(1);
@@ -362,9 +369,10 @@ class ThermalPrinterService {
         styles: const PosStyles(align: PosAlign.center, bold: true),
       );
     }
+    bytes += generator.hr();
 
     // --- Powered by Codynest ---
-    bytes += generator.feed(1);
+    bytes += generator.feed(2);
     bytes += generator.text(
       'Powered by Codynest.com',
       styles: const PosStyles(
@@ -372,6 +380,7 @@ class ThermalPrinterService {
         fontType: PosFontType.fontB,
       ),
     );
+
     bytes += generator.text(
       'Support & WhatsApp:',
       styles: const PosStyles(
@@ -387,7 +396,7 @@ class ThermalPrinterService {
       ),
     );
 
-    bytes += generator.feed(1);
+    // bytes += generator.feed(1);
     bytes += generator.cut();
 
     return Uint8List.fromList(bytes);
