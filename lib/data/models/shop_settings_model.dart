@@ -6,6 +6,7 @@ class ShopSettingsModel {
   final String currencySymbol;
   final double taxRate;           // Tax percentage (e.g. 16.0 for 16%)
   final bool taxInclusive;        // true = price includes tax, false = tax added on top
+  final int lowStockThreshold;    // Alert when stock <= this value (default 5)
 
   ShopSettingsModel({
     this.shopName = 'My Shop',
@@ -15,6 +16,7 @@ class ShopSettingsModel {
     this.currencySymbol = 'Rs',
     this.taxRate = 0,
     this.taxInclusive = false,
+    this.lowStockThreshold = 5,
   });
 
   Map<String, dynamic> toMap() => {
@@ -25,6 +27,7 @@ class ShopSettingsModel {
         'currencySymbol': currencySymbol,
         'taxRate': taxRate,
         'taxInclusive': taxInclusive,
+        'lowStockThreshold': lowStockThreshold,
       };
 
   factory ShopSettingsModel.fromMap(Map<dynamic, dynamic> map) {
@@ -36,6 +39,7 @@ class ShopSettingsModel {
       currencySymbol: map['currencySymbol'] ?? 'Rs',
       taxRate: (map['taxRate'] ?? 0).toDouble(),
       taxInclusive: map['taxInclusive'] ?? false,
+      lowStockThreshold: map['lowStockThreshold'] ?? 5,
     );
   }
 
@@ -47,6 +51,7 @@ class ShopSettingsModel {
     String? currencySymbol,
     double? taxRate,
     bool? taxInclusive,
+    int? lowStockThreshold,
   }) {
     return ShopSettingsModel(
       shopName: shopName ?? this.shopName,
@@ -56,6 +61,7 @@ class ShopSettingsModel {
       currencySymbol: currencySymbol ?? this.currencySymbol,
       taxRate: taxRate ?? this.taxRate,
       taxInclusive: taxInclusive ?? this.taxInclusive,
+      lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
     );
   }
 }

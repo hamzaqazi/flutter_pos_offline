@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../data/models/product_model.dart';
 import '../../data/services/category_service.dart';
 import '../../data/services/hive_service.dart';
+import '../../data/services/settings_service.dart';
 
 class ProductsController extends GetxController {
   final products = <ProductModel>[].obs;
@@ -143,5 +144,16 @@ class ProductsController extends GetxController {
 
       return matchesSearch && matchesCategory;
     }).toList();
+  }
+
+  /// Products that are at or below the low stock threshold.
+  List<ProductModel> get lowStockProducts {
+    final threshold = Get.find<SettingsService>().getSettings().lowStockThreshold;
+    return products.where((p) => p.stock <= threshold).toList();
+  }
+
+  /// Products that are completely out of stock.
+  List<ProductModel> get outOfStockProducts {
+    return products.where((p) => p.stock <= 0).toList();
   }
 }
