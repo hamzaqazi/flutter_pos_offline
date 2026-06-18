@@ -8,9 +8,16 @@ import '../../data/models/sale_model.dart';
 import '../../data/services/hive_service.dart';
 import '../cart/cart_controller.dart';
 import '../products/products_controller.dart';
+import '../customers/customers_controller.dart';
 
 class SalesController extends GetxController {
   final sales = <SaleModel>[].obs;
+
+  // Search & filter state
+  final searchQuery = ''.obs;
+  final dateFilter = 'All'.obs; // 'All', 'Today', 'This Week', 'This Month', 'Custom'
+  DateTime? customStartDate;
+  DateTime? customEndDate;
 
   @override
   void onInit() {
@@ -185,5 +192,67 @@ class SalesController extends GetxController {
     cart.clearCart();
 
     Get.snackbar("Success", "Sale completed — $invNum");
+  }
+
+  /// Filtered sales based on search query and date filter.
+  List<SaleModel> get filteredSales {
+    var result = sales.reversed.toList();
+
+    // Date filter
+    final now = DateTime.now();
+    switch (dateFilter.value) {
+      case 'Today':
+        result = result.where((s) =>
+          s.date.year == now.year && s.date.month == now.month && s.date.day == now.day
+        ).toList();
+        break;
+      case 'This Week':
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        final start = DateTime(weekStart.year, weekStart.month, weekStart.day);
+        result = result.where((s) => s.date.isAfter(start) || s.date.isAtSameMomentAs(start)).toList();
+        break;
+      case 'This Month':
+        result = result.where((s) =>
+          s.date.year == now.year && s.date.month == now.month
+        ).toList();
+        break;
+      case 'Custom':
+        if (customStartDate != null) {
+          final start = DateTime(customStartDate!.year, customStartDate!.month, customStartDate!.day);
+          result = result.where((s) => s.date.isAfter(start) || s.date.isAtSameMomentAs(start)).toList();
+        }
+        if (customEndDate != null) {
+          final end = DateTime(customEndDate!.year, customEndDate!.month, customEndDate!.day, 23, 59, 59);
+          result = result.where((s) => s.date.isBefore(end) || s.date.isAtSameMomentAs(end)).toList();
+        }
+        break;
+    }
+
+    // Search filter (invoice number, customer name, item name)
+    if (searchQuery.value.isNotEmpty) {
+      final query = searchQuery.value.toLowerCase();
+      final customersController = Get.tryFind<CustomersController>();
+      result = result.where((s) {
+        if (s.invoiceNumber.toLowerCase().contains(query)) return true;
+        if (s.hasCustomer && customersController != null) {
+          final customer = customersController.findById(s.customerId);
+          if (customer != null && customer.name.toLowerCase().contains(query)) return true;
+        }
+        // Search by item name
+        for (final item in s.items) {
+          if (item.product.name.toLowerCase().contains(query)) return true;
+        }
+        return false;
+      }).toList();
+    }
+
+    return result;
+  }
+
+  void clearFilters() {
+    searchQuery.value = '';
+    dateFilter.value = 'All';
+    customStartDate = null;
+    customEndDate = null;
   }
 }

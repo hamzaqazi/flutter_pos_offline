@@ -25,8 +25,8 @@ class SalesHistoryPage extends GetView<SalesController> {
           return _EmptySales();
         }
 
-        // Newest first
-        final sales = controller.sales.reversed.toList();
+        // Filtered sales
+        final sales = controller.filteredSales;
         final totalRevenue =
             sales.fold<double>(0, (sum, s) => sum + s.total);
         final totalProfit =
@@ -115,6 +115,115 @@ class SalesHistoryPage extends GetView<SalesController> {
                 ],
               ),
             ),
+
+            // ---------- Search bar ----------
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: "Search by invoice no, customer or item...",
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  filled: true,
+                  suffixIcon: Obx(() {
+                    if (controller.searchQuery.value.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () => controller.searchQuery.value = '',
+                    );
+                  }),
+                ),
+                onChanged: (value) => controller.searchQuery.value = value,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+
+            // ---------- Date filter chips ----------
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: SizedBox(
+                height: 40,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 5,
+                  separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                  itemBuilder: (_, i) {
+                    final filters = ['All', 'Today', 'This Week', 'This Month', 'Custom'];
+                    final filter = filters[i];
+                    return Obx(() {
+                      final selected = controller.dateFilter.value == filter;
+                      return ChoiceChip(
+                        label: Text(filter),
+                        selected: selected,
+                        onSelected: (_) async {
+                          if (filter == 'Custom') {
+                            final picked = await showDateRangePicker(
+                              context: Get.context!,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                              initialDateRange: controller.customStartDate != null && controller.customEndDate != null
+                                  ? DateTimeRange(start: controller.customStartDate!, end: controller.customEndDate!)
+                                  : null,
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (picked != null) {
+                              controller.customStartDate = picked.start;
+                              controller.customEndDate = picked.end;
+                              controller.dateFilter.value = 'Custom';
+                            }
+                          } else {
+                            controller.dateFilter.value = filter;
+                          }
+                        },
+                      );
+                    });
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Active filters indicator
+            Obx(() {
+              final hasFilter = controller.dateFilter.value != 'All' || controller.searchQuery.value.isNotEmpty;
+              if (!hasFilter) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Row(
+                  children: [
+                    Icon(Icons.filter_list, size: 14, color: cs.onSurfaceVariant),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      "${sales.length} result${sales.length == 1 ? '' : 's'}",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () => controller.clearFilters(),
+                      icon: const Icon(Icons.clear_all, size: 14),
+                      label: const Text("Clear filters", style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
 
             Expanded(
               child: ListView.separated(
