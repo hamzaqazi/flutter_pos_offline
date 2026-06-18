@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/data/models/return_model.dart';
 import 'package:ad_shop_pos/data/models/sale_model.dart';
 import 'package:ad_shop_pos/data/models/staff_model.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
@@ -147,6 +148,10 @@ class ExportService {
 
       // Receipt settings
       backup['receiptSettings'] = settingsController.receiptSettings.value.toMap();
+
+      // Categories
+      final catController = Get.find<CategoryController>();
+      backup['categories'] = catController.categories.map((c) => c.toMap()).toList();
 
       // Active cashier
       if (staffController.activeCashierId.value != null) {

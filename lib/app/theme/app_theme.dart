@@ -1,4 +1,6 @@
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 /// Centralized design tokens for consistent spacing & radii across the app.
 class AppSpacing {
@@ -22,7 +24,8 @@ class AppColors {
   static const Color warning = Color(0xFFF59E0B); // Amber 500
   static const Color danger = Color(0xFFDC2626); // Red 600
 
-  /// Soft, distinct colors keyed by product category for visual grouping.
+  /// Default colors keyed by category for visual grouping.
+  /// Used as fallback when CategoryController is not available.
   static const Map<String, Color> category = {
     'Watches': Color(0xFF6366F1),
     'Caps': Color(0xFF0EA5E9),
@@ -30,8 +33,15 @@ class AppColors {
     'Glasses': Color(0xFF14B8A6),
   };
 
-  static Color forCategory(String category) =>
-      AppColors.category[category] ?? AppColors.seed;
+  static Color forCategory(String category) {
+    // Try dynamic categories first (from CategoryController)
+    try {
+      final catController = Get.find<CategoryController>();
+      return catController.colorFor(category);
+    } catch (_) {}
+    // Fallback to static map
+    return AppColors.category[category] ?? AppColors.seed;
+  }
 }
 
 class AppTheme {

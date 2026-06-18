@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
+import '../../data/services/category_service.dart';
 import '../../data/services/hive_service.dart';
 
 class ProductsController extends GetxController {
@@ -70,7 +71,8 @@ class ProductsController extends GetxController {
 
   /// Generate an auto SKU from category prefix + sequential number.
   String generateSku(String category) {
-    final prefix = _categoryPrefix(category);
+    final catController = Get.find<CategoryController>();
+    final prefix = catController.skuPrefix(category);
     // Find the highest existing number for this prefix
     int maxNum = 0;
     for (final p in products) {
@@ -82,21 +84,6 @@ class ProductsController extends GetxController {
     }
     final nextNum = maxNum + 1;
     return '$prefix${nextNum.toString().padLeft(4, '0')}';
-  }
-
-  String _categoryPrefix(String category) {
-    switch (category) {
-      case 'Watches':
-        return 'W';
-      case 'Caps':
-        return 'C';
-      case 'Perfumes':
-        return 'P';
-      case 'Glasses':
-        return 'G';
-      default:
-        return 'X';
-    }
   }
 
   /// Find a product by SKU (exact match, case-insensitive).

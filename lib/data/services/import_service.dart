@@ -155,6 +155,12 @@ class ImportService {
         settingsBox.put('receipt', Map<String, dynamic>.from(data['receiptSettings']));
       }
 
+      // Import categories
+      if (data['categories'] != null) {
+        final catBox = Hive.box('categories');
+        catBox.put('items', data['categories']);
+      }
+
       // Reload all controllers
       await _reloadAllControllers();
 

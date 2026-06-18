@@ -1,5 +1,6 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:flutter/material.dart';
@@ -15,17 +16,36 @@ class ProductCard extends StatelessWidget {
   ProductCard({super.key, required this.product});
 
   IconData _iconForCategory(String category) {
-    switch (category) {
-      case 'Watches':
+    // Map common category names to icons, with a default
+    switch (category.toLowerCase()) {
+      case 'watches':
         return Icons.watch_outlined;
-      case 'Caps':
+      case 'caps':
         return Icons.sports_baseball_outlined;
-      case 'Perfumes':
+      case 'perfumes':
         return Icons.spa_outlined;
-      case 'Glasses':
+      case 'glasses':
         return Icons.remove_red_eye_outlined;
-      default:
+      case 'shoes':
+        return Icons.directions_walk_outlined;
+      case 'clothing':
+        return Icons.checkroom_outlined;
+      case 'electronics':
+        return Icons.devices_outlined;
+      case 'jewelry':
+        return Icons.diamond_outlined;
+      case 'bags':
         return Icons.shopping_bag_outlined;
+      case 'food':
+        return Icons.restaurant_outlined;
+      case 'books':
+        return Icons.menu_book_outlined;
+      case 'toys':
+        return Icons.toys_outlined;
+      case 'sports':
+        return Icons.sports_soccer_outlined;
+      default:
+        return Icons.category_outlined;
     }
   }
 
@@ -539,15 +559,13 @@ class ProductCard extends StatelessWidget {
                         labelText: "Category",
                         prefixIcon: Icon(Icons.category_outlined),
                       ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: "Watches", child: Text("Watches")),
-                        DropdownMenuItem(value: "Caps", child: Text("Caps")),
-                        DropdownMenuItem(
-                            value: "Perfumes", child: Text("Perfumes")),
-                        DropdownMenuItem(
-                            value: "Glasses", child: Text("Glasses")),
-                      ],
+                      items: Get.find<CategoryController>()
+                          .categoryNames
+                          .map((name) => DropdownMenuItem(
+                                value: name,
+                                child: Text(name),
+                              ))
+                          .toList(),
                       onChanged: (value) =>
                           setState(() => selectedCategory = value!),
                     ),

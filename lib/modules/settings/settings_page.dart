@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
 import 'package:ad_shop_pos/data/services/export_service.dart';
@@ -31,6 +32,19 @@ class SettingsPage extends GetView<SettingsController> {
               initiallyExpanded: true,
               children: [
                 Obx(() => _ShopInfoForm(settings: controller.settings.value)),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // ---------- Categories ----------
+            _SectionTile(
+              icon: Icons.category_outlined,
+              title: "Categories",
+              subtitle: "Manage product categories & colors",
+              color: Color(0xFF8B5CF6),
+              children: [
+                _CategoryManagementSection(),
               ],
             ),
 
@@ -225,6 +239,299 @@ class SettingsPage extends GetView<SettingsController> {
         colorText: AppColors.success,
       );
     }
+  }
+}
+
+// =================== Category Management Section ===================
+
+class _CategoryManagementSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final catController = Get.find<CategoryController>();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Add category row
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton.tonalIcon(
+                onPressed: () => _showAddCategoryDialog(context, catController),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text("Add Category"),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Category list
+        Obx(() {
+          if (catController.categories.isEmpty) {
+            return Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Text(
+                "No categories yet. Add one to get started.",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+          return Column(
+            children: catController.categories.map((cat) {
+              return Card(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: ListTile(
+                  dense: true,
+                  leading: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: cat.color,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.category_outlined,
+                        color: ThemeData.estimateBrightnessForColor(cat.color) == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                  title: Text(cat.name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () => _showEditCategoryDialog(context, catController, cat),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        tooltip: "Edit",
+                      ),
+                      IconButton(
+                        onPressed: () => _confirmDeleteCategory(context, catController, cat.name),
+                        icon: Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                        tooltip: "Delete",
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        }),
+      ],
+    );
+  }
+
+  void _showAddCategoryDialog(BuildContext context, CategoryController catController) {
+    final nameController = TextEditingController();
+    Color selectedColor = AppColors.seed;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text("Add Category"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                textCapitalization: TextCapitalization.words,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: "Category name",
+                  prefixIcon: Icon(Icons.category_outlined),
+                  hintText: "e.g. Shoes, Electronics, Jewelry",
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text("Color", style: Theme.of(ctx).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: AppSpacing.sm),
+              _ColorPickerGrid(
+                selectedColor: selectedColor,
+                onColorSelected: (color) => setDialogState(() => selectedColor = color),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text("Cancel"),
+            ),
+            FilledButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isEmpty) return;
+                final added = catController.addCategory(name, selectedColor);
+                if (!added) {
+                  Get.snackbar("Duplicate", "Category \"$name\" already exists",
+                      snackPosition: SnackPosition.BOTTOM);
+                  return;
+                }
+                Navigator.of(ctx).pop();
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditCategoryDialog(BuildContext context, CategoryController catController, CategoryModel cat) {
+    final nameController = TextEditingController(text: cat.name);
+    Color selectedColor = cat.color;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text("Edit Category"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                textCapitalization: TextCapitalization.words,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: "Category name",
+                  prefixIcon: Icon(Icons.category_outlined),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text("Color", style: Theme.of(ctx).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: AppSpacing.sm),
+              _ColorPickerGrid(
+                selectedColor: selectedColor,
+                onColorSelected: (color) => setDialogState(() => selectedColor = color),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text("Cancel"),
+            ),
+            FilledButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isEmpty) return;
+                final updated = catController.updateCategory(cat.name, name, selectedColor);
+                if (!updated) {
+                  Get.snackbar("Duplicate", "Category \"$name\" already exists",
+                      snackPosition: SnackPosition.BOTTOM);
+                  return;
+                }
+                Navigator.of(ctx).pop();
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteCategory(BuildContext context, CategoryController catController, String name) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.danger),
+            const SizedBox(width: AppSpacing.sm),
+            const Text("Delete Category"),
+          ],
+        ),
+        content: Text("Are you sure you want to delete \"$name\"? Products in this category will still keep their category name."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text("Cancel"),
+          ),
+          FilledButton(
+            onPressed: () {
+              catController.deleteCategory(name);
+              Navigator.of(ctx).pop();
+            },
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColorPickerGrid extends StatelessWidget {
+  final Color selectedColor;
+  final ValueChanged<Color> onColorSelected;
+
+  const _ColorPickerGrid({
+    required this.selectedColor,
+    required this.onColorSelected,
+  });
+
+  static const _colors = [
+    Color(0xFF6366F1), // Indigo
+    Color(0xFF0EA5E9), // Sky
+    Color(0xFFEC4899), // Pink
+    Color(0xFF14B8A6), // Teal
+    Color(0xFF8B5CF6), // Violet
+    Color(0xFFF59E0B), // Amber
+    Color(0xFF10B981), // Emerald
+    Color(0xFFEF4444), // Red
+    Color(0xFF3B82F6), // Blue
+    Color(0xFFF97316), // Orange
+    Color(0xFF06B6D4), // Cyan
+    Color(0xFF84CC16), // Lime
+    Color(0xFFD946EF), // Fuchsia
+    Color(0xFF64748B), // Slate
+    Color(0xFF78716C), // Stone
+    Color(0xFFA3E635), // Lime bright
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _colors.map((color) {
+        final isSelected = color.toARGB32() == selectedColor.toARGB32();
+        return GestureDetector(
+          onTap: () => onColorSelected(color),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: isSelected
+                  ? Border.all(color: Colors.black87, width: 3)
+                  : Border.all(color: Colors.black12, width: 1),
+              boxShadow: isSelected
+                  ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6)]
+                  : null,
+            ),
+            child: isSelected
+                ? Icon(Icons.check,
+                    color: ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
+                    size: 20)
+                : null,
+          ),
+        );
+      }).toList(),
+    );
   }
 }
 
