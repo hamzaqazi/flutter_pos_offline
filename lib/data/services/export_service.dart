@@ -46,7 +46,7 @@ class ExportService {
 
     final buffer = StringBuffer();
     buffer.writeln(
-      'Sale ID,Date,Subtotal,Checkout Discount %,Tax Amount,Total,'
+      'Invoice No,Sale ID,Date,Subtotal,Checkout Discount %,Tax Amount,Total,'
       'Cash,Change,Discount Amount,Profit,Customer ID,Items',
     );
 
@@ -55,7 +55,7 @@ class ExportService {
           .map((i) => '${i.product.name}x${i.quantity}')
           .join('; ');
       buffer.writeln(
-        '"${s.id}","${Formatters.dateTime(s.date)}",${s.subtotal},'
+        '"${s.invoiceNumber}","${s.id}","${Formatters.dateTime(s.date)}",${s.subtotal},'
         '${s.checkoutDiscount},${s.taxAmount},${s.total},'
         '${s.cash},${s.change},${s.discount},${s.profit},'
         '"${s.customerId}","$itemsSummary"',
@@ -152,6 +152,11 @@ class ExportService {
       // Categories
       final catController = Get.find<CategoryController>();
       backup['categories'] = catController.categories.map((c) => c.toMap()).toList();
+
+      // Last invoice number (for sequential numbering persistence)
+      final settingsBox = Hive.box('settings');
+      final lastInvoiceNum = settingsBox.get('lastInvoiceNumber', defaultValue: 0);
+      backup['lastInvoiceNumber'] = lastInvoiceNum;
 
       // Active cashier
       if (staffController.activeCashierId.value != null) {

@@ -73,6 +73,7 @@ class ThermalPrinterService {
     double totalSavings = 0,
     String customerName = '',
     String cashierName = '',
+    String invoiceNumber = '',
   }) async {
     try {
       final receiptSettings = SettingsService.getReceiptSettings();
@@ -112,6 +113,7 @@ class ThermalPrinterService {
         totalSavings: totalSavings,
         customerName: customerName,
         cashierName: cashierName,
+        invoiceNumber: invoiceNumber,
         receiptSettings: receiptSettings,
         shopSettings: shopSettings,
       );
@@ -163,6 +165,7 @@ class ThermalPrinterService {
     required double totalSavings,
     required String customerName,
     required String cashierName,
+    required String invoiceNumber,
     required ReceiptSettingsModel receiptSettings,
     required shopSettings,
   }) async {
@@ -239,6 +242,17 @@ class ThermalPrinterService {
     }
 
     bytes += generator.hr();
+
+    // --- Invoice number ---
+    if (invoiceNumber.isNotEmpty) {
+      bytes += generator.text(
+        invoiceNumber,
+        styles: const PosStyles(
+          align: PosAlign.center,
+          bold: true,
+        ),
+      );
+    }
 
     // --- Date ---
     if (receiptSettings.showDate) {

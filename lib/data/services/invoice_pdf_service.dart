@@ -23,6 +23,7 @@ class InvoicePdfService {
     double totalSavings = 0,
     String customerName = '',
     String cashierName = '',
+    String invoiceNumber = '',
   }) async {
     final pdf = pw.Document();
     final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
@@ -79,6 +80,19 @@ class InvoicePdfService {
                 ),
 
               pw.SizedBox(height: 10),
+
+              // Invoice number
+              if (invoiceNumber.isNotEmpty)
+                pw.Center(
+                  child: pw.Text(
+                    invoiceNumber,
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+
               if (receiptSettings.showDate) pw.Text("Date: ${DateTime.now()}"),
               if (receiptSettings.showCustomer && customerName.isNotEmpty)
                 pw.Text("Customer: $customerName"),

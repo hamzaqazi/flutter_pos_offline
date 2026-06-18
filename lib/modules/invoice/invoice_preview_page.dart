@@ -25,6 +25,7 @@ class InvoicePreviewPage extends StatelessWidget {
   final double totalSavings;
   final String customerId;      // linked customer
   final String cashierId;       // staff who processed this sale
+  final String invoiceNumber;   // e.g. "INV-0001"
 
   /// When true, this is a past receipt being viewed (no sale completion).
   final bool readOnly;
@@ -43,6 +44,7 @@ class InvoicePreviewPage extends StatelessWidget {
     this.totalSavings = 0,
     this.customerId = '',
     this.cashierId = '',
+    this.invoiceNumber = '',
     this.readOnly = false,
   });
 
@@ -76,6 +78,7 @@ class InvoicePreviewPage extends StatelessWidget {
       totalSavings: totalSavings,
       customerName: _customerName,
       cashierName: _cashierName,
+      invoiceNumber: invoiceNumber,
     );
     await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   }
@@ -147,6 +150,28 @@ class InvoicePreviewPage extends StatelessWidget {
                             );
                           }),
                           const SizedBox(height: 4),
+                          // Invoice number badge
+                          if (invoiceNumber.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                                vertical: AppSpacing.xs,
+                              ),
+                              decoration: BoxDecoration(
+                                color: cs.primary.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm),
+                              ),
+                              child: Text(
+                                invoiceNumber,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.primary,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
                           Text(
                             Formatters.dateTime(DateTime.now()),
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -400,6 +425,7 @@ class InvoicePreviewPage extends StatelessWidget {
                                   totalSavings: totalSavings,
                                   customerName: _customerName,
                                   cashierName: _cashierName,
+                                  invoiceNumber: invoiceNumber,
                                 );
                               },
                             );
@@ -451,6 +477,7 @@ class InvoicePreviewPage extends StatelessWidget {
                                   totalSavings: totalSavings,
                                   customerName: _customerName,
                                   cashierName: _cashierName,
+                                  invoiceNumber: invoiceNumber,
                                 );
                               },
                             ),
@@ -470,6 +497,7 @@ class InvoicePreviewPage extends StatelessWidget {
                           taxAmount: taxAmount,
                           customerId: customerId,
                           cashierId: cashierId,
+                          invoiceNumber: invoiceNumber,
                         );
                         Get.offAllNamed('/');
                       },
