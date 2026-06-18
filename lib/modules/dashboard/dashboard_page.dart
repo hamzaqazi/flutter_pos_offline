@@ -22,9 +22,7 @@ class DashboardPage extends GetView<DashboardController> {
         child: CustomScrollView(
           slivers: [
             // ---------- Gradient header ----------
-            SliverToBoxAdapter(
-              child: _Header(cs: cs),
-            ),
+            SliverToBoxAdapter(child: _Header(cs: cs)),
 
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(
@@ -139,7 +137,8 @@ class DashboardPage extends GetView<DashboardController> {
                     subtitle: "Scan product barcode to quickly add to cart",
                     color: AppColors.accent,
                     onTap: () => BarcodeScannerHelper.scanAndLookup(
-                      onScanned: (code) => BarcodeScannerHelper.addSkuToCart(code),
+                      onScanned: (code) =>
+                          BarcodeScannerHelper.addSkuToCart(code),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -206,8 +205,12 @@ class DashboardPage extends GetView<DashboardController> {
                   // Low stock notification
                   Obx(() {
                     final productsCtrl = Get.find<ProductsController>();
-                    final lowStock = productsCtrl.products.where((p) => p.stock <= 5).toList();
-                    final outOfStock = lowStock.where((p) => p.stock <= 0).length;
+                    final lowStock = productsCtrl.products
+                        .where((p) => p.stock <= 5)
+                        .toList();
+                    final outOfStock = lowStock
+                        .where((p) => p.stock <= 0)
+                        .length;
                     final low = lowStock.where((p) => p.stock > 0).length;
 
                     if (lowStock.isEmpty) {
@@ -216,7 +219,10 @@ class DashboardPage extends GetView<DashboardController> {
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Row(
                             children: [
-                              Icon(Icons.check_circle_outline, color: AppColors.success),
+                              Icon(
+                                Icons.check_circle_outline,
+                                color: AppColors.success,
+                              ),
                               const SizedBox(width: AppSpacing.md),
                               Expanded(
                                 child: Text(
@@ -371,7 +377,7 @@ class _StatCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -395,10 +401,14 @@ class _StatCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -511,7 +521,12 @@ class _NotificationTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,

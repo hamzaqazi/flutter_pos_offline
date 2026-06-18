@@ -8,6 +8,7 @@ import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
+import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -373,6 +374,7 @@ class CartPage extends GetView<CartController> {
                             onPressed: enough
                                 ? () {
                                     Get.back();
+                                    final invNum = Get.find<SalesController>().peekNextInvoiceNumber();
                                     Get.to(
                                       () => InvoicePreviewPage(
                                         items: cart.cartItems,
@@ -390,6 +392,7 @@ class CartPage extends GetView<CartController> {
                                         totalSavings: totalAllSavings,
                                         customerId: selectedCustomerId ?? '',
                                         cashierId: Get.find<StaffController>().activeCashierId.value ?? '',
+                                        invoiceNumber: invNum,
                                       ),
                                     );
                                   }

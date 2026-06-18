@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
@@ -15,6 +16,7 @@ class InitialBinding extends Bindings {
   @override
   void dependencies() {
     Get.put(ThemeController(), permanent: true);
+    Get.put(CategoryController(), permanent: true);
     Get.put(SettingsController(), permanent: true);
     Get.put(ExpensesController(), permanent: true);
     Get.put(ReturnsController(), permanent: true);

@@ -156,6 +156,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                             totalSavings: sale.discount,
                             customerId: sale.customerId,
                             cashierId: sale.cashierId,
+                            invoiceNumber: sale.invoiceNumber,
                             readOnly: true,
                           ),
                         );
@@ -182,12 +183,40 @@ class SalesHistoryPage extends GetView<SalesController> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    Formatters.currency(sale.total),
-                                    style:
-                                        theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        Formatters.currency(sale.total),
+                                        style:
+                                            theme.textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      if (sale.hasInvoiceNumber) ...[
+                                        const SizedBox(width: AppSpacing.sm),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.xs,
+                                            vertical: 1,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: cs.primary
+                                                .withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                                AppSpacing.radiusSm),
+                                          ),
+                                          child: Text(
+                                            sale.invoiceNumber,
+                                            style: TextStyle(
+                                              color: cs.primary,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                   // Show customer name
                                   if (sale.hasCustomer)

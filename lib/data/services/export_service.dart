@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/data/models/return_model.dart';
 import 'package:ad_shop_pos/data/models/sale_model.dart';
 import 'package:ad_shop_pos/data/models/staff_model.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
@@ -45,7 +46,7 @@ class ExportService {
 
     final buffer = StringBuffer();
     buffer.writeln(
-      'Sale ID,Date,Subtotal,Checkout Discount %,Tax Amount,Total,'
+      'Invoice No,Sale ID,Date,Subtotal,Checkout Discount %,Tax Amount,Total,'
       'Cash,Change,Discount Amount,Profit,Customer ID,Items',
     );
 
@@ -54,7 +55,7 @@ class ExportService {
           .map((i) => '${i.product.name}x${i.quantity}')
           .join('; ');
       buffer.writeln(
-        '"${s.id}","${Formatters.dateTime(s.date)}",${s.subtotal},'
+        '"${s.invoiceNumber}","${s.id}","${Formatters.dateTime(s.date)}",${s.subtotal},'
         '${s.checkoutDiscount},${s.taxAmount},${s.total},'
         '${s.cash},${s.change},${s.discount},${s.profit},'
         '"${s.customerId}","$itemsSummary"',
@@ -144,6 +145,18 @@ class ExportService {
 
       // Settings
       backup['settings'] = settingsController.settings.value.toMap();
+
+      // Receipt settings
+      backup['receiptSettings'] = settingsController.receiptSettings.value.toMap();
+
+      // Categories
+      final catController = Get.find<CategoryController>();
+      backup['categories'] = catController.categories.map((c) => c.toMap()).toList();
+
+      // Last invoice number (for sequential numbering persistence)
+      final settingsBox = Hive.box('settings');
+      final lastInvoiceNum = settingsBox.get('lastInvoiceNumber', defaultValue: 0);
+      backup['lastInvoiceNumber'] = lastInvoiceNum;
 
       // Active cashier
       if (staffController.activeCashierId.value != null) {

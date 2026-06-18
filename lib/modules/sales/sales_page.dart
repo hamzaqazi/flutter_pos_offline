@@ -17,7 +17,11 @@ class SalesPage extends GetView<SalesController> {
             final sale = controller.sales[index];
 
             return ListTile(
-              title: Text("Sale #${sale.id}"),
+              title: Text(
+                sale.hasInvoiceNumber
+                    ? sale.invoiceNumber
+                    : "Sale #${sale.id}",
+              ),
               subtitle: Text("${sale.date} - Rs ${sale.total}"),
             );
           },

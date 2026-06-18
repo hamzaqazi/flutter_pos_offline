@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 
 import '../../data/models/sale_model.dart';
 import '../../data/services/hive_service.dart';
@@ -27,9 +28,6 @@ class SalesController extends GetxController {
         final rawItems = (e['items'] as List?) ?? [];
 
         final items = rawItems.map((item) {
-          // Try to load category from the sale item; fall back to
-          // looking it up from the current products list (for old sales
-          // that were saved before the category field was added).
           String category = item['category'] ?? '';
           if (category.isEmpty && (item['productId'] ?? '').isNotEmpty) {
             final product = productsController.products.firstWhereOrNull(
@@ -57,6 +55,7 @@ class SalesController extends GetxController {
 
         return SaleModel(
           id: e['id'] ?? '',
+          invoiceNumber: e['invoiceNumber'] ?? '',
           items: items,
           subtotal: (e['subtotal'] ?? e['total'] ?? 0).toDouble(),
           checkoutDiscount: (e['checkoutDiscount'] ?? 0).toDouble(),
@@ -71,7 +70,25 @@ class SalesController extends GetxController {
           date: DateTime.tryParse(e['date'] ?? '') ?? DateTime.now(),
         );
       }).toList(),
-    );
+  }
+
+  /// Get the next invoice number (auto-incrementing, persisted in Hive).
+  /// Format: "INV-0001", "INV-0002", etc.
+  String _getNextInvoiceNumber() {
+    final box = Hive.box('settings');
+    int lastNum = box.get('lastInvoiceNumber', defaultValue: 0) as int;
+    lastNum++;
+    box.put('lastInvoiceNumber', lastNum);
+    return 'INV-${lastNum.toString().padLeft(4, '0')}';
+  }
+
+  /// Peek at the next invoice number without incrementing.
+  /// Used for preview before sale is completed.
+  String peekNextInvoiceNumber() {
+    final box = Hive.box('settings');
+    int lastNum = box.get('lastInvoiceNumber', defaultValue: 0) as int;
+    final nextNum = lastNum + 1;
+    return 'INV-${nextNum.toString().padLeft(4, '0')}';
   }
 
   void completeSale({
@@ -81,6 +98,7 @@ class SalesController extends GetxController {
     double taxAmount = 0,
     String customerId = '',
     String cashierId = '',
+    String invoiceNumber = '',
   }) {
     final cart = Get.find<CartController>();
     final products = Get.find<ProductsController>();
@@ -89,24 +107,26 @@ class SalesController extends GetxController {
 
     final saleId = DateTime.now().microsecondsSinceEpoch.toString();
 
-    final subtotal = cart.subtotalAmount; // after product-level discounts
+    final subtotal = cart.subtotalAmount;
     final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
     final grandTotal = cart.totalAmount - checkoutDiscountAmount;
 
-    // Product-level discount savings
     final productSavings = cart.cartItems.fold<double>(
       0,
       (sum, item) => sum + item.savings,
     );
 
-    // Total discount = product discounts + checkout discount
     final totalDiscount = productSavings + checkoutDiscountAmount;
-
-    // Profit is reduced by the checkout discount amount
     final totalProfit = cart.totalProfit - checkoutDiscountAmount;
+
+    // Generate invoice number if not provided
+    final invNum = invoiceNumber.isNotEmpty
+        ? invoiceNumber
+        : _getNextInvoiceNumber();
 
     final sale = SaleModel(
       id: saleId,
+      invoiceNumber: invNum,
       items: List.from(cart.cartItems),
       subtotal: subtotal,
       checkoutDiscount: checkoutDiscount,
@@ -130,6 +150,7 @@ class SalesController extends GetxController {
     // SAVE FULL INVOICE (IMPORTANT)
     HiveService.salesBox.put(saleId, {
       'id': sale.id,
+      'invoiceNumber': sale.invoiceNumber,
       'items': sale.items
           .map(
             (e) => {
@@ -163,6 +184,6 @@ class SalesController extends GetxController {
     sales.add(sale);
     cart.clearCart();
 
-    Get.snackbar("Success", "Sale completed");
+    Get.snackbar("Success", "Sale completed — $invNum");
   }
 }

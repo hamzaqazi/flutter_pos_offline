@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
 
 import '../../data/models/shop_settings_model.dart';
+import '../../data/models/receipt_settings_model.dart';
 import '../../data/services/settings_service.dart';
 
 class SettingsController extends GetxController {
   final settings = ShopSettingsModel().obs;
+  final receiptSettings = ReceiptSettingsModel().obs;
 
   @override
   void onInit() {
@@ -14,11 +16,17 @@ class SettingsController extends GetxController {
 
   void loadSettings() {
     settings.value = SettingsService.getSettings();
+    receiptSettings.value = SettingsService.getReceiptSettings();
   }
 
   void updateSettings(ShopSettingsModel newSettings) {
     SettingsService.saveSettings(newSettings);
     settings.value = newSettings;
+  }
+
+  void updateReceiptSettings(ReceiptSettingsModel newSettings) {
+    SettingsService.saveReceiptSettings(newSettings);
+    receiptSettings.value = newSettings;
   }
 
   String get shopName => settings.value.shopName;

@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
@@ -10,8 +11,6 @@ import 'products_controller.dart';
 
 class ProductsPage extends GetView<ProductsController> {
   const ProductsPage({super.key});
-
-  static const _categories = ["All", "Watches", "Caps", "Perfumes", "Glasses"];
 
   @override
   Widget build(BuildContext context) {
@@ -109,13 +108,16 @@ class ProductsPage extends GetView<ProductsController> {
           // ---------- Category filter ----------
           SizedBox(
             height: 44,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              itemCount: _categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (_, i) => _categoryChip(_categories[i], cs),
-            ),
+            child: Obx(() {
+              final cats = ['All', ...Get.find<CategoryController>().categoryNames];
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                itemCount: cats.length,
+                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                itemBuilder: (_, i) => _categoryChip(cats[i], cs),
+              );
+            }),
           ),
 
           // ---------- Grid ----------
@@ -172,7 +174,7 @@ class ProductsPage extends GetView<ProductsController> {
     final purchasePriceController = TextEditingController();
     final discountController = TextEditingController();
     final stockController = TextEditingController();
-    String selectedCategory = "Watches";
+    String selectedCategory = Get.find<CategoryController>().categoryNames.firstOrNull ?? "General";
 
     // Auto-generate SKU when category changes
     void updateAutoSku(String category) {
@@ -350,15 +352,13 @@ class ProductsPage extends GetView<ProductsController> {
                         labelText: "Category",
                         prefixIcon: Icon(Icons.category_outlined),
                       ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: "Watches", child: Text("Watches")),
-                        DropdownMenuItem(value: "Caps", child: Text("Caps")),
-                        DropdownMenuItem(
-                            value: "Perfumes", child: Text("Perfumes")),
-                        DropdownMenuItem(
-                            value: "Glasses", child: Text("Glasses")),
-                      ],
+                      items: Get.find<CategoryController>()
+                          .categoryNames
+                          .map((name) => DropdownMenuItem(
+                                value: name,
+                                child: Text(name),
+                              ))
+                          .toList(),
                       onChanged: (value) {
                         setState(() => selectedCategory = value!);
                         updateAutoSku(value!);

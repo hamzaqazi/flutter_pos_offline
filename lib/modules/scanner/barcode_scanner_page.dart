@@ -49,7 +49,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     HapticFeedback.mediumImpact();
 
     // Return the scanned value
-    Get.back(result: barcode.rawValue);
+    Navigator.of(context).pop(barcode.rawValue);
   }
 
   @override
@@ -147,21 +147,20 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
     );
   }
 
-  void _showManualEntry() {
+  void _showManualEntry() async {
     final controller = TextEditingController();
-    Get.dialog(
-      Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Enter Code"),
+        content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Enter Code", style: Get.textTheme.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
               Text(
                 "Enter the barcode number or SKU from the product",
-                style: Get.textTheme.bodySmall?.copyWith(
-                  color: Get.theme.colorScheme.onSurfaceVariant,
+                style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -175,40 +174,35 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
                 ),
                 onSubmitted: (value) {
                   if (value.trim().isNotEmpty) {
-                    Get.back(); // close dialog
-                    _hasScanned = true;
-                    _controller.stop();
-                    Get.back(result: value.trim()); // close scanner with result
+                    Navigator.of(ctx).pop(value.trim());
                   }
                 },
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Get.back(), // just close dialog
-                    child: const Text("Cancel"),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  FilledButton(
-                    onPressed: () {
-                      if (controller.text.trim().isNotEmpty) {
-                        Get.back(); // close dialog
-                        _hasScanned = true;
-                        _controller.stop();
-                        Get.back(result: controller.text.trim()); // close scanner with result
-                      }
-                    },
-                    child: const Text("Find"),
-                  ),
-                ],
               ),
             ],
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: const Text("Cancel"),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.of(ctx).pop(controller.text.trim());
+              }
+            },
+            child: const Text("Find"),
+          ),
+        ],
       ),
     );
+
+    if (result != null && result.isNotEmpty && mounted) {
+      _hasScanned = true;
+      _controller.stop();
+      Navigator.of(context).pop(result); // close scanner with result
+    }
   }
 }
 

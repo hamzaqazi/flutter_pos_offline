@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 
 class SaleModel {
   final String id;
+  final String invoiceNumber; // e.g. "INV-0001"
   final List<CartItemModel> items;
   final double subtotal;
   final double checkoutDiscount;
@@ -17,6 +18,7 @@ class SaleModel {
 
   SaleModel({
     required this.id,
+    this.invoiceNumber = '',
     required this.items,
     required this.subtotal,
     this.checkoutDiscount = 0,
@@ -33,10 +35,12 @@ class SaleModel {
 
   bool get hasCustomer => customerId.isNotEmpty;
   bool get hasCashier => cashierId.isNotEmpty;
+  bool get hasInvoiceNumber => invoiceNumber.isNotEmpty;
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'invoiceNumber': invoiceNumber,
       'items': items
           .map(
             (e) => {
@@ -71,6 +75,7 @@ class SaleModel {
   factory SaleModel.fromMap(Map data) {
     return SaleModel(
       id: data['id'],
+      invoiceNumber: data['invoiceNumber'] ?? '',
       items: [],
       subtotal: (data['subtotal'] ?? data['total'] ?? 0).toDouble(),
       checkoutDiscount: (data['checkoutDiscount'] ?? 0).toDouble(),

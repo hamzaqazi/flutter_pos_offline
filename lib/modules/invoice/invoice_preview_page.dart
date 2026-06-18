@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
+import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
@@ -24,6 +25,7 @@ class InvoicePreviewPage extends StatelessWidget {
   final double totalSavings;
   final String customerId;      // linked customer
   final String cashierId;       // staff who processed this sale
+  final String invoiceNumber;   // e.g. "INV-0001"
 
   /// When true, this is a past receipt being viewed (no sale completion).
   final bool readOnly;
@@ -42,6 +44,7 @@ class InvoicePreviewPage extends StatelessWidget {
     this.totalSavings = 0,
     this.customerId = '',
     this.cashierId = '',
+    this.invoiceNumber = '',
     this.readOnly = false,
   });
 
@@ -75,6 +78,7 @@ class InvoicePreviewPage extends StatelessWidget {
       totalSavings: totalSavings,
       customerName: _customerName,
       cashierName: _cashierName,
+      invoiceNumber: invoiceNumber,
     );
     await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   }
@@ -146,6 +150,28 @@ class InvoicePreviewPage extends StatelessWidget {
                             );
                           }),
                           const SizedBox(height: 4),
+                          // Invoice number badge
+                          if (invoiceNumber.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                                vertical: AppSpacing.xs,
+                              ),
+                              decoration: BoxDecoration(
+                                color: cs.primary.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm),
+                              ),
+                              child: Text(
+                                invoiceNumber,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.primary,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
                           Text(
                             Formatters.dateTime(DateTime.now()),
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -358,39 +384,123 @@ class InvoicePreviewPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: readOnly
-              ? OutlinedButton.icon(
-                  icon: const Icon(Icons.print_outlined),
-                  label: const Text("Reprint receipt"),
-                  onPressed: _printInvoice,
-                )
-              : Row(
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.print_outlined),
-                        label: const Text("Print"),
-                        onPressed: _printInvoice,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.print_outlined),
+                            label: const Text("Print PDF"),
+                            onPressed: _printInvoice,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Obx(() {
+                            final settings = Get.find<SettingsController>();
+                            final hasPrinter = settings.receiptSettings.value.hasPrinter;
+                            return FilledButton.tonalIcon(
+                              icon: Icon(
+                                Icons.bluetooth,
+                                color: hasPrinter ? AppColors.accent : null,
+                              ),
+                              label: Text(hasPrinter ? "Thermal Print" : "Pair Printer"),
+                              onPressed: () async {
+                                if (!hasPrinter) {
+                                  Get.toNamed('/settings');
+                                  return;
+                                }
+                                await ThermalPrinterService.printReceipt(
+                                  items: items,
+                                  subtotal: subtotal,
+                                  checkoutDiscount: checkoutDiscount,
+                                  taxRate: taxRate,
+                                  taxInclusive: taxInclusive,
+                                  taxAmount: taxAmount,
+                                  total: total,
+                                  cash: cash,
+                                  change: change,
+                                  totalSavings: totalSavings,
+                                  customerName: _customerName,
+                                  cashierName: _cashierName,
+                                  invoiceNumber: invoiceNumber,
+                                );
+                              },
+                            );
+                          }),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      flex: 2,
-                      child: FilledButton.icon(
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text("Complete sale"),
-                        onPressed: () async {
-                          await _printInvoice();
-                          Get.find<SalesController>().completeSale(
-                            cash: cash,
-                            change: change,
-                            checkoutDiscount: checkoutDiscount,
-                            taxAmount: taxAmount,
-                            customerId: customerId,
-                            cashierId: cashierId,
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.print_outlined),
+                            label: const Text("PDF"),
+                            onPressed: _printInvoice,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Obx(() {
+                          final settings = Get.find<SettingsController>();
+                          final hasPrinter = settings.receiptSettings.value.hasPrinter;
+                          return Expanded(
+                            child: FilledButton.tonalIcon(
+                              icon: Icon(
+                                Icons.bluetooth,
+                                color: hasPrinter ? AppColors.accent : null,
+                                size: 18,
+                              ),
+                              label: Text(hasPrinter ? "Thermal" : "Pair"),
+                              onPressed: () async {
+                                if (!hasPrinter) {
+                                  Get.toNamed('/settings');
+                                  return;
+                                }
+                                await ThermalPrinterService.printReceipt(
+                                  items: items,
+                                  subtotal: subtotal,
+                                  checkoutDiscount: checkoutDiscount,
+                                  taxRate: taxRate,
+                                  taxInclusive: taxInclusive,
+                                  taxAmount: taxAmount,
+                                  total: total,
+                                  cash: cash,
+                                  change: change,
+                                  totalSavings: totalSavings,
+                                  customerName: _customerName,
+                                  cashierName: _cashierName,
+                                  invoiceNumber: invoiceNumber,
+                                );
+                              },
+                            ),
                           );
-                          Get.offAllNamed('/');
-                        },
-                      ),
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    FilledButton.icon(
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text("Complete sale"),
+                      onPressed: () {
+                        Get.find<SalesController>().completeSale(
+                          cash: cash,
+                          change: change,
+                          checkoutDiscount: checkoutDiscount,
+                          taxAmount: taxAmount,
+                          customerId: customerId,
+                          cashierId: cashierId,
+                          invoiceNumber: invoiceNumber,
+                        );
+                        Get.offAllNamed('/');
+                      },
                     ),
                   ],
                 ),
