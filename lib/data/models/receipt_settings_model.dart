@@ -17,19 +17,9 @@ class ReceiptSettingsModel {
   final bool showFooter;
   final int paperWidth; // 58 = 58mm, 80 = 80mm
   final int fontSize; // base font size for thermal print (0=small, 1=normal, 2=large)
-  final int template; // 0=Classic, 1=Modern, 2=Compact, 3=Detailed
 
   // --- Thermal printer ---
   final String pairedPrinterMac; // MAC address of paired Bluetooth printer
-
-  /// Template names for display
-  static const templateNames = ['Classic', 'Modern', 'Compact', 'Detailed'];
-  static const templateDescriptions = [
-    'Dot-line alignment with clear sections',
-    'Clean right-aligned prices with dividers',
-    'Minimal layout saves paper',
-    'Box-style with full item details',
-  ];
 
   ReceiptSettingsModel({
     this.logoPath = '',
@@ -48,7 +38,6 @@ class ReceiptSettingsModel {
     this.showFooter = true,
     this.paperWidth = 80,
     this.fontSize = 1,
-    this.template = 0,
     this.pairedPrinterMac = '',
   });
 
@@ -57,10 +46,11 @@ class ReceiptSettingsModel {
 
   /// Get chars per line based on paper width and font size.
   int get charsPerLine {
+    // Standard: 58mm ≈ 32 chars, 80mm ≈ 48 chars (at normal size)
     final base = paperWidth == 58 ? 32 : 48;
-    if (fontSize == 0) return (base * 1.3).floor();
-    if (fontSize == 2) return (base * 0.7).floor();
-    return base;
+    if (fontSize == 0) return (base * 1.3).floor(); // small
+    if (fontSize == 2) return (base * 0.7).floor(); // large
+    return base; // normal
   }
 
   ReceiptSettingsModel copyWith({
@@ -80,7 +70,6 @@ class ReceiptSettingsModel {
     bool? showFooter,
     int? paperWidth,
     int? fontSize,
-    int? template,
     String? pairedPrinterMac,
   }) {
     return ReceiptSettingsModel(
@@ -100,7 +89,6 @@ class ReceiptSettingsModel {
       showFooter: showFooter ?? this.showFooter,
       paperWidth: paperWidth ?? this.paperWidth,
       fontSize: fontSize ?? this.fontSize,
-      template: template ?? this.template,
       pairedPrinterMac: pairedPrinterMac ?? this.pairedPrinterMac,
     );
   }
@@ -122,7 +110,6 @@ class ReceiptSettingsModel {
         'showFooter': showFooter,
         'paperWidth': paperWidth,
         'fontSize': fontSize,
-        'template': template,
         'pairedPrinterMac': pairedPrinterMac,
       };
 
@@ -144,7 +131,6 @@ class ReceiptSettingsModel {
       showFooter: map['showFooter'] ?? true,
       paperWidth: map['paperWidth'] ?? 80,
       fontSize: map['fontSize'] ?? 1,
-      template: map['template'] ?? 0,
       pairedPrinterMac: map['pairedPrinterMac'] ?? '',
     );
   }
