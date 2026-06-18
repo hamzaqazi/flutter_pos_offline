@@ -16,10 +16,12 @@ class ThermalPrinterService {
       final listResult = await PrintBluetoothThermal.pairedBluetooths;
       if (listResult.isEmpty) return [];
       return listResult
-          .map((bluetooth) => BluetoothPrinter(
-                name: bluetooth.name,
-                mac: bluetooth.macAdress,
-              ))
+          .map(
+            (bluetooth) => BluetoothPrinter(
+              name: bluetooth.name,
+              mac: bluetooth.macAdress,
+            ),
+          )
           .where((p) => p.mac.isNotEmpty)
           .toList();
     } catch (e) {
@@ -30,7 +32,9 @@ class ThermalPrinterService {
   /// Connect to a Bluetooth printer by MAC address.
   static Future<bool> connect(String mac) async {
     try {
-      final result = await PrintBluetoothThermal.connect(macPrinterAddress: mac);
+      final result = await PrintBluetoothThermal.connect(
+        macPrinterAddress: mac,
+      );
       return result;
     } catch (e) {
       return false;
@@ -112,13 +116,32 @@ class ThermalPrinterService {
       );
 
       // Send to printer
-      final result = await PrintBluetoothThermal.writeBytes(bytes);
+      try {
+        final List<int> printData = bytes.toList();
+        final result = await PrintBluetoothThermal.writeBytes(printData);
+        if (!result) {
+          Get.snackbar(
+            "Print error",
+            "Failed to send data to printer",
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          // return false;
+        }
+      } catch (e) {
+        Get.snackbar(
+          "Print error",
+          "Failed to send data to printer: $e",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        // return false;
+      }
+      // final result = await PrintBluetoothThermal.writeBytes(bytes);
 
       // Disconnect after printing
       await Future.delayed(const Duration(seconds: 1));
       await disconnect();
 
-      return result;
+      // return result;
     } catch (e) {
       Get.snackbar(
         "Print error",
