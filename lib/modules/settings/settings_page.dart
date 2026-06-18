@@ -46,9 +46,7 @@ class SettingsPage extends GetView<SettingsController> {
               title: "Categories",
               subtitle: "Manage product categories & colors",
               color: Color(0xFF8B5CF6),
-              children: [
-                _CategoryManagementSection(),
-              ],
+              children: [_CategoryManagementSection()],
             ),
 
             const SizedBox(height: AppSpacing.md),
@@ -300,25 +298,44 @@ class _CategoryManagementSection extends StatelessWidget {
                     child: Center(
                       child: Icon(
                         Icons.category_outlined,
-                        color: ThemeData.estimateBrightnessForColor(cat.color) == Brightness.dark
+                        color:
+                            ThemeData.estimateBrightnessForColor(cat.color) ==
+                                Brightness.dark
                             ? Colors.white
                             : Colors.black87,
                         size: 16,
                       ),
                     ),
                   ),
-                  title: Text(cat.name, style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  title: Text(
+                    cat.name,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        onPressed: () => _showEditCategoryDialog(context, catController, cat),
+                        onPressed: () => _showEditCategoryDialog(
+                          context,
+                          catController,
+                          cat,
+                        ),
                         icon: const Icon(Icons.edit_outlined, size: 18),
                         tooltip: "Edit",
                       ),
                       IconButton(
-                        onPressed: () => _confirmDeleteCategory(context, catController, cat.name),
-                        icon: Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                        onPressed: () => _confirmDeleteCategory(
+                          context,
+                          catController,
+                          cat.name,
+                        ),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: AppColors.danger,
+                        ),
                         tooltip: "Delete",
                       ),
                     ],
@@ -332,7 +349,10 @@ class _CategoryManagementSection extends StatelessWidget {
     );
   }
 
-  void _showAddCategoryDialog(BuildContext context, CategoryController catController) {
+  void _showAddCategoryDialog(
+    BuildContext context,
+    CategoryController catController,
+  ) {
     final nameController = TextEditingController();
     Color selectedColor = AppColors.seed;
 
@@ -355,11 +375,17 @@ class _CategoryManagementSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text("Color", style: Theme.of(ctx).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                "Color",
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: AppSpacing.sm),
               _ColorPickerGrid(
                 selectedColor: selectedColor,
-                onColorSelected: (color) => setDialogState(() => selectedColor = color),
+                onColorSelected: (color) =>
+                    setDialogState(() => selectedColor = color),
               ),
             ],
           ),
@@ -374,8 +400,11 @@ class _CategoryManagementSection extends StatelessWidget {
                 if (name.isEmpty) return;
                 final added = catController.addCategory(name, selectedColor);
                 if (!added) {
-                  Get.snackbar("Duplicate", "Category \"$name\" already exists",
-                      snackPosition: SnackPosition.BOTTOM);
+                  Get.snackbar(
+                    "Duplicate",
+                    "Category \"$name\" already exists",
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
                   return;
                 }
                 Navigator.of(ctx).pop();
@@ -388,7 +417,11 @@ class _CategoryManagementSection extends StatelessWidget {
     );
   }
 
-  void _showEditCategoryDialog(BuildContext context, CategoryController catController, CategoryModel cat) {
+  void _showEditCategoryDialog(
+    BuildContext context,
+    CategoryController catController,
+    CategoryModel cat,
+  ) {
     final nameController = TextEditingController(text: cat.name);
     Color selectedColor = cat.color;
 
@@ -410,11 +443,17 @@ class _CategoryManagementSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text("Color", style: Theme.of(ctx).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                "Color",
+                style: Theme.of(
+                  ctx,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: AppSpacing.sm),
               _ColorPickerGrid(
                 selectedColor: selectedColor,
-                onColorSelected: (color) => setDialogState(() => selectedColor = color),
+                onColorSelected: (color) =>
+                    setDialogState(() => selectedColor = color),
               ),
             ],
           ),
@@ -427,10 +466,17 @@ class _CategoryManagementSection extends StatelessWidget {
               onPressed: () {
                 final name = nameController.text.trim();
                 if (name.isEmpty) return;
-                final updated = catController.updateCategory(cat.name, name, selectedColor);
+                final updated = catController.updateCategory(
+                  cat.name,
+                  name,
+                  selectedColor,
+                );
                 if (!updated) {
-                  Get.snackbar("Duplicate", "Category \"$name\" already exists",
-                      snackPosition: SnackPosition.BOTTOM);
+                  Get.snackbar(
+                    "Duplicate",
+                    "Category \"$name\" already exists",
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
                   return;
                 }
                 Navigator.of(ctx).pop();
@@ -443,7 +489,11 @@ class _CategoryManagementSection extends StatelessWidget {
     );
   }
 
-  void _confirmDeleteCategory(BuildContext context, CategoryController catController, String name) {
+  void _confirmDeleteCategory(
+    BuildContext context,
+    CategoryController catController,
+    String name,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -454,7 +504,9 @@ class _CategoryManagementSection extends StatelessWidget {
             const Text("Delete Category"),
           ],
         ),
-        content: Text("Are you sure you want to delete \"$name\"? Products in this category will still keep their category name."),
+        content: Text(
+          "Are you sure you want to delete \"$name\"? Products in this category will still keep their category name.",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -521,15 +573,24 @@ class _ColorPickerGrid extends StatelessWidget {
                   ? Border.all(color: Colors.black87, width: 3)
                   : Border.all(color: Colors.black12, width: 1),
               boxShadow: isSelected
-                  ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6)]
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                      ),
+                    ]
                   : null,
             ),
             child: isSelected
-                ? Icon(Icons.check,
-                    color: ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+                ? Icon(
+                    Icons.check,
+                    color:
+                        ThemeData.estimateBrightnessForColor(color) ==
+                            Brightness.dark
                         ? Colors.white
                         : Colors.black87,
-                    size: 20)
+                    size: 20,
+                  )
                 : null,
           ),
         );
@@ -836,10 +897,12 @@ class _ReceiptCustomizationWithPreview extends StatefulWidget {
   });
 
   @override
-  State<_ReceiptCustomizationWithPreview> createState() => _ReceiptCustomizationWithPreviewState();
+  State<_ReceiptCustomizationWithPreview> createState() =>
+      _ReceiptCustomizationWithPreviewState();
 }
 
-class _ReceiptCustomizationWithPreviewState extends State<_ReceiptCustomizationWithPreview> {
+class _ReceiptCustomizationWithPreviewState
+    extends State<_ReceiptCustomizationWithPreview> {
   late ReceiptSettingsModel _settings;
 
   @override
@@ -885,14 +948,17 @@ class _ReceiptCustomizationWithPreviewState extends State<_ReceiptCustomizationW
                 decoration: BoxDecoration(
                   color: AppColors.seed.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  border: Border.all(color: AppColors.seed.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.seed.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   child: Image.file(
                     File(_settings.logoPath),
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, size: 24),
+                    errorBuilder: (_, __, ___) =>
+                        const Icon(Icons.broken_image_outlined, size: 24),
                   ),
                 ),
               ),
@@ -901,10 +967,13 @@ class _ReceiptCustomizationWithPreviewState extends State<_ReceiptCustomizationW
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Logo set", style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.success,
-                    )),
+                    Text(
+                      "Logo set",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.success,
+                      ),
+                    ),
                     Text(
                       _settings.logoPath.split('/').last,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -916,8 +985,14 @@ class _ReceiptCustomizationWithPreviewState extends State<_ReceiptCustomizationW
                 ),
               ),
               IconButton.outlined(
-                onPressed: () => widget.onChanged(_settings.copyWith(logoPath: '', showLogo: false)),
-                icon: Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                onPressed: () => widget.onChanged(
+                  _settings.copyWith(logoPath: '', showLogo: false),
+                ),
+                icon: Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: AppColors.danger,
+                ),
                 tooltip: "Remove logo",
               ),
             ],
@@ -1233,7 +1308,13 @@ class _ReceiptPreview extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2),
                       ),
                       child: Center(
-                        child: Text("LOGO", style: TextStyle(fontSize: 8 * scale, color: Colors.grey)),
+                        child: Text(
+                          "LOGO",
+                          style: TextStyle(
+                            fontSize: 8 * scale,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1248,10 +1329,19 @@ class _ReceiptPreview extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                if (receiptSettings.showAddress && shopSettings.address.isNotEmpty)
-                  Text(shopSettings.address, textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
+                if (receiptSettings.showAddress &&
+                    shopSettings.address.isNotEmpty)
+                  Text(
+                    shopSettings.address,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 8 * scale),
+                  ),
                 if (receiptSettings.showPhone && shopSettings.phone.isNotEmpty)
-                  Text(shopSettings.phone, textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
+                  Text(
+                    shopSettings.phone,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 8 * scale),
+                  ),
 
                 // ═══ RECEIPT INFO ═══
                 const _PreviewDoubleLine(),
@@ -1260,7 +1350,10 @@ class _ReceiptPreview extends StatelessWidget {
                   style: TextStyle(fontSize: 8 * scale),
                 ),
                 if (receiptSettings.showCustomer)
-                  Text('Customer: Ahmed', style: TextStyle(fontSize: 8 * scale)),
+                  Text(
+                    'Customer: Ahmed',
+                    style: TextStyle(fontSize: 8 * scale),
+                  ),
                 if (receiptSettings.showCashier)
                   Text('Cashier: Ali', style: TextStyle(fontSize: 8 * scale)),
                 const _PreviewDashedLine(),
@@ -1313,7 +1406,10 @@ class _ReceiptPreview extends StatelessWidget {
                 const _PreviewDashedLine(),
                 Text(
                   _dotLine('TOTAL', '$cur 8,513', cw),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11 * scale),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11 * scale,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(_dotLine('Cash', '$cur 9,000', cw)),
@@ -1333,9 +1429,21 @@ class _ReceiptPreview extends StatelessWidget {
                 // ── CODYNEST ──
                 const SizedBox(height: 4),
                 const _PreviewDashedLine(),
-                Text("Powered by Codynest.com", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
-                Text("Support / WhatsApp:", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
-                Text("0315-3507075 / 0345-3333316", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
+                Text(
+                  "Powered by Codynest.com",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 8 * scale),
+                ),
+                Text(
+                  "Support / WhatsApp:",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 8 * scale),
+                ),
+                Text(
+                  "0315-3507075 / 0345-3333316",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 8 * scale),
+                ),
               ],
             ),
           ),
@@ -1357,9 +1465,31 @@ class _PreviewDoubleLine extends StatelessWidget {
           final w = constraints.maxWidth > 0 ? constraints.maxWidth : 200.0;
           return Column(
             children: [
-              Row(children: List.generate((w / 3).floor(), (_) => Expanded(child: Container(height: 0.8, color: Colors.black54, margin: const EdgeInsets.symmetric(horizontal: 0.5))))),
+              Row(
+                children: List.generate(
+                  (w / 3).floor(),
+                  (_) => Expanded(
+                    child: Container(
+                      height: 0.8,
+                      color: Colors.black54,
+                      margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(height: 1),
-              Row(children: List.generate((w / 3).floor(), (_) => Expanded(child: Container(height: 0.8, color: Colors.black54, margin: const EdgeInsets.symmetric(horizontal: 0.5))))),
+              Row(
+                children: List.generate(
+                  (w / 3).floor(),
+                  (_) => Expanded(
+                    child: Container(
+                      height: 0.8,
+                      color: Colors.black54,
+                      margin: const EdgeInsets.symmetric(horizontal: 0.5),
+                    ),
+                  ),
+                ),
+              ),
             ],
           );
         },
@@ -1444,6 +1574,11 @@ class _PreviewItem extends StatelessWidget {
         : price;
     final itemTotal = qty * discountedPrice;
 
+    final details = <String>[];
+    if (showBrand && brand.isNotEmpty) details.add(brand);
+    if (showSku && sku.isNotEmpty) details.add('SKU:$sku');
+    if (showBarcode && barcode.isNotEmpty) details.add('BC:$barcode');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1451,17 +1586,14 @@ class _PreviewItem extends StatelessWidget {
         Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
 
         // Brand | SKU | Barcode on one line (small)
-        final details = <String>[];
-        if (showBrand && brand.isNotEmpty) details.add(brand);
-        if (showSku && sku.isNotEmpty) details.add('SKU:$sku');
-        if (showBarcode && barcode.isNotEmpty) details.add('BC:$barcode');
         if (details.isNotEmpty)
-          Text('  ${details.join(' | ')}', style: TextStyle(fontSize: 8 * scale, color: Colors.black54)),
+          Text(
+            '  ${details.join(' | ')}',
+            style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
+          ),
 
         // Qty x Price ......... Total
-        Text(
-          _dotLine('  $qty x $cur$discountedPrice', '$cur$itemTotal'),
-        ),
+        Text(_dotLine('  $qty x $cur$discountedPrice', '$cur$itemTotal')),
 
         // Discount savings
         if (showDiscount && discount > 0)
@@ -1476,12 +1608,19 @@ class _PreviewItem extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final w = constraints.maxWidth > 0 ? constraints.maxWidth / 2 : 100.0;
+                final w = constraints.maxWidth > 0
+                    ? constraints.maxWidth / 2
+                    : 100.0;
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
                     (w / 4).floor(),
-                    (_) => Container(width: 2, height: 0.3, color: Colors.black26, margin: const EdgeInsets.symmetric(horizontal: 2)),
+                    (_) => Container(
+                      width: 2,
+                      height: 0.3,
+                      color: Colors.black26,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                    ),
                   ),
                 );
               },
