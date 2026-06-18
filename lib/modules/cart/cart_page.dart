@@ -50,101 +50,106 @@ class CartPage extends GetView<CartController> {
           const SizedBox(width: AppSpacing.sm),
         ],
       ),
-      body: Obx(() {
-        if (controller.cartItems.isEmpty) {
-          return _EmptyCart();
-        }
-
-        return Column(
-          children: [
-            // SKU quick-add bar
-            _SkuQuickAdd(),
-
-            // Held carts banner
-            Obx(() {
-              if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
-              return Container(
-                margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
-                child: Card(
-                  color: AppColors.warning.withValues(alpha: 0.08),
-                  child: InkWell(
-                    onTap: () => _showHeldCartsSheet(controller),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                            ),
-                            child: const Icon(
-                              Icons.pause_circle_filled,
-                              color: AppColors.warning,
-                              size: 20,
-                            ),
+      body: Column(
+        children: [
+          // Held carts banner (always visible when carts are held, even with empty cart)
+          Obx(() {
+            if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
+            return Container(
+              margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+              child: Card(
+                color: AppColors.warning.withValues(alpha: 0.08),
+                child: InkWell(
+                  onTap: () => _showHeldCartsSheet(controller),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: AppColors.warning.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}",
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                          child: const Icon(
+                            Icons.pause_circle_filled,
+                            color: AppColors.warning,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}",
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                Text(
-                                  "Tap to view and resume",
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
+                              ),
+                              Text(
+                                "Tap to view and resume",
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
+            );
+          }),
+
+          Expanded(
+            child: Obx(() {
+              if (controller.cartItems.isEmpty) {
+                return _EmptyCart();
+              }
+
+              return Column(
+                children: [
+                  // SKU quick-add bar
+                  _SkuQuickAdd(),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      itemCount: controller.cartItems.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.md),
+                      itemBuilder: (_, index) {
+                        final item = controller.cartItems[index];
+                        return _CartTile(
+                          item: item,
+                          onIncrease: () => controller.increaseQuantity(index),
+                          onDecrease: () => controller.decreaseQuantity(index),
+                        );
+                      },
+                    ),
+                  ),
+                  _SummaryBar(
+                    total: controller.totalAmount,
+                    subtotal: controller.subtotalAmount,
+                    tax: controller.taxAmount,
+                    savings: controller.totalSavings,
+                    itemCount: controller.totalItems,
+                    onCheckout: () => _checkout(context),
+                  ),
+                ],
               );
             }),
-
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: controller.cartItems.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.md),
-                itemBuilder: (_, index) {
-                  final item = controller.cartItems[index];
-                  return _CartTile(
-                    item: item,
-                    onIncrease: () => controller.increaseQuantity(index),
-                    onDecrease: () => controller.decreaseQuantity(index),
-                  );
-                },
-              ),
-            ),
-            _SummaryBar(
-              total: controller.totalAmount,
-              subtotal: controller.subtotalAmount,
-              tax: controller.taxAmount,
-              savings: controller.totalSavings,
-              itemCount: controller.totalItems,
-              onCheckout: () => _checkout(context),
-            ),
-          ],
-        );
-      }),
+          ),
+        ],
+      ),
     );
   }
 
@@ -322,15 +327,18 @@ class CartPage extends GetView<CartController> {
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           // Resume button
-                          FilledButton.tonalIcon(
-                            onPressed: () {
-                              controller.resumeCart(held.id);
-                              Get.back(); // Close bottom sheet
-                            },
-                            icon: const Icon(Icons.play_arrow, size: 18),
-                            label: const Text("Resume"),
-                            style: FilledButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
+                          SizedBox(
+                            width: 90,
+                            child: FilledButton.tonalIcon(
+                              onPressed: () {
+                                controller.resumeCart(held.id);
+                                Get.back(); // Close bottom sheet
+                              },
+                              icon: const Icon(Icons.play_arrow, size: 18),
+                              label: const Text("Resume"),
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                              ),
                             ),
                           ),
                         ],
