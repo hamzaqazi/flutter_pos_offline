@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/modules/cart/cart_page.dart';
 import 'package:ad_shop_pos/modules/customers/customers_page.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_page.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_page.dart';
+import 'package:ad_shop_pos/modules/products/low_stock_page.dart';
 import 'package:ad_shop_pos/modules/products/products_page.dart';
 import 'package:ad_shop_pos/modules/reports/reports_page.dart';
 import 'package:ad_shop_pos/modules/returns/returns_page.dart';
@@ -28,5 +29,6 @@ class AppPages {
     GetPage(name: Routes.customers, page: () => const CustomersPage()),
     GetPage(name: Routes.staff, page: () => const StaffPage()),
     GetPage(name: Routes.scanner, page: () => const BarcodeScannerPage()),
+    GetPage(name: Routes.lowStock, page: () => const LowStockPage()),
   ];
 }

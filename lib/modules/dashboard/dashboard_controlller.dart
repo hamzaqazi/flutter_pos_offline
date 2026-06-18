@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:get/get.dart';
@@ -30,8 +31,9 @@ class DashboardController extends GetxController {
 
   void _recalcProducts() {
     totalProducts.value = productsController.products.length;
+    final threshold = SettingsService.getSettings().lowStockThreshold;
     lowStockCount.value =
-        productsController.products.where((p) => p.stock <= 5).length;
+        productsController.products.where((p) => p.stock <= threshold).length;
   }
 
   void _recalcSales() {

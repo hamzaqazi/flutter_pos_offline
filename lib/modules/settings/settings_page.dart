@@ -64,6 +64,19 @@ class SettingsPage extends GetView<SettingsController> {
 
             const SizedBox(height: AppSpacing.md),
 
+            // ---------- Low Stock Alert ----------
+            _SectionTile(
+              icon: Icons.warning_amber_rounded,
+              title: "Low Stock Alert",
+              subtitle: "Alert threshold & notifications",
+              color: AppColors.warning,
+              children: [
+                Obx(() => _LowStockThresholdForm(settings: controller.settings.value)),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
             // ---------- Receipt Customization ----------
             _SectionTile(
               icon: Icons.receipt_long_outlined,
@@ -2301,6 +2314,78 @@ class _SummaryRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// =================== Low Stock Threshold Form ===================
+class _LowStockThresholdForm extends StatefulWidget {
+  final ShopSettingsModel settings;
+  const _LowStockThresholdForm({required this.settings});
+
+  @override
+  State<_LowStockThresholdForm> createState() => _LowStockThresholdFormState();
+}
+
+class _LowStockThresholdFormState extends State<_LowStockThresholdForm> {
+  late final _thresholdController = TextEditingController(
+    text: widget.settings.lowStockThreshold.toString(),
+  );
+
+  @override
+  void dispose() {
+    _thresholdController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<SettingsController>();
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Products at or below this stock level will trigger a low stock alert on the dashboard.",
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _thresholdController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Low stock threshold",
+                  hintText: "e.g. 5",
+                  prefixIcon: Icon(Icons.warning_amber_rounded),
+                  suffixText: "units",
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            FilledButton(
+              onPressed: () {
+                final threshold = int.tryParse(_thresholdController.text.trim()) ?? 5;
+                if (threshold < 0) return;
+                controller.updateSettings(
+                  controller.settings.value.copyWith(lowStockThreshold: threshold),
+                );
+                Get.snackbar(
+                  "Updated",
+                  "Low stock threshold set to $threshold units",
+                  snackPosition: SnackPosition.BOTTOM,
+                );
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

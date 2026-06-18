@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
@@ -81,7 +82,7 @@ class DashboardPage extends GetView<DashboardController> {
                           value: controller.lowStockCount.value.toString(),
                           icon: Icons.warning_amber_rounded,
                           color: AppColors.warning,
-                          onTap: () => Get.toNamed('/products'),
+                          onTap: () => Get.toNamed('/low-stock'),
                         ),
                         _StatCard(
                           label: "Margin",
@@ -205,8 +206,9 @@ class DashboardPage extends GetView<DashboardController> {
                   // Low stock notification
                   Obx(() {
                     final productsCtrl = Get.find<ProductsController>();
+                    final settings = SettingsService.getSettings();
                     final lowStock = productsCtrl.products
-                        .where((p) => p.stock <= 5)
+                        .where((p) => p.stock <= settings.lowStockThreshold)
                         .toList();
                     final outOfStock = lowStock
                         .where((p) => p.stock <= 0)
@@ -244,7 +246,7 @@ class DashboardPage extends GetView<DashboardController> {
                             title: "$outOfStock out of stock",
                             subtitle: "Products need restocking immediately",
                             color: AppColors.danger,
-                            onTap: () => Get.toNamed('/products'),
+                            onTap: () => Get.toNamed('/low-stock'),
                           ),
                         if (outOfStock > 0 && low > 0)
                           const SizedBox(height: AppSpacing.md),
@@ -252,9 +254,9 @@ class DashboardPage extends GetView<DashboardController> {
                           _NotificationTile(
                             icon: Icons.warning_amber_rounded,
                             title: "$low low stock",
-                            subtitle: "Products running low (≤5 units)",
+                            subtitle: "Products running low (≤${settings.lowStockThreshold} units)",
                             color: AppColors.warning,
-                            onTap: () => Get.toNamed('/products'),
+                            onTap: () => Get.toNamed('/low-stock'),
                           ),
                       ],
                     );
