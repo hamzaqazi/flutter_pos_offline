@@ -1,3 +1,5 @@
+import 'package:ad_shop_pos/data/models/product_model.dart';
+
 import 'cart_item_model.dart';
 
 /// A cart that has been put on hold for later retrieval.
@@ -21,19 +23,21 @@ class HeldCartModel {
     return {
       'id': id,
       'items': items
-          .map((e) => {
-                'productId': e.product.id,
-                'name': e.product.name,
-                'brand': e.product.brand,
-                'sku': e.product.sku,
-                'barcode': e.product.barcode,
-                'price': e.product.price,
-                'purchasePrice': e.product.purchasePrice,
-                'discount': e.product.discount,
-                'category': e.product.category,
-                'stock': e.product.stock,
-                'qty': e.quantity,
-              })
+          .map(
+            (e) => {
+              'productId': e.product.id,
+              'name': e.product.name,
+              'brand': e.product.brand,
+              'sku': e.product.sku,
+              'barcode': e.product.barcode,
+              'price': e.product.price,
+              'purchasePrice': e.product.purchasePrice,
+              'discount': e.product.discount,
+              'category': e.product.category,
+              'stock': e.product.stock,
+              'qty': e.quantity,
+            },
+          )
           .toList(),
       'heldAt': heldAt.toIso8601String(),
       'label': label,

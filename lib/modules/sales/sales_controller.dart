@@ -15,7 +15,8 @@ class SalesController extends GetxController {
 
   // Search & filter state
   final searchQuery = ''.obs;
-  final dateFilter = 'All'.obs; // 'All', 'Today', 'This Week', 'This Month', 'Custom'
+  final dateFilter =
+      'All'.obs; // 'All', 'Today', 'This Week', 'This Month', 'Custom'
   DateTime? customStartDate;
   DateTime? customEndDate;
 
@@ -77,6 +78,7 @@ class SalesController extends GetxController {
           date: DateTime.tryParse(e['date'] ?? '') ?? DateTime.now(),
         );
       }).toList(),
+    );
   }
 
   /// Get the next invoice number (auto-incrementing, persisted in Hive).
@@ -202,46 +204,103 @@ class SalesController extends GetxController {
     final now = DateTime.now();
     switch (dateFilter.value) {
       case 'Today':
-        result = result.where((s) =>
-          s.date.year == now.year && s.date.month == now.month && s.date.day == now.day
-        ).toList();
+        result = result
+            .where(
+              (s) =>
+                  s.date.year == now.year &&
+                  s.date.month == now.month &&
+                  s.date.day == now.day,
+            )
+            .toList();
         break;
       case 'This Week':
         final weekStart = now.subtract(Duration(days: now.weekday - 1));
         final start = DateTime(weekStart.year, weekStart.month, weekStart.day);
-        result = result.where((s) => s.date.isAfter(start) || s.date.isAtSameMomentAs(start)).toList();
+        result = result
+            .where(
+              (s) => s.date.isAfter(start) || s.date.isAtSameMomentAs(start),
+            )
+            .toList();
         break;
       case 'This Month':
-        result = result.where((s) =>
-          s.date.year == now.year && s.date.month == now.month
-        ).toList();
+        result = result
+            .where((s) => s.date.year == now.year && s.date.month == now.month)
+            .toList();
         break;
       case 'Custom':
         if (customStartDate != null) {
-          final start = DateTime(customStartDate!.year, customStartDate!.month, customStartDate!.day);
-          result = result.where((s) => s.date.isAfter(start) || s.date.isAtSameMomentAs(start)).toList();
+          final start = DateTime(
+            customStartDate!.year,
+            customStartDate!.month,
+            customStartDate!.day,
+          );
+          result = result
+              .where(
+                (s) => s.date.isAfter(start) || s.date.isAtSameMomentAs(start),
+              )
+              .toList();
         }
         if (customEndDate != null) {
-          final end = DateTime(customEndDate!.year, customEndDate!.month, customEndDate!.day, 23, 59, 59);
-          result = result.where((s) => s.date.isBefore(end) || s.date.isAtSameMomentAs(end)).toList();
+          final end = DateTime(
+            customEndDate!.year,
+            customEndDate!.month,
+            customEndDate!.day,
+            23,
+            59,
+            59,
+          );
+          result = result
+              .where(
+                (s) => s.date.isBefore(end) || s.date.isAtSameMomentAs(end),
+              )
+              .toList();
         }
         break;
     }
 
     // Search filter (invoice number, customer name, item name)
+    // if (searchQuery.value.isNotEmpty) {
+    //   final query = searchQuery.value.toLowerCase();
+    //   final customersController = Get.tryFind<CustomersController>();
+    //   result = result.where((s) {
+    //     if (s.invoiceNumber.toLowerCase().contains(query)) return true;
+    //     if (s.hasCustomer && customersController != null) {
+    //       final customer = customersController.findById(s.customerId);
+    //       if (customer != null && customer.name.toLowerCase().contains(query)) return true;
+    //     }
+    //     // Search by item name
+    //     for (final item in s.items) {
+    //       if (item.product.name.toLowerCase().contains(query)) return true;
+    //     }
+    //     return false;
+    //   }).toList();
+    // }
     if (searchQuery.value.isNotEmpty) {
       final query = searchQuery.value.toLowerCase();
-      final customersController = Get.tryFind<CustomersController>();
+
+      final customersController = Get.isRegistered<CustomersController>()
+          ? Get.find<CustomersController>()
+          : null;
+
       result = result.where((s) {
-        if (s.invoiceNumber.toLowerCase().contains(query)) return true;
+        if (s.invoiceNumber.toLowerCase().contains(query)) {
+          return true;
+        }
+
         if (s.hasCustomer && customersController != null) {
           final customer = customersController.findById(s.customerId);
-          if (customer != null && customer.name.toLowerCase().contains(query)) return true;
+
+          if (customer != null && customer.name.toLowerCase().contains(query)) {
+            return true;
+          }
         }
-        // Search by item name
+
         for (final item in s.items) {
-          if (item.product.name.toLowerCase().contains(query)) return true;
+          if (item.product.name.toLowerCase().contains(query)) {
+            return true;
+          }
         }
+
         return false;
       }).toList();
     }

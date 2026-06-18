@@ -16,6 +16,7 @@ import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:get/get.dart';
+import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -27,7 +28,9 @@ class ExportService {
     final products = controller.products;
 
     final buffer = StringBuffer();
-    buffer.writeln('SKU,Barcode,Name,Brand,Category,Price,Purchase Price,Discount %,Stock');
+    buffer.writeln(
+      'SKU,Barcode,Name,Brand,Category,Price,Purchase Price,Discount %,Stock',
+    );
 
     for (final p in products) {
       buffer.writeln(
@@ -104,24 +107,24 @@ class ExportService {
 
       // Products — store as list of maps
       backup['products'] = productsController.products
-          .map((p) => {
-                'id': p.id,
-                'name': p.name,
-                'brand': p.brand,
-                'category': p.category,
-                'price': p.price,
-                'purchasePrice': p.purchasePrice,
-                'discount': p.discount,
-                'stock': p.stock,
-                'sku': p.sku,
-                'barcode': p.barcode,
-              })
+          .map(
+            (p) => {
+              'id': p.id,
+              'name': p.name,
+              'brand': p.brand,
+              'category': p.category,
+              'price': p.price,
+              'purchasePrice': p.purchasePrice,
+              'discount': p.discount,
+              'stock': p.stock,
+              'sku': p.sku,
+              'barcode': p.barcode,
+            },
+          )
           .toList();
 
       // Sales — store as list of maps (with full item details)
-      backup['sales'] = salesController.sales
-          .map((s) => s.toMap())
-          .toList();
+      backup['sales'] = salesController.sales.map((s) => s.toMap()).toList();
 
       // Expenses
       backup['expenses'] = expensesController.expenses
@@ -139,23 +142,27 @@ class ExportService {
           .toList();
 
       // Staff
-      backup['staff'] = staffController.staff
-          .map((s) => s.toMap())
-          .toList();
+      backup['staff'] = staffController.staff.map((s) => s.toMap()).toList();
 
       // Settings
       backup['settings'] = settingsController.settings.value.toMap();
 
       // Receipt settings
-      backup['receiptSettings'] = settingsController.receiptSettings.value.toMap();
+      backup['receiptSettings'] = settingsController.receiptSettings.value
+          .toMap();
 
       // Categories
       final catController = Get.find<CategoryController>();
-      backup['categories'] = catController.categories.map((c) => c.toMap()).toList();
+      backup['categories'] = catController.categories
+          .map((c) => c.toMap())
+          .toList();
 
       // Last invoice number (for sequential numbering persistence)
       final settingsBox = Hive.box('settings');
-      final lastInvoiceNum = settingsBox.get('lastInvoiceNumber', defaultValue: 0);
+      final lastInvoiceNum = settingsBox.get(
+        'lastInvoiceNumber',
+        defaultValue: 0,
+      );
       backup['lastInvoiceNumber'] = lastInvoiceNum;
 
       // Active cashier
@@ -176,7 +183,8 @@ class ExportService {
       await Share.shareXFiles(
         [XFile(file.path)],
         subject: 'Full Backup - $timestamp',
-        text: 'Shop POS Full Backup (${productsController.products.length} products, '
+        text:
+            'Shop POS Full Backup (${productsController.products.length} products, '
             '${salesController.sales.length} sales, '
             '${expensesController.expenses.length} expenses)',
       );

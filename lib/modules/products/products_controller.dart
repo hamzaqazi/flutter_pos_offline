@@ -104,9 +104,7 @@ class ProductsController extends GetxController {
   ProductModel? findByBarcode(String code) {
     if (code.isEmpty) return null;
     try {
-      return products.firstWhere(
-        (p) => p.barcode == code,
-      );
+      return products.firstWhere((p) => p.barcode == code);
     } catch (_) {
       return null;
     }
@@ -119,27 +117,29 @@ class ProductsController extends GetxController {
   }
 
   Map<String, dynamic> _toMap(ProductModel p) => {
-        'id': p.id,
-        'name': p.name,
-        'brand': p.brand,
-        'category': p.category,
-        'price': p.price,
-        'purchasePrice': p.purchasePrice,
-        'discount': p.discount,
-        'stock': p.stock,
-        'sku': p.sku,
-        'barcode': p.barcode,
-      };
+    'id': p.id,
+    'name': p.name,
+    'brand': p.brand,
+    'category': p.category,
+    'price': p.price,
+    'purchasePrice': p.purchasePrice,
+    'discount': p.discount,
+    'stock': p.stock,
+    'sku': p.sku,
+    'barcode': p.barcode,
+  };
 
   List<ProductModel> get filteredProducts {
     return products.where((product) {
       final query = searchQuery.value.toLowerCase();
-      final matchesSearch = product.name.toLowerCase().contains(query) ||
+      final matchesSearch =
+          product.name.toLowerCase().contains(query) ||
           product.brand.toLowerCase().contains(query) ||
           product.sku.toLowerCase().contains(query) ||
           product.barcode.toLowerCase().contains(query);
 
-      final matchesCategory = selectedCategory.value == 'All' ||
+      final matchesCategory =
+          selectedCategory.value == 'All' ||
           product.category == selectedCategory.value;
 
       return matchesSearch && matchesCategory;
@@ -148,7 +148,7 @@ class ProductsController extends GetxController {
 
   /// Products that are at or below the low stock threshold.
   List<ProductModel> get lowStockProducts {
-    final threshold = Get.find<SettingsService>().getSettings().lowStockThreshold;
+    final threshold = SettingsService.getSettings().lowStockThreshold;
     return products.where((p) => p.stock <= threshold).toList();
   }
 
