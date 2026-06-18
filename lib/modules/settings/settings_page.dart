@@ -1177,9 +1177,14 @@ class _ReceiptPreview extends StatelessWidget {
     required this.shopSettings,
   });
 
+  String _dotLine(String left, String right, int width) {
+    final gap = width - left.length - right.length;
+    if (gap <= 0) return '$left $right';
+    return '$left${'.' * gap}$right';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final width = receiptSettings.paperWidth == 58 ? 220.0 : 300.0;
     final scale = receiptSettings.fontSize == 0
         ? 0.85
@@ -1187,11 +1192,12 @@ class _ReceiptPreview extends StatelessWidget {
         ? 1.15
         : 1.0;
     final cur = shopSettings.currencySymbol;
+    final cw = receiptSettings.paperWidth == 58 ? 32 : 48;
 
     return Center(
       child: Container(
         width: width,
-        constraints: const BoxConstraints(maxHeight: 420),
+        constraints: const BoxConstraints(maxHeight: 480),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -1214,8 +1220,9 @@ class _ReceiptPreview extends StatelessWidget {
               height: 1.4,
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo preview
+                // ── LOGO ──
                 if (receiptSettings.showLogo && receiptSettings.hasLogo)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
@@ -1230,7 +1237,8 @@ class _ReceiptPreview extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Shop header (bold, NOT oversized — fits 58mm)
+
+                // ── SHOP NAME ──
                 if (receiptSettings.showShopName)
                   Text(
                     shopSettings.shopName.toUpperCase(),
@@ -1240,37 +1248,24 @@ class _ReceiptPreview extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                // Address (small)
-                if (receiptSettings.showAddress &&
-                    shopSettings.address.isNotEmpty)
-                  Text(
-                    shopSettings.address,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 8 * scale),
-                  ),
-                // Phone (small)
+                if (receiptSettings.showAddress && shopSettings.address.isNotEmpty)
+                  Text(shopSettings.address, textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
                 if (receiptSettings.showPhone && shopSettings.phone.isNotEmpty)
-                  Text(
-                    shopSettings.phone,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 8 * scale),
-                  ),
-                const _PreviewDivider(),
+                  Text(shopSettings.phone, textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
 
-                // Date
-                if (receiptSettings.showDate)
-                  Text(
-                    "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} 14:30",
-                    textAlign: TextAlign.left,
-                  ),
-                if (receiptSettings.showCashier) const Text("Cashier: Ali"),
-                if (receiptSettings.showCustomer) const Text("Customer: Ahmed"),
-                if (receiptSettings.showDate ||
-                    receiptSettings.showCashier ||
-                    receiptSettings.showCustomer)
-                  const _PreviewDivider(),
+                // ═══ RECEIPT INFO ═══
+                const _PreviewDoubleLine(),
+                Text(
+                  _dotLine('No: R2847391', '19/06/2026 14:30', cw),
+                  style: TextStyle(fontSize: 8 * scale),
+                ),
+                if (receiptSettings.showCustomer)
+                  Text('Customer: Ahmed', style: TextStyle(fontSize: 8 * scale)),
+                if (receiptSettings.showCashier)
+                  Text('Cashier: Ali', style: TextStyle(fontSize: 8 * scale)),
+                const _PreviewDashedLine(),
 
-                // Sample items
+                // ── ITEMS ──
                 _PreviewItem(
                   name: "Casio Watch",
                   qty: 2,
@@ -1285,6 +1280,8 @@ class _ReceiptPreview extends StatelessWidget {
                   brand: "Casio",
                   barcode: "8901234567890",
                   scale: scale,
+                  cw: cw,
+                  isLast: false,
                 ),
                 _PreviewItem(
                   name: "Perfume",
@@ -1300,31 +1297,32 @@ class _ReceiptPreview extends StatelessWidget {
                   brand: "",
                   barcode: "",
                   scale: scale,
+                  cw: cw,
+                  isLast: true,
                 ),
-                const _PreviewDivider(),
 
-                // Totals
-                Text("Subtotal: $cur 8,300"),
+                // ═══ TOTALS ═══
+                const _PreviewDoubleLine(),
+                Text(_dotLine('Subtotal', '$cur 8,300', cw)),
                 if (receiptSettings.showDiscountDetails) ...[
-                  Text("Product disc: -$cur 700"),
-                  Text("Checkout disc (5%): -$cur 415"),
+                  Text(_dotLine('Product disc', '-$cur 700', cw)),
+                  Text(_dotLine('Checkout 5% disc', '-$cur 415', cw)),
                 ],
                 if (receiptSettings.showTaxDetails)
-                  Text("Tax (16%): $cur 1,328"),
+                  Text(_dotLine('Tax 16.0%', '$cur 1,328', cw)),
+                const _PreviewDashedLine(),
                 Text(
-                  "TOTAL: $cur 8,513",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11 * scale,
-                  ),
+                  _dotLine('TOTAL', '$cur 8,513', cw),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11 * scale),
                 ),
-                Text("Cash: $cur 9,000"),
-                Text("Change: $cur 487"),
+                const SizedBox(height: 2),
+                Text(_dotLine('Cash', '$cur 9,000', cw)),
+                Text(_dotLine('Change', '$cur 487', cw)),
 
-                // Footer
+                // ── FOOTER ──
                 if (receiptSettings.showFooter) ...[
                   const SizedBox(height: 4),
-                  const _PreviewDivider(),
+                  const _PreviewDashedLine(),
                   Text(
                     shopSettings.receiptFooter,
                     textAlign: TextAlign.center,
@@ -1332,9 +1330,9 @@ class _ReceiptPreview extends StatelessWidget {
                   ),
                 ],
 
-                // Powered by Codynest (always shown)
+                // ── CODYNEST ──
                 const SizedBox(height: 4),
-                const _PreviewDivider(),
+                const _PreviewDashedLine(),
                 Text("Powered by Codynest.com", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
                 Text("Support / WhatsApp:", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
                 Text("0315-3507075 / 0345-3333316", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
@@ -1347,21 +1345,42 @@ class _ReceiptPreview extends StatelessWidget {
   }
 }
 
-class _PreviewDivider extends StatelessWidget {
-  const _PreviewDivider();
+class _PreviewDoubleLine extends StatelessWidget {
+  const _PreviewDoubleLine();
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final dashWidth = constraints.maxWidth > 0
-              ? constraints.maxWidth
-              : 200.0;
+          final w = constraints.maxWidth > 0 ? constraints.maxWidth : 200.0;
+          return Column(
+            children: [
+              Row(children: List.generate((w / 3).floor(), (_) => Expanded(child: Container(height: 0.8, color: Colors.black54, margin: const EdgeInsets.symmetric(horizontal: 0.5))))),
+              const SizedBox(height: 1),
+              Row(children: List.generate((w / 3).floor(), (_) => Expanded(child: Container(height: 0.8, color: Colors.black54, margin: const EdgeInsets.symmetric(horizontal: 0.5))))),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PreviewDashedLine extends StatelessWidget {
+  const _PreviewDashedLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth > 0 ? constraints.maxWidth : 200.0;
           return Row(
             children: List.generate(
-              (dashWidth / 6).floor(),
+              (w / 6).floor(),
               (_) => Expanded(
                 child: Container(
                   height: 0.5,
@@ -1391,6 +1410,8 @@ class _PreviewItem extends StatelessWidget {
   final String brand;
   final String barcode;
   final double scale;
+  final int cw;
+  final bool isLast;
 
   const _PreviewItem({
     required this.name,
@@ -1406,44 +1427,67 @@ class _PreviewItem extends StatelessWidget {
     required this.brand,
     required this.barcode,
     required this.scale,
+    required this.cw,
+    this.isLast = false,
   });
+
+  String _dotLine(String left, String right) {
+    final gap = cw - left.length - right.length;
+    if (gap <= 0) return '$left $right';
+    return '$left${'.' * gap}$right';
+  }
 
   @override
   Widget build(BuildContext context) {
     final discountedPrice = discount > 0
         ? (price * (1 - discount / 100)).round()
         : price;
-    final total = qty * discountedPrice;
+    final itemTotal = qty * discountedPrice;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-          if (showBrand && brand.isNotEmpty)
-            Text(
-              "  Brand: $brand",
-              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Name (bold)
+        Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
+
+        // Brand | SKU | Barcode on one line (small)
+        final details = <String>[];
+        if (showBrand && brand.isNotEmpty) details.add(brand);
+        if (showSku && sku.isNotEmpty) details.add('SKU:$sku');
+        if (showBarcode && barcode.isNotEmpty) details.add('BC:$barcode');
+        if (details.isNotEmpty)
+          Text('  ${details.join(' | ')}', style: TextStyle(fontSize: 8 * scale, color: Colors.black54)),
+
+        // Qty x Price ......... Total
+        Text(
+          _dotLine('  $qty x $cur$discountedPrice', '$cur$itemTotal'),
+        ),
+
+        // Discount savings
+        if (showDiscount && discount > 0)
+          Text(
+            '  Save ${discount.toStringAsFixed(0)}% (was $cur$price)',
+            style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
+          ),
+
+        // Dotted separator between items
+        if (!isLast)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth > 0 ? constraints.maxWidth / 2 : 100.0;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    (w / 4).floor(),
+                    (_) => Container(width: 2, height: 0.3, color: Colors.black26, margin: const EdgeInsets.symmetric(horizontal: 2)),
+                  ),
+                );
+              },
             ),
-          if (showSku && sku.isNotEmpty)
-            Text(
-              "  SKU: $sku",
-              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
-            ),
-          if (showBarcode && barcode.isNotEmpty)
-            Text(
-              "  Barcode: $barcode",
-              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
-            ),
-          Text("  $qty x $cur $discountedPrice = $cur $total"),
-          if (showDiscount && discount > 0)
-            Text(
-              "  Orig: $cur $price (-${discount.toStringAsFixed(0)}%)",
-              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
-            ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
