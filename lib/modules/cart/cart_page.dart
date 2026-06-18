@@ -29,11 +29,22 @@ class CartPage extends GetView<CartController> {
         actions: [
           Obx(() {
             if (controller.cartItems.isEmpty) return const SizedBox.shrink();
-            return TextButton.icon(
-              onPressed: () => controller.clearCart(),
-              icon: const Icon(Icons.delete_outline, size: 18),
-              label: const Text("Clear"),
-              style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _holdCartDialog(controller),
+                  icon: const Icon(Icons.pause_circle_outline, size: 18),
+                  label: const Text("Hold"),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+                ),
+                TextButton.icon(
+                  onPressed: () => controller.clearCart(),
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text("Clear"),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                ),
+              ],
             );
           }),
           const SizedBox(width: AppSpacing.sm),
@@ -48,6 +59,65 @@ class CartPage extends GetView<CartController> {
           children: [
             // SKU quick-add bar
             _SkuQuickAdd(),
+
+            // Held carts banner
+            Obx(() {
+              if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+                child: Card(
+                  color: AppColors.warning.withValues(alpha: 0.08),
+                  child: InkWell(
+                    onTap: () => _showHeldCartsSheet(controller),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: const Icon(
+                              Icons.pause_circle_filled,
+                              color: AppColors.warning,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}",
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  "Tap to view and resume",
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -75,6 +145,205 @@ class CartPage extends GetView<CartController> {
           ],
         );
       }),
+    );
+  }
+
+  void _holdCartDialog(CartController controller) {
+    final labelController = TextEditingController();
+    Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.all(AppSpacing.lg),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.pause_circle_outline, color: AppColors.warning),
+                    const SizedBox(width: AppSpacing.md),
+                    Text("Hold Cart", style: Get.textTheme.titleLarge),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  "Save this cart to resume later. Current cart items will be held.",
+                  style: Get.textTheme.bodyMedium?.copyWith(
+                    color: Get.theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextField(
+                  controller: labelController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: "Label (optional)",
+                    hintText: "e.g. Customer name, table number",
+                    prefixIcon: Icon(Icons.label_outline),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: Get.back,
+                        child: const Text("Cancel"),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          controller.holdCart(label: labelController.text.trim());
+                          Get.back();
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.warning,
+                        ),
+                        child: const Text("Hold"),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showHeldCartsSheet(CartController controller) {
+    Get.bottomSheet(
+      Container(
+        constraints: BoxConstraints(maxHeight: Get.height * 0.7),
+        decoration: BoxDecoration(
+          color: Get.theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppSpacing.radiusLg),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.only(top: AppSpacing.md),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Get.theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                children: [
+                  Icon(Icons.pause_circle_filled, color: AppColors.warning),
+                  const SizedBox(width: AppSpacing.md),
+                  Text("Held Carts", style: Get.textTheme.titleLarge),
+                  const Spacer(),
+                  Text(
+                    "${controller.heldCartCount} cart${controller.heldCartCount == 1 ? '' : 's'}",
+                    style: Get.textTheme.bodySmall?.copyWith(
+                      color: Get.theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: Obx(() => ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                itemCount: controller.heldCarts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+                itemBuilder: (_, index) {
+                  final held = controller.heldCarts[index];
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: const Icon(
+                              Icons.pause_circle_filled,
+                              color: AppColors.warning,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  held.label.isNotEmpty ? held.label : "Held Cart",
+                                  style: Get.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "${held.totalItems} items • ${Formatters.currency(held.totalAmount)}",
+                                  style: Get.textTheme.bodySmall?.copyWith(
+                                    color: Get.theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  Formatters.dateTime(held.heldAt),
+                                  style: Get.textTheme.bodySmall?.copyWith(
+                                    color: Get.theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Delete button
+                          IconButton(
+                            onPressed: () {
+                              controller.deleteHeldCart(held.id);
+                            },
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            color: AppColors.danger,
+                            tooltip: "Discard held cart",
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          // Resume button
+                          FilledButton.tonalIcon(
+                            onPressed: () {
+                              controller.resumeCart(held.id);
+                              Get.back(); // Close bottom sheet
+                            },
+                            icon: const Icon(Icons.play_arrow, size: 18),
+                            label: const Text("Resume"),
+                            style: FilledButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              )),
+            ),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
     );
   }
 

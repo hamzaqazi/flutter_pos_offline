@@ -23,6 +23,7 @@ void main() async {
   await Hive.openBox('customers');
   await Hive.openBox('staff');
   await Hive.openBox('categories');
+  await Hive.openBox('held_carts');
   runApp(const PosApp());
 }
 
