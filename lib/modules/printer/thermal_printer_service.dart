@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:math';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
@@ -125,7 +126,6 @@ class ThermalPrinterService {
             "Failed to send data to printer",
             snackPosition: SnackPosition.BOTTOM,
           );
-          // return false;
         }
       } catch (e) {
         Get.snackbar(
@@ -133,15 +133,11 @@ class ThermalPrinterService {
           "Failed to send data to printer: $e",
           snackPosition: SnackPosition.BOTTOM,
         );
-        // return false;
       }
-      // final result = await PrintBluetoothThermal.writeBytes(bytes);
 
       // Disconnect after printing
       await Future.delayed(const Duration(seconds: 1));
       await disconnect();
-
-      // return result;
     } catch (e) {
       Get.snackbar(
         "Print error",
@@ -153,6 +149,7 @@ class ThermalPrinterService {
   }
 
   /// Generate ESC/POS byte commands for the receipt.
+  /// Optimized for 58mm (32 chars/line) and 80mm (48 chars/line).
   static Future<Uint8List> _generateEscPos({
     required List<CartItemModel> items,
     required double subtotal,
@@ -170,9 +167,8 @@ class ThermalPrinterService {
     required shopSettings,
   }) async {
     final profile = await CapabilityProfile.load();
-    final paperSize = receiptSettings.paperWidth == 58
-        ? PaperSize.mm58
-        : PaperSize.mm80;
+    final is58mm = receiptSettings.paperWidth == 58;
+    final paperSize = is58mm ? PaperSize.mm58 : PaperSize.mm80;
     final generator = Generator(paperSize, profile);
     List<int> bytes = [];
 
@@ -186,37 +182,53 @@ class ThermalPrinterService {
           final imageBytes = await file.readAsBytes();
           final decoded = img.decodeImage(imageBytes);
           if (decoded != null) {
-            bytes += generator.image(decoded);
+            // Resize logo to fit paper width (58mm ≈ 384px, 80mm ≈ 576px)
+            final maxWidth = is58mm ? 280 : 500;
+            if (decoded.width > maxWidth) {
+              final ratio = maxWidth / decoded.width;
+              final resized = img.copyResize(decoded, width: maxWidth, height: (decoded.height * ratio).round());
+              bytes += generator.image(resized);
+            } else {
+              bytes += generator.image(decoded);
+            }
             bytes += generator.feed(1);
           }
         }
       } catch (_) {}
     }
 
-    // --- Shop header ---
+    // --- Shop header (bold but NOT double-size — fits on 58mm) ---
     if (receiptSettings.showShopName) {
       bytes += generator.text(
         shopSettings.shopName.toUpperCase(),
         styles: const PosStyles(
           align: PosAlign.center,
           bold: true,
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
         ),
       );
     }
 
+    // --- Address (small font) ---
     if (receiptSettings.showAddress && shopSettings.address.isNotEmpty) {
       bytes += generator.text(
         shopSettings.address,
-        styles: const PosStyles(align: PosAlign.center),
+        styles: PosStyles(
+          align: PosAlign.center,
+          height: PosTextSize.size1,
+          width: PosTextSize.size1,
+        ),
       );
     }
 
+    // --- Phone (small font) ---
     if (receiptSettings.showPhone && shopSettings.phone.isNotEmpty) {
       bytes += generator.text(
         shopSettings.phone,
-        styles: const PosStyles(align: PosAlign.center),
+        styles: PosStyles(
+          align: PosAlign.center,
+          height: PosTextSize.size1,
+          width: PosTextSize.size1,
+        ),
       );
     }
 
@@ -249,22 +261,34 @@ class ThermalPrinterService {
         styles: const PosStyles(bold: true),
       );
 
+      // Small font for brand, SKU, barcode
+      final smallStyle = PosStyles(
+        height: PosTextSize.size1,
+        width: PosTextSize.size1,
+      );
+
       // Brand
       if (receiptSettings.showBrand && item.product.hasBrand) {
         bytes += generator.text(
           '  Brand: ${item.product.brand}',
-          styles: const PosStyles(underline: true),
+          styles: smallStyle,
         );
       }
 
       // SKU
       if (receiptSettings.showSku && item.product.hasSku) {
-        bytes += generator.text('  SKU: ${item.product.sku}');
+        bytes += generator.text(
+          '  SKU: ${item.product.sku}',
+          styles: smallStyle,
+        );
       }
 
       // Barcode
       if (receiptSettings.showBarcode && item.product.hasBarcode) {
-        bytes += generator.text('  Barcode: ${item.product.barcode}');
+        bytes += generator.text(
+          '  Barcode: ${item.product.barcode}',
+          styles: smallStyle,
+        );
       }
 
       // Qty x Price = Total
@@ -276,7 +300,7 @@ class ThermalPrinterService {
       if (receiptSettings.showDiscountDetails && item.product.discount > 0) {
         bytes += generator.text(
           '  Orig: $cur ${item.product.price.toStringAsFixed(0)} (-${item.product.discount.toStringAsFixed(0)}%)',
-          styles: const PosStyles(underline: true),
+          styles: smallStyle,
         );
       }
     }
@@ -292,12 +316,12 @@ class ThermalPrinterService {
     if (receiptSettings.showDiscountDetails) {
       if (productDiscountAmount > 0) {
         bytes += generator.text(
-          'Product discounts: -$cur ${productDiscountAmount.toStringAsFixed(0)}',
+          'Product disc: -$cur ${productDiscountAmount.toStringAsFixed(0)}',
         );
       }
       if (checkoutDiscount > 0) {
         bytes += generator.text(
-          'Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%): -$cur ${checkoutDiscountAmount.toStringAsFixed(0)}',
+          'Checkout disc (${checkoutDiscount.toStringAsFixed(0)}%): -$cur ${checkoutDiscountAmount.toStringAsFixed(0)}',
         );
       }
     }
@@ -311,12 +335,13 @@ class ThermalPrinterService {
       );
     }
 
+    // TOTAL in bold only (not double-size, fits 58mm)
     bytes += generator.text(
       'TOTAL: $cur ${total.toStringAsFixed(0)}',
       styles: const PosStyles(
         bold: true,
         height: PosTextSize.size2,
-        width: PosTextSize.size2,
+        width: PosTextSize.size1,
       ),
     );
 
@@ -331,6 +356,21 @@ class ThermalPrinterService {
         styles: const PosStyles(align: PosAlign.center, bold: true),
       );
     }
+
+    // --- Powered by Codynest ---
+    bytes += generator.feed(1);
+    bytes += generator.text(
+      'Powered by Codynest.com',
+      styles: const PosStyles(align: PosAlign.center),
+    );
+    bytes += generator.text(
+      'Support / WhatsApp:',
+      styles: const PosStyles(align: PosAlign.center),
+    );
+    bytes += generator.text(
+      '0315-3507075 / 0345-3333316',
+      styles: const PosStyles(align: PosAlign.center),
+    );
 
     bytes += generator.feed(3);
     bytes += generator.cut();

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
@@ -6,6 +8,7 @@ import 'package:ad_shop_pos/data/services/export_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
@@ -821,7 +824,7 @@ class _TaxFormState extends State<_TaxForm> {
 
 // =================== Receipt Customization with Preview ===================
 
-class _ReceiptCustomizationWithPreview extends StatelessWidget {
+class _ReceiptCustomizationWithPreview extends StatefulWidget {
   final ReceiptSettingsModel receiptSettings;
   final ShopSettingsModel shopSettings;
   final ValueChanged<ReceiptSettingsModel> onChanged;
@@ -833,10 +836,112 @@ class _ReceiptCustomizationWithPreview extends StatelessWidget {
   });
 
   @override
+  State<_ReceiptCustomizationWithPreview> createState() => _ReceiptCustomizationWithPreviewState();
+}
+
+class _ReceiptCustomizationWithPreviewState extends State<_ReceiptCustomizationWithPreview> {
+  late ReceiptSettingsModel _settings;
+
+  @override
+  void didUpdateWidget(covariant _ReceiptCustomizationWithPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _settings = widget.receiptSettings;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _settings = widget.receiptSettings;
+  }
+
+  Future<void> _pickLogo() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 600,
+      maxHeight: 600,
+      imageQuality: 85,
+    );
+    if (picked != null) {
+      final newPath = picked.path;
+      widget.onChanged(_settings.copyWith(logoPath: newPath, showLogo: true));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Shop Logo
+        _SettingLabel("Shop Logo"),
+        const SizedBox(height: AppSpacing.xs),
+        if (_settings.hasLogo) ...[
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.seed.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  border: Border.all(color: AppColors.seed.withValues(alpha: 0.3)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  child: Image.file(
+                    File(_settings.logoPath),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.broken_image_outlined, size: 24),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Logo set", style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.success,
+                    )),
+                    Text(
+                      _settings.logoPath.split('/').last,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              IconButton.outlined(
+                onPressed: () => widget.onChanged(_settings.copyWith(logoPath: '', showLogo: false)),
+                icon: Icon(Icons.delete_outline, size: 18, color: AppColors.danger),
+                tooltip: "Remove logo",
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SwitchListTile(
+            value: _settings.showLogo,
+            onChanged: (v) => widget.onChanged(_settings.copyWith(showLogo: v)),
+            title: const Text("Show logo on receipt"),
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+        ] else ...[
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _pickLogo,
+              icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
+              label: const Text("Choose Logo"),
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.lg),
+
         // Paper width
         _SettingLabel("Paper Width"),
         const SizedBox(height: AppSpacing.xs),
@@ -844,14 +949,14 @@ class _ReceiptCustomizationWithPreview extends StatelessWidget {
           children: [
             _ChoiceChip(
               label: "58mm",
-              selected: receiptSettings.paperWidth == 58,
-              onTap: () => onChanged(receiptSettings.copyWith(paperWidth: 58)),
+              selected: _settings.paperWidth == 58,
+              onTap: () => widget.onChanged(_settings.copyWith(paperWidth: 58)),
             ),
             const SizedBox(width: AppSpacing.sm),
             _ChoiceChip(
               label: "80mm",
-              selected: receiptSettings.paperWidth == 80,
-              onTap: () => onChanged(receiptSettings.copyWith(paperWidth: 80)),
+              selected: _settings.paperWidth == 80,
+              onTap: () => widget.onChanged(_settings.copyWith(paperWidth: 80)),
             ),
           ],
         ),
@@ -864,20 +969,20 @@ class _ReceiptCustomizationWithPreview extends StatelessWidget {
           children: [
             _ChoiceChip(
               label: "Small",
-              selected: receiptSettings.fontSize == 0,
-              onTap: () => onChanged(receiptSettings.copyWith(fontSize: 0)),
+              selected: _settings.fontSize == 0,
+              onTap: () => widget.onChanged(_settings.copyWith(fontSize: 0)),
             ),
             const SizedBox(width: AppSpacing.sm),
             _ChoiceChip(
               label: "Normal",
-              selected: receiptSettings.fontSize == 1,
-              onTap: () => onChanged(receiptSettings.copyWith(fontSize: 1)),
+              selected: _settings.fontSize == 1,
+              onTap: () => widget.onChanged(_settings.copyWith(fontSize: 1)),
             ),
             const SizedBox(width: AppSpacing.sm),
             _ChoiceChip(
               label: "Large",
-              selected: receiptSettings.fontSize == 2,
-              onTap: () => onChanged(receiptSettings.copyWith(fontSize: 2)),
+              selected: _settings.fontSize == 2,
+              onTap: () => widget.onChanged(_settings.copyWith(fontSize: 2)),
             ),
           ],
         ),
@@ -886,15 +991,15 @@ class _ReceiptCustomizationWithPreview extends StatelessWidget {
         // Show/hide toggles grouped
         _SettingLabel("Show on Receipt"),
         const SizedBox(height: AppSpacing.xs),
-        _ToggleGroup(settings: receiptSettings, onChanged: onChanged),
+        _ToggleGroup(settings: _settings, onChanged: widget.onChanged),
         const SizedBox(height: AppSpacing.lg),
 
         // Preview
         _SettingLabel("Live Preview"),
         const SizedBox(height: AppSpacing.xs),
         _ReceiptPreview(
-          receiptSettings: receiptSettings,
-          shopSettings: shopSettings,
+          receiptSettings: _settings,
+          shopSettings: widget.shopSettings,
         ),
       ],
     );
@@ -1110,21 +1215,46 @@ class _ReceiptPreview extends StatelessWidget {
             ),
             child: Column(
               children: [
-                // Shop header
+                // Logo preview
+                if (receiptSettings.showLogo && receiptSettings.hasLogo)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Container(
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: Center(
+                        child: Text("LOGO", style: TextStyle(fontSize: 8 * scale, color: Colors.grey)),
+                      ),
+                    ),
+                  ),
+                // Shop header (bold, NOT oversized — fits 58mm)
                 if (receiptSettings.showShopName)
                   Text(
                     shopSettings.shopName.toUpperCase(),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 13 * scale,
+                      fontSize: 11 * scale,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                // Address (small)
                 if (receiptSettings.showAddress &&
                     shopSettings.address.isNotEmpty)
-                  Text(shopSettings.address, textAlign: TextAlign.center),
+                  Text(
+                    shopSettings.address,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 8 * scale),
+                  ),
+                // Phone (small)
                 if (receiptSettings.showPhone && shopSettings.phone.isNotEmpty)
-                  Text(shopSettings.phone, textAlign: TextAlign.center),
+                  Text(
+                    shopSettings.phone,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 8 * scale),
+                  ),
                 const _PreviewDivider(),
 
                 // Date
@@ -1185,7 +1315,7 @@ class _ReceiptPreview extends StatelessWidget {
                   "TOTAL: $cur 8,513",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 12 * scale,
+                    fontSize: 11 * scale,
                   ),
                 ),
                 Text("Cash: $cur 9,000"),
@@ -1201,6 +1331,13 @@ class _ReceiptPreview extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
+
+                // Powered by Codynest (always shown)
+                const SizedBox(height: 4),
+                const _PreviewDivider(),
+                Text("Powered by Codynest.com", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
+                Text("Support / WhatsApp:", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
+                Text("0315-3507075 / 0345-3333316", textAlign: TextAlign.center, style: TextStyle(fontSize: 8 * scale)),
               ],
             ),
           ),
@@ -1287,23 +1424,23 @@ class _PreviewItem extends StatelessWidget {
           if (showBrand && brand.isNotEmpty)
             Text(
               "  Brand: $brand",
-              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
             ),
           if (showSku && sku.isNotEmpty)
             Text(
               "  SKU: $sku",
-              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
             ),
           if (showBarcode && barcode.isNotEmpty)
             Text(
               "  Barcode: $barcode",
-              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
             ),
           Text("  $qty x $cur $discountedPrice = $cur $total"),
           if (showDiscount && discount > 0)
             Text(
               "  Orig: $cur $price (-${discount.toStringAsFixed(0)}%)",
-              style: TextStyle(fontSize: 9 * scale, color: Colors.black54),
+              style: TextStyle(fontSize: 8 * scale, color: Colors.black54),
             ),
         ],
       ),
