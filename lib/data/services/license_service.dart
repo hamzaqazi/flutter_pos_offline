@@ -140,7 +140,7 @@ class LicenseService {
           return LicenseResult(
             success: false,
             message:
-                'Device limit reached ($maxDevices/${maxDevices}). Contact support to add more devices.',
+                'Device limit reached ($maxDevices devices max). Contact support to add more devices.',
           );
         }
       }
@@ -175,7 +175,15 @@ class LicenseService {
       debugPrint('🔥 LICENSE ERROR: $e');
       debugPrint('STACK TRACE: $s');
 
-      return LicenseResult(success: false, message: e.toString());
+      // Show user-friendly message instead of raw exception
+      String userMessage = 'Connection error. Please check your internet and try again.';
+      if (e.toString().contains('permission-denied') || e.toString().contains('PERMISSION_DENIED')) {
+        userMessage = 'Access denied. Please contact support.';
+      } else if (e.toString().contains('not-found')) {
+        userMessage = 'Invalid license key. Please check and try again.';
+      }
+
+      return LicenseResult(success: false, message: userMessage);
     }
     // catch (e) {
     //   // If no internet, check if we have a saved activation
@@ -274,12 +282,47 @@ class LicenseService {
     if (reason.isNotEmpty) {
       await _box.put('license_deactivationReason', reason);
     }
+
+    // Try to unregister this device from Firestore
+    await _unregisterDevice();
+
     await _box.delete('license_activated');
     await _box.delete('license_key');
     await _box.delete('license_shopName');
     await _box.delete('license_expiresAt');
     await _box.delete('license_pin');
     await _box.delete('license_pinEnabled');
+  }
+
+  /// Remove this device from Firestore registeredDevices list.
+  static Future<void> _unregisterDevice() async {
+    try {
+      final key = _box.get('license_key') as String? ?? '';
+      if (key.isEmpty) return;
+
+      final doc = await FirebaseFirestore.instance
+          .collection('licenses')
+          .doc(key)
+          .get();
+
+      if (!doc.exists) return;
+
+      final currentDeviceId = await deviceId;
+      final registeredDevices = List<String>.from(
+        doc.data()?['registeredDevices'] ?? [],
+      );
+
+      if (registeredDevices.contains(currentDeviceId)) {
+        registeredDevices.remove(currentDeviceId);
+        await FirebaseFirestore.instance
+            .collection('licenses')
+            .doc(key)
+            .update({'registeredDevices': registeredDevices});
+      }
+    } catch (e) {
+      // Silently fail — don't block deactivation if network is down
+      debugPrint('⚠️ Failed to unregister device: $e');
+    }
   }
 
   static String _formatDate(DateTime date) {

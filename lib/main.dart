@@ -59,8 +59,18 @@ class _PosAppState extends State<PosApp> {
       return;
     }
 
-    // Already activated — verify with Firestore (background check)
-    final stillValid = await LicenseService.verifyActiveLicense();
+    // Already activated — verify with Firestore (with 8-second timeout)
+    bool stillValid;
+    try {
+      stillValid = await LicenseService.verifyActiveLicense()
+          .timeout(const Duration(seconds: 8), onTimeout: () {
+        // Timeout — trust the saved activation (offline mode)
+        return LicenseService.isActivated;
+      });
+    } catch (e) {
+      // Any error — trust saved activation
+      stillValid = LicenseService.isActivated;
+    }
 
     if (!stillValid) {
       // License revoked or expired — back to activation

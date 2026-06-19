@@ -83,11 +83,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     final currentPin = _isConfirmStep ? _confirmPin : _pin;
     final title = _isConfirmStep ? 'Confirm PIN' : 'Set PIN';
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            const Spacer(),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              const Spacer(),
 
             // Icon
             Container(
@@ -226,6 +228,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
