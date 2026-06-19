@@ -132,7 +132,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                           border: Border.all(
                             color: AppColors.warning.withValues(alpha: 0.4),
                           ),
@@ -141,7 +143,11 @@ class _ActivationScreenState extends State<ActivationScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: AppColors.warning,
+                                  size: 24,
+                                ),
                                 const SizedBox(width: AppSpacing.md),
                                 Expanded(
                                   child: Text(
@@ -165,10 +171,14 @@ class _ActivationScreenState extends State<ActivationScreen> {
                             const SizedBox(height: AppSpacing.md),
                             Row(
                               children: [
-                                Icon(Icons.call, size: 14, color: AppColors.warning),
+                                Icon(
+                                  Icons.call,
+                                  size: 14,
+                                  color: AppColors.warning,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Contact: 0315-3507075 / 0345-3333316',
+                                  'Contact: 0315-3507075',
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: AppColors.warning,
                                     fontWeight: FontWeight.w700,

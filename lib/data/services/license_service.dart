@@ -56,7 +56,8 @@ class LicenseService {
 
   /// Check if there's a deactivation reason to show.
   static bool get hasDeactivationReason {
-    return (_box.get('license_deactivationReason', defaultValue: '') as String).isNotEmpty;
+    return (_box.get('license_deactivationReason', defaultValue: '') as String)
+        .isNotEmpty;
   }
 
   /// Clear the deactivation reason (after it's been shown).
@@ -210,7 +211,10 @@ class LicenseService {
         return false;
       }
       if (doc.data()?['active'] != true) {
-        await deactivate(reason: 'Your license has been deactivated by the administrator. Contact support to reactivate.');
+        await deactivate(
+          reason:
+              'Your license has been deactivated by the administrator. Contact support to reactivate.',
+        );
         return false;
       }
 
@@ -218,7 +222,10 @@ class LicenseService {
       if (doc.data()?['expiresAt'] != null) {
         final expiresAt = (doc.data()!['expiresAt'] as Timestamp).toDate();
         if (expiresAt.isBefore(DateTime.now())) {
-          await deactivate(reason: 'Your license expired on ${_formatDate(expiresAt)}. Contact support to renew your license.');
+          await deactivate(
+            reason:
+                'Your license expired on ${_formatDate(expiresAt)}. Contact support to renew your license.',
+          );
           return false;
         }
       }
@@ -276,7 +283,29 @@ class LicenseService {
   }
 
   static String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    // Format as 10 jan 2026
+    return '${date.day} ${_monthName(date.month)} ${date.year}';
+
+    // return '${date.day}/${date.month}/${date.year}';
+  }
+
+  static String _monthName(int month) {
+    const names = [
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return names[month];
   }
 }
 
