@@ -81,7 +81,10 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [AppColors.seed, AppColors.seed.withValues(alpha: 0.75)],
+                          colors: [
+                            AppColors.seed,
+                            AppColors.seed.withValues(alpha: 0.75),
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
@@ -124,7 +127,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                     Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -138,9 +143,15 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                   padding: const EdgeInsets.all(AppSpacing.sm),
                                   decoration: BoxDecoration(
                                     color: cs.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm,
+                                    ),
                                   ),
-                                  child: Icon(Icons.vpn_key_outlined, color: cs.primary, size: 20),
+                                  child: Icon(
+                                    Icons.vpn_key_outlined,
+                                    color: cs.primary,
+                                    size: 20,
+                                  ),
                                 ),
                                 const SizedBox(width: AppSpacing.md),
                                 Text(
@@ -176,15 +187,26 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                 prefixIcon: const Icon(Icons.vpn_key_outlined),
                                 filled: true,
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                  borderSide: BorderSide(color: cs.outlineVariant),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: cs.outlineVariant,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                  borderSide: BorderSide(color: cs.primary, width: 2),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
+                                  borderSide: BorderSide(
+                                    color: cs.primary,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                               onSubmitted: (_) => _activate(),
@@ -197,24 +219,35 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(AppSpacing.md),
                                 decoration: BoxDecoration(
-                                  color: AppColors.danger.withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  color: AppColors.danger.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusSm,
+                                  ),
                                   border: Border.all(
-                                    color: AppColors.danger.withValues(alpha: 0.25),
+                                    color: AppColors.danger.withValues(
+                                      alpha: 0.25,
+                                    ),
                                   ),
                                 ),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                                    Icon(
+                                      Icons.error_outline,
+                                      color: AppColors.danger,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: AppSpacing.sm),
                                     Expanded(
                                       child: Text(
                                         _error!,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: AppColors.danger,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.danger,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -232,7 +265,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                 onPressed: _loading ? null : _activate,
                                 style: FilledButton.styleFrom(
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd,
+                                    ),
                                   ),
                                 ),
                                 child: _loading
@@ -245,16 +280,21 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                         ),
                                       )
                                     : Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          const Icon(Icons.verified_user_outlined, size: 20),
+                                          const Icon(
+                                            Icons.verified_user_outlined,
+                                            size: 20,
+                                          ),
                                           const SizedBox(width: AppSpacing.sm),
                                           Text(
                                             'Activate License',
-                                            style: theme.textTheme.titleSmall?.copyWith(
-                                              color: cs.onPrimary,
-                                              fontWeight: FontWeight.w700,
-                                            ),
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  color: cs.onPrimary,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -276,12 +316,20 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         return Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
-                            color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            color: cs.surfaceContainerHighest.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
+                              Icon(
+                                Icons.devices,
+                                size: 16,
+                                color: cs.onSurfaceVariant,
+                              ),
                               const SizedBox(width: AppSpacing.sm),
                               Expanded(
                                 child: Text(
@@ -314,10 +362,14 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
+                            Icon(
+                              Icons.call,
+                              size: 14,
+                              color: cs.onSurfaceVariant,
+                            ),
                             const SizedBox(width: 4),
                             Text(
-                              '0315-3507075 / 0345-3333316',
+                              '0315-3507075',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
                                 fontWeight: FontWeight.w600,

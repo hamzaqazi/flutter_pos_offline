@@ -85,7 +85,7 @@ class SettingsPage extends GetView<SettingsController> {
             // ---------- PIN Lock ----------
             _SectionTile(
               icon: Icons.lock_outline,
-              title: "PIN Lock",
+              title: "App Security",
               subtitle: "App security & PIN settings",
               color: const Color(0xFF6366F1),
               children: [_PinLockSection()],
@@ -1469,7 +1469,7 @@ class _ReceiptPreview extends StatelessWidget {
                   style: TextStyle(fontSize: 8 * scale),
                 ),
                 Text(
-                  "0315-3507075 / 0345-3333316",
+                  "0315-3507075",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 8 * scale),
                 ),
@@ -2385,7 +2385,7 @@ class _LowStockThresholdFormState extends State<_LowStockThresholdForm> {
             ),
             const SizedBox(width: AppSpacing.md),
             SizedBox(
-              width: 80,
+              width: 90,
               child: FilledButton(
                 onPressed: () {
                   final threshold =
@@ -2527,35 +2527,56 @@ class _PinLockSectionState extends State<_PinLockSection> {
               ),
               if (LicenseService.expiresAt != null) ...[
                 const SizedBox(height: 4),
-                Builder(builder: (_) {
-                  final exp = LicenseService.expiresAt!;
-                  final days = LicenseService.daysUntilExpiry ?? 0;
-                  final isWarning = days <= 30;
-                  final isCritical = days <= 7;
-                  final color = isCritical
-                      ? AppColors.danger
-                      : isWarning
-                          ? AppColors.warning
-                          : AppColors.success;
-                  return Row(
-                    children: [
-                      Icon(Icons.event_outlined, size: 16, color: color),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        "Expires: ${exp.day}/${exp.month}/${exp.year} ($days days left)",
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: color,
-                          fontWeight: FontWeight.w600,
+                Builder(
+                  builder: (_) {
+                    final exp = LicenseService.expiresAt!;
+                    final days = LicenseService.daysUntilExpiry ?? 0;
+                    final isWarning = days <= 30;
+                    final isCritical = days <= 7;
+                    final color = isCritical
+                        ? AppColors.danger
+                        : isWarning
+                        ? AppColors.warning
+                        : AppColors.success;
+                    return Row(
+                      children: [
+                        Icon(Icons.event_outlined, size: 16, color: color),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          "Expires: ${formatDate(exp)} ($days days left)",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                }),
+                      ],
+                    );
+                  },
+                ),
               ],
             ],
           ),
         ),
       ],
     );
+  }
+
+  String formatDate(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
