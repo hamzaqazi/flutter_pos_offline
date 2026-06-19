@@ -352,8 +352,11 @@ class AutoBackupService {
 
   /// List all auto-backup files with metadata.
   static Future<List<BackupFileInfo>> listBackups() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final backupDir = Directory('${dir.path}/backups');
+    // final dir = await getApplicationDocumentsDirectory();
+    // final backupDir = Directory('${dir.path}/backups');
+    final backupDir = Directory(
+      '/storage/emulated/0/Documents/Codynest POS/Backups',
+    );
     if (!await backupDir.exists()) return [];
 
     final files = <BackupFileInfo>[];
