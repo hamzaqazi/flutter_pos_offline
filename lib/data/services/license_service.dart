@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
 
@@ -185,20 +184,6 @@ class LicenseService {
 
       return LicenseResult(success: false, message: userMessage);
     }
-    // catch (e) {
-    //   // If no internet, check if we have a saved activation
-    //   if (isActivated) {
-    //     return LicenseResult(
-    //       success: true,
-    //       message: 'Offline — using saved activation',
-    //       shopName: shopName,
-    //     );
-    //   }
-    //   return LicenseResult(
-    //     success: false,
-    //     message: 'Connection error. Please check your internet and try again.',
-    //   );
-    // }
   }
 
   /// Background check — verify license is still active (called on app start).
