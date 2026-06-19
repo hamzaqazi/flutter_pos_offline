@@ -32,6 +32,7 @@ dependencies:
   printing: ^5.14.3
   cloud_firestore: ^6.6.0
   device_info_plus: ^11.3.0
+  workmanager: ^0.5.2
   firebase_core: ^4.11.0
 
 dev_dependencies:
