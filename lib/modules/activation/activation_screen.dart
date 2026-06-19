@@ -34,7 +34,6 @@ class _ActivationScreenState extends State<ActivationScreen> {
     setState(() => _loading = false);
 
     if (result.success) {
-      // Go to PIN setup (optional)
       Get.offAllNamed('/pin-setup');
     } else {
       setState(() => _error = result.message);
@@ -53,174 +52,291 @@ class _ActivationScreenState extends State<ActivationScreen> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.08),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.storefront,
-                      size: 64,
-                      color: cs.primary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  Text(
-                    'Shop POS',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Enter your license key to activate',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // License key input
-                  TextField(
-                    controller: _keyController,
-                    textCapitalization: TextCapitalization.characters,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'License Key',
-                      hintText: 'XXXX-XXXX',
-                      prefixIcon: const Icon(Icons.vpn_key_outlined),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                        borderSide: BorderSide(color: cs.primary, width: 2),
-                      ),
-                    ),
-                    onSubmitted: (_) => _activate(),
-                  ),
-
-                  if (_error != null) ...[
-                    const SizedBox(height: AppSpacing.md),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              cs.primary.withValues(alpha: 0.05),
+              cs.surface,
+              cs.primary.withValues(alpha: 0.03),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ---------- Brand Logo Area ----------
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      width: 100,
+                      height: 100,
                       decoration: BoxDecoration(
-                        color: AppColors.danger.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        border: Border.all(
-                          color: AppColors.danger.withValues(alpha: 0.3),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.seed, AppColors.seed.withValues(alpha: 0.75)],
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.error_outline, color: AppColors.danger, size: 20),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(
-                              _error!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppColors.danger,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.seed.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Activate button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: _loading ? null : _activate,
-                      style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      child: const Center(
+                        child: Icon(
+                          Icons.point_of_sale,
+                          color: Colors.white,
+                          size: 50,
                         ),
                       ),
-                      child: _loading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Activate',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                            ),
                     ),
-                  ),
+                    const SizedBox(height: AppSpacing.xxl),
 
-                  const SizedBox(height: AppSpacing.xl),
+                    // ---------- Title ----------
+                    Text(
+                      'Shop POS',
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Point of Sale System',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
 
-                  // Device ID info
-                  FutureBuilder<String>(
-                    future: LicenseService.deviceId,
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const SizedBox.shrink();
-                      final deviceId = snapshot.data!;
-                      return Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: Row(
+                    // ---------- Card ----------
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                'Device ID: ${deviceId.substring(0, deviceId.length > 16 ? 16 : deviceId.length)}...',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontFamily: 'monospace',
+                            // Section header
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(AppSpacing.sm),
+                                  decoration: BoxDecoration(
+                                    color: cs.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  ),
+                                  child: Icon(Icons.vpn_key_outlined, color: cs.primary, size: 20),
                                 ),
+                                const SizedBox(width: AppSpacing.md),
+                                Text(
+                                  'Activate Your License',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              'Enter the license key provided to you to activate this application. Each key is linked to your shop and device.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xl),
+
+                            // License key input
+                            TextField(
+                              controller: _keyController,
+                              textCapitalization: TextCapitalization.characters,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 3,
+                                fontFamily: 'monospace',
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'License Key',
+                                hintText: 'XXXX-XXXX-XXXX',
+                                prefixIcon: const Icon(Icons.vpn_key_outlined),
+                                filled: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                  borderSide: BorderSide(color: cs.outlineVariant),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                  borderSide: BorderSide(color: cs.primary, width: 2),
+                                ),
+                              ),
+                              onSubmitted: (_) => _activate(),
+                            ),
+
+                            // Error message
+                            if (_error != null) ...[
+                              const SizedBox(height: AppSpacing.md),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                decoration: BoxDecoration(
+                                  color: AppColors.danger.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  border: Border.all(
+                                    color: AppColors.danger.withValues(alpha: 0.25),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: Text(
+                                        _error!,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: AppColors.danger,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: AppSpacing.xl),
+
+                            // Activate button
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: FilledButton(
+                                onPressed: _loading ? null : _activate,
+                                style: FilledButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                  ),
+                                ),
+                                child: _loading
+                                    ? const SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.verified_user_outlined, size: 20),
+                                          const SizedBox(width: AppSpacing.sm),
+                                          Text(
+                                            'Activate License',
+                                            style: theme.textTheme.titleSmall?.copyWith(
+                                              color: cs.onPrimary,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                               ),
                             ),
                           ],
                         ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  Text(
-                    'Powered by Codynest.com',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // ---------- Device ID + Support Info ----------
+                    FutureBuilder<String>(
+                      future: LicenseService.deviceId,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) return const SizedBox.shrink();
+                        final deviceId = snapshot.data!;
+                        return Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  'Device: ${deviceId.length > 20 ? deviceId.substring(0, 20) : deviceId}...',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    fontFamily: 'monospace',
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // ---------- Footer ----------
+                    Column(
+                      children: [
+                        Text(
+                          'Need help? Contact support',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
+                            const SizedBox(width: 4),
+                            Text(
+                              '0315-3507075 / 0345-3333316',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          'Powered by Codynest.com',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -28,6 +28,27 @@ class LicenseService {
     return _box.get('license_key', defaultValue: '') as String;
   }
 
+  /// Get the license expiry date (null if not set or never expires).
+  static DateTime? get expiresAt {
+    final str = _box.get('license_expiresAt') as String?;
+    if (str == null || str.isEmpty) return null;
+    return DateTime.tryParse(str);
+  }
+
+  /// Check if license is expired.
+  static bool get isExpired {
+    final exp = expiresAt;
+    if (exp == null) return false;
+    return exp.isBefore(DateTime.now());
+  }
+
+  /// Days until license expires (null if no expiry).
+  static int? get daysUntilExpiry {
+    final exp = expiresAt;
+    if (exp == null) return null;
+    return exp.difference(DateTime.now()).inDays;
+  }
+
   /// Check if PIN lock is enabled.
   static bool get isPinEnabled {
     return _box.get('license_pinEnabled', defaultValue: false) as bool;

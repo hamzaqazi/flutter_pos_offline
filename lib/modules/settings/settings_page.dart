@@ -2522,6 +2522,33 @@ class _PinLockSectionState extends State<_PinLockSection> {
                   ),
                 ],
               ),
+              if (LicenseService.expiresAt != null) ...[
+                const SizedBox(height: 4),
+                Builder(builder: (_) {
+                  final exp = LicenseService.expiresAt!;
+                  final days = LicenseService.daysUntilExpiry ?? 0;
+                  final isWarning = days <= 30;
+                  final isCritical = days <= 7;
+                  final color = isCritical
+                      ? AppColors.danger
+                      : isWarning
+                          ? AppColors.warning
+                          : AppColors.success;
+                  return Row(
+                    children: [
+                      Icon(Icons.event_outlined, size: 16, color: color),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        "Expires: ${exp.day}/${exp.month}/${exp.year} ($days days left)",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
             ],
           ),
         ),

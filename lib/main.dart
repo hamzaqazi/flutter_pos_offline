@@ -29,25 +29,84 @@ void main() async {
   await Hive.openBox('categories');
   await Hive.openBox('held_carts');
 
-  // Determine initial route based on license activation
-  String initialRoute;
-  if (!LicenseService.isActivated) {
-    initialRoute = Routes.activation;
-  } else if (LicenseService.isPinEnabled) {
-    initialRoute = Routes.pinLock;
-  } else {
-    initialRoute = Routes.dashboard;
-  }
-
-  runApp(PosApp(initialRoute: initialRoute));
+  runApp(const PosApp());
 }
 
-class PosApp extends StatelessWidget {
-  final String initialRoute;
-  const PosApp({super.key, required this.initialRoute});
+class PosApp extends StatefulWidget {
+  const PosApp({super.key});
+
+  @override
+  State<PosApp> createState() => _PosAppState();
+}
+
+class _PosAppState extends State<PosApp> {
+  bool _checking = true;
+  String _initialRoute = Routes.activation;
+
+  @override
+  void initState() {
+    super.initState();
+    _determineStartRoute();
+  }
+
+  Future<void> _determineStartRoute() async {
+    if (!LicenseService.isActivated) {
+      // Not activated → show activation screen
+      setState(() {
+        _initialRoute = Routes.activation;
+        _checking = false;
+      });
+      return;
+    }
+
+    // Already activated — verify with Firestore (background check)
+    final stillValid = await LicenseService.verifyActiveLicense();
+
+    if (!stillValid) {
+      // License revoked or expired — back to activation
+      setState(() {
+        _initialRoute = Routes.activation;
+        _checking = false;
+      });
+      return;
+    }
+
+    // License valid — check PIN
+    setState(() {
+      _initialRoute = LicenseService.isPinEnabled
+          ? Routes.pinLock
+          : Routes.dashboard;
+      _checking = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Show splash/loading while checking license
+    if (_checking) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.storefront, size: 64, color: AppTheme.seed),
+                const SizedBox(height: 24),
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                const Text(
+                  'Verifying license...',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return GetMaterialApp(
       title: 'Shop POS',
       debugShowCheckedModeBanner: false,
@@ -55,7 +114,7 @@ class PosApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      initialRoute: initialRoute,
+      initialRoute: _initialRoute,
       getPages: AppPages.pages,
       builder: (context, child) {
         final brightness = Theme.of(context).brightness;
