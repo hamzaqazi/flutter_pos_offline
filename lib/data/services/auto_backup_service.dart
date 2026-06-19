@@ -28,7 +28,8 @@ class AutoBackupService {
 
   // Hive keys
   static const _keyEnabled = 'autoBackup_enabled';
-  static const _keyFrequency = 'autoBackup_frequency'; // 'daily' | 'weekly' | 'manual'
+  static const _keyFrequency =
+      'autoBackup_frequency'; // 'daily' | 'weekly' | 'manual'
   static const _keyLastBackup = 'autoBackup_lastBackup';
   static const _keyMaxBackups = 'autoBackup_maxBackups';
   static const _keyKeepLast = 'autoBackup_keepLast';
@@ -116,10 +117,8 @@ class AutoBackupService {
         'autoBackup',
         'autoBackupTask',
         frequency: duration,
-        constraints: Constraints(
-          networkType: NetworkType.not_required,
-        ),
-        existingWorkPolicy: ExistingWorkPolicy.replace,
+        constraints: Constraints(networkType: NetworkType.notRequired),
+        existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
         backoffPolicy: BackoffPolicy.linear,
         backoffPolicyDelay: const Duration(minutes: 30),
       );
@@ -133,7 +132,7 @@ class AutoBackupService {
   /// Cancel the auto-backup task.
   static Future<void> cancelAutoBackup() async {
     try {
-      await Workmanager().cancelByName('autoBackup');
+      await Workmanager().cancelByUniqueName('autoBackup');
       debugPrint('🛑 Auto-backup cancelled');
     } catch (e) {
       debugPrint('⚠️ Workmanager cancel failed: $e');
@@ -178,8 +177,13 @@ class AutoBackupService {
       final jsonStr = const JsonEncoder.withIndent('  ').convert(backupData);
 
       // Save to app documents directory (persistent, not temp)
-      final dir = await getApplicationDocumentsDirectory();
-      final backupDir = Directory('${dir.path}/backups');
+      // final dir = await getApplicationDocumentsDirectory();
+      final dir = await getExternalStorageDirectory();
+      // final backupDir = Directory('${dir.path}/backups');
+      // final backupDir = Directory('${dir!.path}/backups');
+      final backupDir = Directory(
+        '/storage/emulated/0/Documents/Codynest POS/Backups',
+      );
       if (!await backupDir.exists()) {
         await backupDir.create(recursive: true);
       }
@@ -193,10 +197,7 @@ class AutoBackupService {
       await file.writeAsString(jsonStr);
 
       // Update last backup time
-      await _settingsBox.put(
-        _keyLastBackup,
-        DateTime.now().toIso8601String(),
-      );
+      await _settingsBox.put(_keyLastBackup, DateTime.now().toIso8601String());
 
       // Prune old backups
       await _pruneOldBackups(backupDir);
@@ -222,18 +223,20 @@ class AutoBackupService {
     try {
       final pc = Get.find<ProductsController>();
       backup['products'] = pc.products
-          .map((p) => {
-                'id': p.id,
-                'name': p.name,
-                'brand': p.brand,
-                'category': p.category,
-                'price': p.price,
-                'purchasePrice': p.purchasePrice,
-                'discount': p.discount,
-                'stock': p.stock,
-                'sku': p.sku,
-                'barcode': p.barcode,
-              })
+          .map(
+            (p) => {
+              'id': p.id,
+              'name': p.name,
+              'brand': p.brand,
+              'category': p.category,
+              'price': p.price,
+              'purchasePrice': p.purchasePrice,
+              'discount': p.discount,
+              'stock': p.stock,
+              'sku': p.sku,
+              'barcode': p.barcode,
+            },
+          )
           .toList();
     } catch (_) {
       final box = HiveService.productBox;
@@ -310,8 +313,10 @@ class AutoBackupService {
 
     // Last invoice number
     final settingsBox = Hive.box('settings');
-    backup['lastInvoiceNumber'] =
-        settingsBox.get('lastInvoiceNumber', defaultValue: 0);
+    backup['lastInvoiceNumber'] = settingsBox.get(
+      'lastInvoiceNumber',
+      defaultValue: 0,
+    );
 
     return backup;
   }
@@ -330,9 +335,7 @@ class AutoBackupService {
     }
 
     // Sort by modification time, newest first
-    files.sort(
-      (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
-    );
+    files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
 
     // Delete oldest files beyond the limit
     if (files.length > limit) {
@@ -360,12 +363,14 @@ class AutoBackupService {
         final stat = await entity.stat();
         final sizeKB = (stat.size / 1024).round();
         final filename = entity.path.split('/').last;
-        files.add(BackupFileInfo(
-          file: entity,
-          filename: filename,
-          date: stat.modified,
-          sizeKB: sizeKB,
-        ));
+        files.add(
+          BackupFileInfo(
+            file: entity,
+            filename: filename,
+            date: stat.modified,
+            sizeKB: sizeKB,
+          ),
+        );
       }
     }
 
@@ -392,7 +397,7 @@ class AutoBackupService {
   /// Get total size of all backups in KB.
   static Future<int> totalBackupSizeKB() async {
     final backups = await listBackups();
-    return backups.fold(0, (sum, b) => sum + b.sizeKB);
+    return backups.fold<int>(0, (sum, b) => sum + b.sizeKB);
   }
 
   /// Read a backup file and return its parsed JSON content.

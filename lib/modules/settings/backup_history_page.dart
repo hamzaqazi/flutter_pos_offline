@@ -128,31 +128,38 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
             Text(
               'Backup from ${info.formattedDate} (${info.formattedSize})',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             ...[
-              ('Products', summary.productCount),
-              ('Sales', summary.saleCount),
-              ('Expenses', summary.expenseCount),
-              ('Returns', summary.returnCount),
-              ('Customers', summary.customerCount),
-              ('Staff', summary.staffCount),
-            ]
+                  ('Products', summary.productCount),
+                  ('Sales', summary.saleCount),
+                  ('Expenses', summary.expenseCount),
+                  ('Returns', summary.returnCount),
+                  ('Customers', summary.customerCount),
+                  ('Staff', summary.staffCount),
+                ]
                 .where((e) => e.$2 > 0)
-                .map((e) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        children: [
-                          Icon(Icons.check_circle_outline,
-                              size: 14, color: AppColors.success),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text('${e.$1}: ${e.$2}',
-                              style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    )),
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 14,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          '${e.$1}: ${e.$2}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.sm),
@@ -165,16 +172,18 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
-                      size: 16, color: AppColors.danger),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: AppColors.danger,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       'This will replace ALL current data!',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: AppColors.danger),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: AppColors.danger),
                     ),
                   ),
                 ],
@@ -270,7 +279,8 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
                           );
                         },
                         style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.danger),
+                          backgroundColor: AppColors.danger,
+                        ),
                         child: const Text('Delete All'),
                       ),
                     ],
@@ -285,86 +295,91 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _backups.isEmpty
-              ? _EmptyState(onRefresh: _loadBackups)
-              : RefreshIndicator(
-                  onRefresh: _loadBackups,
-                  child: CustomScrollView(
-                    slivers: [
-                      // Summary card
-                      SliverToBoxAdapter(
-                        child: Container(
-                          margin: const EdgeInsets.all(AppSpacing.lg),
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.seed,
-                                AppColors.seed.withValues(alpha: 0.75),
-                              ],
+          ? _EmptyState(onRefresh: _loadBackups)
+          : RefreshIndicator(
+              onRefresh: _loadBackups,
+              child: CustomScrollView(
+                slivers: [
+                  // Summary card
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.seed,
+                            AppColors.seed.withValues(alpha: 0.75),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _SummaryStat(
+                              icon: Icons.folder_outlined,
+                              label: 'Total Backups',
+                              value: _backups.length.toString(),
                             ),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
                           ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _SummaryStat(
-                                  icon: Icons.folder_outlined,
-                                  label: 'Total Backups',
-                                  value: _backups.length.toString(),
-                                ),
-                              ),
-                              Container(
-                                  width: 1, height: 36, color: Colors.white24),
-                              Expanded(
-                                child: _SummaryStat(
-                                  icon: Icons.sd_card_outlined,
-                                  label: 'Total Size',
-                                  value: _formattedTotalSize(),
-                                ),
-                              ),
-                              Container(
-                                  width: 1, height: 36, color: Colors.white24),
-                              Expanded(
-                                child: _SummaryStat(
-                                  icon: Icons.schedule_outlined,
-                                  label: 'Latest',
-                                  value: _backups.isNotEmpty
-                                      ? _backups.first.formattedDate
-                                      : '—',
-                                ),
-                              ),
-                            ],
+                          Container(
+                            width: 1,
+                            height: 36,
+                            color: Colors.white24,
                           ),
-                        ),
-                      ),
-
-                      // Backup list
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final backup = _backups[index];
-                              return _BackupTile(
-                                info: backup,
-                                isLatest: index == 0,
-                                onRestore: () => _confirmRestore(backup),
-                                onDelete: () => _confirmDelete(backup),
-                              );
-                            },
-                            childCount: _backups.length,
+                          Expanded(
+                            child: _SummaryStat(
+                              icon: Icons.sd_card_outlined,
+                              label: 'Total Size',
+                              value: _formattedTotalSize(),
+                            ),
                           ),
-                        ),
+                          Container(
+                            width: 1,
+                            height: 36,
+                            color: Colors.white24,
+                          ),
+                          Expanded(
+                            child: _SummaryStat(
+                              icon: Icons.schedule_outlined,
+                              label: 'Latest',
+                              value: _backups.isNotEmpty
+                                  ? _backups.first.formattedDate
+                                  : '—',
+                            ),
+                          ),
+                        ],
                       ),
-
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: AppSpacing.xl),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  // Backup list
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final backup = _backups[index];
+                        return _BackupTile(
+                          info: backup,
+                          isLatest: index == 0,
+                          onRestore: () => _confirmRestore(backup),
+                          onDelete: () => _confirmDelete(backup),
+                        );
+                      }, childCount: _backups.length),
+                    ),
+                  ),
+
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: AppSpacing.xl),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -398,7 +413,10 @@ class _SummaryStat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 10),
+        ),
       ],
     );
   }
@@ -468,7 +486,9 @@ class _BackupTile extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.12),
+                                color: AppColors.success.withValues(
+                                  alpha: 0.12,
+                                ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -500,9 +520,10 @@ class _BackupTile extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 100,
+                  width: 120,
                   height: 38,
                   child: OutlinedButton.icon(
                     onPressed: onRestore,
@@ -510,13 +531,15 @@ class _BackupTile extends StatelessWidget {
                     label: const Text('Restore'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.warning,
-                      side: BorderSide(color: AppColors.warning.withValues(alpha: 0.5)),
+                      side: BorderSide(
+                        color: AppColors.warning.withValues(alpha: 0.5),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 SizedBox(
-                  width: 80,
+                  width: 120,
                   height: 38,
                   child: OutlinedButton.icon(
                     onPressed: onDelete,
@@ -524,7 +547,9 @@ class _BackupTile extends StatelessWidget {
                     label: const Text('Delete'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.danger,
-                      side: BorderSide(color: AppColors.danger.withValues(alpha: 0.5)),
+                      side: BorderSide(
+                        color: AppColors.danger.withValues(alpha: 0.5),
+                      ),
                     ),
                   ),
                 ),
