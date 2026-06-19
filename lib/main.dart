@@ -1,17 +1,22 @@
 import 'package:ad_shop_pos/app/routes/app_routes.dart';
+import 'package:ad_shop_pos/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:hive/hive.dart';
+// import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
-import 'app/theme/theme_controller.dart';
+// import 'app/theme/theme_controller.dart';
 import 'app/bindings/initial_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await Hive.initFlutter();
 
