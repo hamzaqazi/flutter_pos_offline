@@ -92,7 +92,7 @@ class _PosAppState extends State<PosApp> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.storefront, size: 64, color: AppTheme.seed),
+                Icon(Icons.storefront, size: 64, color: AppColors.seed),
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
