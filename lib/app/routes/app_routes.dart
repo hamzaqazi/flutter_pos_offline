@@ -10,6 +10,9 @@ abstract class Routes {
   static const customers = '/customers';
   static const staff = '/staff';
 
+  static const activation = '/activation';
+  static const pinSetup = '/pin-setup';
+  static const pinLock = '/pin-lock';
   static const lowStock = '/low-stock';
   static const inventory = '/inventory';
   static const invoice = '/invoice';

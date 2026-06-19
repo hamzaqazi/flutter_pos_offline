@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
@@ -35,6 +36,82 @@ class DashboardPage extends GetView<DashboardController> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // ---------- Today's Summary ----------
+                  // ---------- License Info Banner ----------
+                  Builder(
+                    builder: (context) {
+                      if (!LicenseService.isActivated)
+                        return const SizedBox.shrink();
+                      final days = LicenseService.daysUntilExpiry;
+                      final expiresAt = LicenseService.expiresAt;
+                      if (days == null || expiresAt == null)
+                        return const SizedBox.shrink();
+
+                      final isWarning = days <= 30;
+                      final isCritical = days <= 7;
+                      final color = isCritical
+                          ? AppColors.danger
+                          : isWarning
+                          ? AppColors.warning
+                          : AppColors.success;
+
+                      return Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.vpn_key_outlined,
+                              color: color,
+                              size: 20,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    isCritical
+                                        ? 'License expires in $days day${days == 1 ? '' : 's'}!'
+                                        : isWarning
+                                        ? 'License expires in $days days'
+                                        : 'License active',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: color,
+                                    ),
+                                  ),
+                                  Text(
+                                    // format date 4 january 2027
+                                    'Expires: ${formatDate(expiresAt)}',
+                                    // 'Expires: ${expiresAt.day}/${expiresAt.month}/${expiresAt.year}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 18,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
                   Text("Today's Summary", style: theme.textTheme.titleMedium),
                   const SizedBox(height: AppSpacing.md),
 
@@ -50,7 +127,9 @@ class DashboardPage extends GetView<DashboardController> {
                             AppColors.success.withValues(alpha: 0.75),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -61,20 +140,32 @@ class DashboardPage extends GetView<DashboardController> {
                               value: controller.todaySales.value.toString(),
                             ),
                           ),
-                          Container(width: 1, height: 40, color: Colors.white24),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Colors.white24,
+                          ),
                           Expanded(
                             child: _TodayStat(
                               icon: Icons.payments_outlined,
                               label: "Revenue",
-                              value: Formatters.currency(controller.todayRevenue.value),
+                              value: Formatters.currency(
+                                controller.todayRevenue.value,
+                              ),
                             ),
                           ),
-                          Container(width: 1, height: 40, color: Colors.white24),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: Colors.white24,
+                          ),
                           Expanded(
                             child: _TodayStat(
                               icon: Icons.trending_up_outlined,
                               label: "Profit",
-                              value: Formatters.currency(controller.todayProfit.value),
+                              value: Formatters.currency(
+                                controller.todayProfit.value,
+                              ),
                             ),
                           ),
                         ],
@@ -304,7 +395,8 @@ class DashboardPage extends GetView<DashboardController> {
                           _NotificationTile(
                             icon: Icons.warning_amber_rounded,
                             title: "$low low stock",
-                            subtitle: "Products running low (≤${settings.lowStockThreshold} units)",
+                            subtitle:
+                                "Products running low (≤${settings.lowStockThreshold} units)",
                             color: AppColors.warning,
                             onTap: () => Get.toNamed('/low-stock'),
                           ),
@@ -319,6 +411,25 @@ class DashboardPage extends GetView<DashboardController> {
       ),
     );
   }
+}
+
+String formatDate(DateTime date) {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
+  return '${date.day} ${months[date.month - 1]} ${date.year}';
 }
 
 class _Header extends StatelessWidget {

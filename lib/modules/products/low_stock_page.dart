@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
 
-class LowStockPage extends GetView<ProductsController> {
+class LowStockPage extends StatelessWidget {
   const LowStockPage({super.key});
 
   @override
@@ -17,10 +17,11 @@ class LowStockPage extends GetView<ProductsController> {
     final cs = theme.colorScheme;
     final threshold = SettingsService.getSettings().lowStockThreshold;
 
+    // Get ProductsController (lazy-loaded with fenix, so find always works)
+    final controller = Get.find<ProductsController>();
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Low Stock (≤ $threshold)"),
-      ),
+      appBar: AppBar(title: Text("Low Stock (≤ $threshold)")),
       body: Obx(() {
         final outOfStock = controller.outOfStockProducts;
         final lowStock = controller.lowStockProducts
@@ -55,11 +56,7 @@ class LowStockPage extends GetView<ProductsController> {
                       icon: Icons.cancel_outlined,
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: Colors.white24,
-                  ),
+                  Container(width: 1, height: 36, color: Colors.white24),
                   Expanded(
                     child: _SummaryStat(
                       label: "Low stock",
@@ -67,11 +64,7 @@ class LowStockPage extends GetView<ProductsController> {
                       icon: Icons.warning_amber_rounded,
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: Colors.white24,
-                  ),
+                  Container(width: 1, height: 36, color: Colors.white24),
                   Expanded(
                     child: _SummaryStat(
                       label: "Threshold",
@@ -93,7 +86,9 @@ class LowStockPage extends GetView<ProductsController> {
                 icon: Icons.cancel_outlined,
               ),
               const SizedBox(height: AppSpacing.md),
-              ...outOfStock.map((p) => _LowStockTile(product: p, isOutOfStock: true)),
+              ...outOfStock.map(
+                (p) => _LowStockTile(product: p, isOutOfStock: true),
+              ),
               const SizedBox(height: AppSpacing.xl),
             ],
 
@@ -106,7 +101,9 @@ class LowStockPage extends GetView<ProductsController> {
                 icon: Icons.warning_amber_rounded,
               ),
               const SizedBox(height: AppSpacing.md),
-              ...lowStock.map((p) => _LowStockTile(product: p, isOutOfStock: false)),
+              ...lowStock.map(
+                (p) => _LowStockTile(product: p, isOutOfStock: false),
+              ),
             ],
           ],
         );
@@ -141,7 +138,9 @@ class _LowStockTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Icon(
-                isOutOfStock ? Icons.cancel_outlined : Icons.warning_amber_rounded,
+                isOutOfStock
+                    ? Icons.cancel_outlined
+                    : Icons.warning_amber_rounded,
                 color: color,
                 size: 24,
               ),
@@ -166,7 +165,10 @@ class _LowStockTile extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(height: 4),
-                  Row(
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       // Stock badge
                       Container(
@@ -176,7 +178,9 @@ class _LowStockTile extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                         child: Text(
                           isOutOfStock ? "0 left" : "${product.stock} left",
@@ -187,7 +191,6 @@ class _LowStockTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
                       // Category
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -195,9 +198,12 @@ class _LowStockTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.forCategory(product.category)
-                              .withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          color: AppColors.forCategory(
+                            product.category,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                         child: Text(
                           product.category,
@@ -208,7 +214,6 @@ class _LowStockTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         Formatters.currency(product.discountedPrice),
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -221,12 +226,15 @@ class _LowStockTile extends StatelessWidget {
               ),
             ),
             // Quick restock button
-            FilledButton.tonalIcon(
-              onPressed: () => _quickRestock(context, product),
-              icon: const Icon(Icons.add_shopping_cart, size: 16),
-              label: const Text("Restock"),
-              style: FilledButton.styleFrom(
-                visualDensity: VisualDensity.compact,
+            SizedBox(
+              width: 110,
+              child: FilledButton.tonalIcon(
+                onPressed: () => _quickRestock(context, product),
+                icon: const Icon(Icons.add_shopping_cart, size: 16),
+                label: const Text("Restock", style: TextStyle(fontSize: 12)),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
             ),
           ],
@@ -350,9 +358,9 @@ class _SectionHeader extends StatelessWidget {
         Text(
           "$title ($count)",
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
         ),
       ],
     );

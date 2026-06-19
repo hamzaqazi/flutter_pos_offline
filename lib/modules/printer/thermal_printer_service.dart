@@ -247,10 +247,7 @@ class ThermalPrinterService {
     if (invoiceNumber.isNotEmpty) {
       bytes += generator.text(
         invoiceNumber,
-        styles: const PosStyles(
-          align: PosAlign.center,
-          bold: true,
-        ),
+        styles: const PosStyles(align: PosAlign.center, bold: true),
       );
     }
 
@@ -374,7 +371,8 @@ class ThermalPrinterService {
     bytes += generator.text('Cash: $cur ${cash.toStringAsFixed(0)}');
     bytes += generator.text('Change: $cur ${change.toStringAsFixed(0)}');
 
-    bytes += generator.hr();
+    bytes += generator.feed(1);
+    // bytes += generator.hr();
     // --- Footer ---
     if (receiptSettings.showFooter) {
       bytes += generator.feed(1);
