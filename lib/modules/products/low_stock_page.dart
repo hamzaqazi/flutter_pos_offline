@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
 
-class LowStockPage extends GetView<ProductsController> {
+class LowStockPage extends StatelessWidget {
   const LowStockPage({super.key});
 
   @override
@@ -16,6 +16,9 @@ class LowStockPage extends GetView<ProductsController> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final threshold = SettingsService.getSettings().lowStockThreshold;
+
+    // Get ProductsController (lazy-loaded with fenix, so find always works)
+    final controller = Get.find<ProductsController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -221,12 +224,15 @@ class _LowStockTile extends StatelessWidget {
               ),
             ),
             // Quick restock button
-            FilledButton.tonalIcon(
-              onPressed: () => _quickRestock(context, product),
-              icon: const Icon(Icons.add_shopping_cart, size: 16),
-              label: const Text("Restock"),
-              style: FilledButton.styleFrom(
-                visualDensity: VisualDensity.compact,
+            SizedBox(
+              width: 110,
+              child: FilledButton.tonalIcon(
+                onPressed: () => _quickRestock(context, product),
+                icon: const Icon(Icons.add_shopping_cart, size: 16),
+                label: const Text("Restock"),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
             ),
           ],
