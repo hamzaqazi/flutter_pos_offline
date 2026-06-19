@@ -1,3 +1,6 @@
+import 'package:ad_shop_pos/modules/activation/activation_screen.dart';
+import 'package:ad_shop_pos/modules/activation/pin_lock_screen.dart';
+import 'package:ad_shop_pos/modules/activation/pin_setup_screen.dart';
 import 'package:ad_shop_pos/modules/cart/cart_page.dart';
 import 'package:ad_shop_pos/modules/customers/customers_page.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_page.dart';
@@ -30,5 +33,8 @@ class AppPages {
     GetPage(name: Routes.staff, page: () => const StaffPage()),
     GetPage(name: Routes.scanner, page: () => const BarcodeScannerPage()),
     GetPage(name: Routes.lowStock, page: () => const LowStockPage()),
+    GetPage(name: Routes.activation, page: () => const ActivationScreen()),
+    GetPage(name: Routes.pinSetup, page: () => const PinSetupScreen()),
+    GetPage(name: Routes.pinLock, page: () => const PinLockScreen()),
   ];
 }

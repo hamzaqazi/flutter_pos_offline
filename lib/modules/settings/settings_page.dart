@@ -77,6 +77,19 @@ class SettingsPage extends GetView<SettingsController> {
 
             const SizedBox(height: AppSpacing.md),
 
+            // ---------- PIN Lock ----------
+            _SectionTile(
+              icon: Icons.lock_outline,
+              title: "PIN Lock",
+              subtitle: "App security & PIN settings",
+              color: const Color(0xFF6366F1),
+              children: [
+                Obx(() => _PinLockSection()),
+              ],
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
             // ---------- Receipt Customization ----------
             _SectionTile(
               icon: Icons.receipt_long_outlined,
@@ -2384,6 +2397,119 @@ class _LowStockThresholdFormState extends State<_LowStockThresholdForm> {
               child: const Text("Save"),
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+// =================== PIN Lock Section ===================
+class _PinLockSection extends StatefulWidget {
+  const _PinLockSection();
+
+  @override
+  State<_PinLockSection> createState() => _PinLockSectionState();
+}
+
+class _PinLockSectionState extends State<_PinLockSection> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isPinEnabled = LicenseService.isPinEnabled;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Require a 4-digit PIN when opening the app. This prevents unauthorized access on shared devices.",
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SwitchListTile(
+          value: isPinEnabled,
+          onChanged: (enabled) async {
+            if (enabled) {
+              // Navigate to PIN setup
+              final result = await Get.toNamed('/pin-setup');
+            } else {
+              // Disable PIN
+              await LicenseService.togglePin(false);
+              setState(() {});
+              Get.snackbar(
+                "PIN Disabled",
+                "App will open without PIN",
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          },
+          title: const Text("Enable PIN lock"),
+          subtitle: Text(
+            isPinEnabled ? "PIN required on app launch" : "App opens directly",
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          secondary: Icon(
+            isPinEnabled ? Icons.lock : Icons.lock_open,
+            color: isPinEnabled ? const Color(0xFF6366F1) : cs.onSurfaceVariant,
+          ),
+        ),
+        if (isPinEnabled) ...[
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                await Get.toNamed('/pin-setup');
+                setState(() {});
+              },
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text("Change PIN"),
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.md),
+        // License info
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.vpn_key_outlined, size: 16, color: cs.onSurfaceVariant),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    "License: ${LicenseService.licenseKey}",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(Icons.store_outlined, size: 16, color: cs.onSurfaceVariant),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    "Shop: ${LicenseService.shopName}",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ],
     );

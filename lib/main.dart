@@ -1,16 +1,15 @@
 import 'package:ad_shop_pos/app/routes/app_routes.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-// import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
-// import 'app/theme/theme_controller.dart';
 import 'app/bindings/initial_binding.dart';
 
 void main() async {
@@ -29,11 +28,23 @@ void main() async {
   await Hive.openBox('staff');
   await Hive.openBox('categories');
   await Hive.openBox('held_carts');
-  runApp(const PosApp());
+
+  // Determine initial route based on license activation
+  String initialRoute;
+  if (!LicenseService.isActivated) {
+    initialRoute = Routes.activation;
+  } else if (LicenseService.isPinEnabled) {
+    initialRoute = Routes.pinLock;
+  } else {
+    initialRoute = Routes.dashboard;
+  }
+
+  runApp(PosApp(initialRoute: initialRoute));
 }
 
 class PosApp extends StatelessWidget {
-  const PosApp({super.key});
+  final String initialRoute;
+  const PosApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +55,7 @@ class PosApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      initialRoute: Routes.dashboard,
+      initialRoute: initialRoute,
       getPages: AppPages.pages,
       builder: (context, child) {
         final brightness = Theme.of(context).brightness;

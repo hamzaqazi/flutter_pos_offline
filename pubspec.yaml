@@ -31,6 +31,7 @@ dependencies:
   pdf: ^3.12.0
   printing: ^5.14.3
   cloud_firestore: ^6.6.0
+  device_info_plus: ^11.3.0
   firebase_core: ^4.11.0
 
 dev_dependencies:
