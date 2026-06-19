@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
 import 'package:ad_shop_pos/data/services/export_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -71,7 +72,11 @@ class SettingsPage extends GetView<SettingsController> {
               subtitle: "Alert threshold & notifications",
               color: AppColors.warning,
               children: [
-                Obx(() => _LowStockThresholdForm(settings: controller.settings.value)),
+                Obx(
+                  () => _LowStockThresholdForm(
+                    settings: controller.settings.value,
+                  ),
+                ),
               ],
             ),
 
@@ -83,9 +88,7 @@ class SettingsPage extends GetView<SettingsController> {
               title: "PIN Lock",
               subtitle: "App security & PIN settings",
               color: const Color(0xFF6366F1),
-              children: [
-                Obx(() => _PinLockSection()),
-              ],
+              children: [_PinLockSection()],
             ),
 
             const SizedBox(height: AppSpacing.md),
@@ -2383,10 +2386,13 @@ class _LowStockThresholdFormState extends State<_LowStockThresholdForm> {
             const SizedBox(width: AppSpacing.md),
             FilledButton(
               onPressed: () {
-                final threshold = int.tryParse(_thresholdController.text.trim()) ?? 5;
+                final threshold =
+                    int.tryParse(_thresholdController.text.trim()) ?? 5;
                 if (threshold < 0) return;
                 controller.updateSettings(
-                  controller.settings.value.copyWith(lowStockThreshold: threshold),
+                  controller.settings.value.copyWith(
+                    lowStockThreshold: threshold,
+                  ),
                 );
                 Get.snackbar(
                   "Updated",
@@ -2484,7 +2490,11 @@ class _PinLockSectionState extends State<_PinLockSection> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.vpn_key_outlined, size: 16, color: cs.onSurfaceVariant),
+                  Icon(
+                    Icons.vpn_key_outlined,
+                    size: 16,
+                    color: cs.onSurfaceVariant,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     "License: ${LicenseService.licenseKey}",
@@ -2498,7 +2508,11 @@ class _PinLockSectionState extends State<_PinLockSection> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.store_outlined, size: 16, color: cs.onSurfaceVariant),
+                  Icon(
+                    Icons.store_outlined,
+                    size: 16,
+                    color: cs.onSurfaceVariant,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
                     "Shop: ${LicenseService.shopName}",

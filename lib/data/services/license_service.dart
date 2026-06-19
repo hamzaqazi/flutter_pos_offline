@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
@@ -82,14 +83,17 @@ class LicenseService {
         if (expiresAt.isBefore(DateTime.now())) {
           return LicenseResult(
             success: false,
-            message: 'License expired on ${_formatDate(expiresAt)}. Contact support to renew.',
+            message:
+                'License expired on ${_formatDate(expiresAt)}. Contact support to renew.',
           );
         }
       }
 
       final shopName = data['shopName'] as String? ?? 'My Shop';
       final maxDevices = data['maxDevices'] as int? ?? 3;
-      final registeredDevices = List<String>.from(data['registeredDevices'] ?? []);
+      final registeredDevices = List<String>.from(
+        data['registeredDevices'] ?? [],
+      );
 
       // Check device limit
       final currentDeviceId = await deviceId;
@@ -98,7 +102,8 @@ class LicenseService {
         if (registeredDevices.length >= maxDevices) {
           return LicenseResult(
             success: false,
-            message: 'Device limit reached ($maxDevices/${maxDevices}). Contact support to add more devices.',
+            message:
+                'Device limit reached ($maxDevices/${maxDevices}). Contact support to add more devices.',
           );
         }
       }
@@ -129,20 +134,26 @@ class LicenseService {
             ? (data['expiresAt'] as Timestamp).toDate()
             : null,
       );
-    } catch (e) {
-      // If no internet, check if we have a saved activation
-      if (isActivated) {
-        return LicenseResult(
-          success: true,
-          message: 'Offline — using saved activation',
-          shopName: shopName,
-        );
-      }
-      return LicenseResult(
-        success: false,
-        message: 'Connection error. Please check your internet and try again.',
-      );
+    } catch (e, s) {
+      debugPrint('🔥 LICENSE ERROR: $e');
+      debugPrint('STACK TRACE: $s');
+
+      return LicenseResult(success: false, message: e.toString());
     }
+    // catch (e) {
+    //   // If no internet, check if we have a saved activation
+    //   if (isActivated) {
+    //     return LicenseResult(
+    //       success: true,
+    //       message: 'Offline — using saved activation',
+    //       shopName: shopName,
+    //     );
+    //   }
+    //   return LicenseResult(
+    //     success: false,
+    //     message: 'Connection error. Please check your internet and try again.',
+    //   );
+    // }
   }
 
   /// Background check — verify license is still active (called on app start).
