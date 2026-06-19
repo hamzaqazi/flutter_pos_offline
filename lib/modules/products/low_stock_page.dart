@@ -169,7 +169,10 @@ class _LowStockTile extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(height: 4),
-                  Row(
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       // Stock badge
                       Container(
@@ -190,7 +193,6 @@ class _LowStockTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
                       // Category
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -211,7 +213,6 @@ class _LowStockTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
                       Text(
                         Formatters.currency(product.discountedPrice),
                         style: theme.textTheme.bodySmall?.copyWith(
