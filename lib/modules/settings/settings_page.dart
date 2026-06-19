@@ -2384,23 +2384,26 @@ class _LowStockThresholdFormState extends State<_LowStockThresholdForm> {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            FilledButton(
-              onPressed: () {
-                final threshold =
-                    int.tryParse(_thresholdController.text.trim()) ?? 5;
-                if (threshold < 0) return;
-                controller.updateSettings(
-                  controller.settings.value.copyWith(
-                    lowStockThreshold: threshold,
-                  ),
-                );
-                Get.snackbar(
-                  "Updated",
-                  "Low stock threshold set to $threshold units",
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              },
-              child: const Text("Save"),
+            SizedBox(
+              width: 80,
+              child: FilledButton(
+                onPressed: () {
+                  final threshold =
+                      int.tryParse(_thresholdController.text.trim()) ?? 5;
+                  if (threshold < 0) return;
+                  controller.updateSettings(
+                    controller.settings.value.copyWith(
+                      lowStockThreshold: threshold,
+                    ),
+                  );
+                  Get.snackbar(
+                    "Updated",
+                    "Low stock threshold set to $threshold units",
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                },
+                child: const Text("Save"),
+              ),
             ),
           ],
         ),
