@@ -37,7 +37,7 @@ class DashboardPage extends GetView<DashboardController> {
                 delegate: SliverChildListDelegate([
                   // ---------- Today's Summary ----------
                   // ---------- License Info Banner ----------
-                  Obx(() {
+                  Builder(builder: (context) {
                     if (!LicenseService.isActivated) return const SizedBox.shrink();
                     final days = LicenseService.daysUntilExpiry;
                     final expiresAt = LicenseService.expiresAt;
