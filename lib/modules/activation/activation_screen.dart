@@ -34,6 +34,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
     setState(() => _loading = false);
 
     if (result.success) {
+      LicenseService.clearDeactivationReason();
       Get.offAllNamed('/pin-setup');
     } else {
       setState(() => _error = result.message);
@@ -122,6 +123,62 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
+
+                    // ---------- Deactivation Reason Banner ----------
+                    if (LicenseService.hasDeactivationReason)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          border: Border.all(
+                            color: AppColors.warning.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 24),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    'License Deactivated',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.warning,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              LicenseService.deactivationReason,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.warning.withValues(alpha: 0.9),
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Row(
+                              children: [
+                                Icon(Icons.call, size: 14, color: AppColors.warning),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Contact: 0315-3507075 / 0345-3333316',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.warning,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
 
                     // ---------- Card ----------
                     Card(

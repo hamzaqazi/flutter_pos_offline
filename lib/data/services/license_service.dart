@@ -49,6 +49,21 @@ class LicenseService {
     return exp.difference(DateTime.now()).inDays;
   }
 
+  /// Get the deactivation reason (shown on activation screen).
+  static String get deactivationReason {
+    return _box.get('license_deactivationReason', defaultValue: '') as String;
+  }
+
+  /// Check if there's a deactivation reason to show.
+  static bool get hasDeactivationReason {
+    return (_box.get('license_deactivationReason', defaultValue: '') as String).isNotEmpty;
+  }
+
+  /// Clear the deactivation reason (after it's been shown).
+  static void clearDeactivationReason() {
+    _box.delete('license_deactivationReason');
+  }
+
   /// Check if PIN lock is enabled.
   static bool get isPinEnabled {
     return _box.get('license_pinEnabled', defaultValue: false) as bool;
@@ -190,10 +205,12 @@ class LicenseService {
           .doc(key)
           .get();
 
-      if (!doc.exists) return false;
+      if (!doc.exists) {
+        await deactivate(reason: 'License key not found. Contact support.');
+        return false;
+      }
       if (doc.data()?['active'] != true) {
-        // License revoked remotely — deactivate
-        await deactivate();
+        await deactivate(reason: 'Your license has been deactivated by the administrator. Contact support to reactivate.');
         return false;
       }
 
@@ -201,7 +218,7 @@ class LicenseService {
       if (doc.data()?['expiresAt'] != null) {
         final expiresAt = (doc.data()!['expiresAt'] as Timestamp).toDate();
         if (expiresAt.isBefore(DateTime.now())) {
-          await deactivate();
+          await deactivate(reason: 'Your license expired on ${_formatDate(expiresAt)}. Contact support to renew your license.');
           return false;
         }
       }
@@ -244,7 +261,12 @@ class LicenseService {
   }
 
   /// Deactivate this device (local wipe).
-  static Future<void> deactivate() async {
+  /// [reason] is saved so the activation screen can show why.
+  static Future<void> deactivate({String reason = ''}) async {
+    // Save reason BEFORE wiping other fields
+    if (reason.isNotEmpty) {
+      await _box.put('license_deactivationReason', reason);
+    }
     await _box.delete('license_activated');
     await _box.delete('license_key');
     await _box.delete('license_shopName');
