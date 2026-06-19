@@ -27,12 +27,12 @@ class SalesHistoryPage extends GetView<SalesController> {
 
         // Filtered sales
         final sales = controller.filteredSales;
-        final totalRevenue =
-            sales.fold<double>(0, (sum, s) => sum + s.total);
-        final totalProfit =
-            sales.fold<double>(0, (sum, s) => sum + s.profit);
-        final totalDiscount =
-            sales.fold<double>(0, (sum, s) => sum + s.discount);
+        final totalRevenue = sales.fold<double>(0, (sum, s) => sum + s.total);
+        final totalProfit = sales.fold<double>(0, (sum, s) => sum + s.profit);
+        final totalDiscount = sales.fold<double>(
+          0,
+          (sum, s) => sum + s.discount,
+        );
 
         return Column(
           children: [
@@ -59,22 +59,14 @@ class SalesHistoryPage extends GetView<SalesController> {
                           value: Formatters.currency(totalRevenue),
                         ),
                       ),
-                      Container(
-                        width: 1,
-                        height: 36,
-                        color: Colors.white24,
-                      ),
+                      Container(width: 1, height: 36, color: Colors.white24),
                       Expanded(
                         child: _BannerStat(
                           label: "Profit",
                           value: Formatters.currency(totalProfit),
                         ),
                       ),
-                      Container(
-                        width: 1,
-                        height: 36,
-                        color: Colors.white24,
-                      ),
+                      Container(width: 1, height: 36, color: Colors.white24),
                       Expanded(
                         child: _BannerStat(
                           label: "Sales",
@@ -92,14 +84,18 @@ class SalesHistoryPage extends GetView<SalesController> {
                       ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.discount_outlined,
-                              color: Colors.white70, size: 14),
+                          const Icon(
+                            Icons.discount_outlined,
+                            color: Colors.white70,
+                            size: 14,
+                          ),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
                             "Total discounts given: ${Formatters.currency(totalDiscount)}",
@@ -133,7 +129,8 @@ class SalesHistoryPage extends GetView<SalesController> {
                   ),
                   filled: true,
                   suffixIcon: Obx(() {
-                    if (controller.searchQuery.value.isEmpty) return const SizedBox.shrink();
+                    if (controller.searchQuery.value.isEmpty)
+                      return const SizedBox.shrink();
                     return IconButton(
                       icon: const Icon(Icons.clear, size: 18),
                       onPressed: () => controller.searchQuery.value = '',
@@ -153,9 +150,16 @@ class SalesHistoryPage extends GetView<SalesController> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: 5,
-                  separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: AppSpacing.sm),
                   itemBuilder: (_, i) {
-                    final filters = ['All', 'Today', 'This Week', 'This Month', 'Custom'];
+                    final filters = [
+                      'All',
+                      'Today',
+                      'This Week',
+                      'This Month',
+                      'Custom',
+                    ];
                     final filter = filters[i];
                     return Obx(() {
                       final selected = controller.dateFilter.value == filter;
@@ -168,8 +172,13 @@ class SalesHistoryPage extends GetView<SalesController> {
                               context: Get.context!,
                               firstDate: DateTime(2020),
                               lastDate: DateTime.now(),
-                              initialDateRange: controller.customStartDate != null && controller.customEndDate != null
-                                  ? DateTimeRange(start: controller.customStartDate!, end: controller.customEndDate!)
+                              initialDateRange:
+                                  controller.customStartDate != null &&
+                                      controller.customEndDate != null
+                                  ? DateTimeRange(
+                                      start: controller.customStartDate!,
+                                      end: controller.customEndDate!,
+                                    )
                                   : null,
                               builder: (context, child) {
                                 return Theme(
@@ -197,13 +206,19 @@ class SalesHistoryPage extends GetView<SalesController> {
 
             // Active filters indicator
             Obx(() {
-              final hasFilter = controller.dateFilter.value != 'All' || controller.searchQuery.value.isNotEmpty;
+              final hasFilter =
+                  controller.dateFilter.value != 'All' ||
+                  controller.searchQuery.value.isNotEmpty;
               if (!hasFilter) return const SizedBox.shrink();
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: Row(
                   children: [
-                    Icon(Icons.filter_list, size: 14, color: cs.onSurfaceVariant),
+                    Icon(
+                      Icons.filter_list,
+                      size: 14,
+                      color: cs.onSurfaceVariant,
+                    ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       "${sales.length} result${sales.length == 1 ? '' : 's'}",
@@ -215,7 +230,10 @@ class SalesHistoryPage extends GetView<SalesController> {
                     TextButton.icon(
                       onPressed: () => controller.clearFilters(),
                       icon: const Icon(Icons.clear_all, size: 14),
-                      label: const Text("Clear filters", style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        "Clear filters",
+                        style: TextStyle(fontSize: 12),
+                      ),
                       style: TextButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                       ),
@@ -238,8 +256,10 @@ class SalesHistoryPage extends GetView<SalesController> {
                     const SizedBox(height: AppSpacing.md),
                 itemBuilder: (_, index) {
                   final sale = sales[index];
-                  final itemCount =
-                      sale.items.fold<int>(0, (s, i) => s + i.quantity);
+                  final itemCount = sale.items.fold<int>(
+                    0,
+                    (s, i) => s + i.quantity,
+                  );
 
                   // Check if there are returns for this sale
                   final returnsController = Get.find<ReturnsController>();
@@ -271,16 +291,18 @@ class SalesHistoryPage extends GetView<SalesController> {
                         );
                       },
                       child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(AppSpacing.md),
                               decoration: BoxDecoration(
-                                color: AppColors.success
-                                    .withValues(alpha: 0.12),
+                                color: AppColors.success.withValues(
+                                  alpha: 0.12,
+                                ),
                                 borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusSm),
+                                  AppSpacing.radiusSm,
+                                ),
                               ),
                               child: const Icon(
                                 Icons.receipt_long,
@@ -296,73 +318,116 @@ class SalesHistoryPage extends GetView<SalesController> {
                                     children: [
                                       Text(
                                         Formatters.currency(sale.total),
-                                        style:
-                                            theme.textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                      if (sale.hasInvoiceNumber) ...[
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppSpacing.xs,
-                                            vertical: 1,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: cs.primary
-                                                .withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(
-                                                AppSpacing.radiusSm),
-                                          ),
-                                          child: Text(
-                                            sale.invoiceNumber,
-                                            style: TextStyle(
-                                              color: cs.primary,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.5,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
                                             ),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
+                                      // if (sale.hasInvoiceNumber) ...[
+                                      //   const SizedBox(width: AppSpacing.sm),
+                                      //   Container(
+                                      //     padding: const EdgeInsets.symmetric(
+                                      //       horizontal: AppSpacing.xs,
+                                      //       vertical: 1,
+                                      //     ),
+                                      //     decoration: BoxDecoration(
+                                      //       color: cs.primary.withValues(
+                                      //         alpha: 0.1,
+                                      //       ),
+                                      //       borderRadius: BorderRadius.circular(
+                                      //         AppSpacing.radiusSm,
+                                      //       ),
+                                      //     ),
+                                      //     child: Text(
+                                      //       sale.invoiceNumber,
+                                      //       style: TextStyle(
+                                      //         color: cs.primary,
+                                      //         fontSize: 10,
+                                      //         fontWeight: FontWeight.w700,
+                                      //         letterSpacing: 0.5,
+                                      //       ),
+                                      //     ),
+                                      //   ),
+                                      // ],
                                     ],
                                   ),
+                                  if (sale.hasInvoiceNumber) ...[
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSpacing.xs,
+                                        vertical: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: cs.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusSm,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        sale.invoiceNumber,
+                                        style: TextStyle(
+                                          color: cs.primary,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                   // Show customer name
                                   if (sale.hasCustomer)
-                                    Builder(builder: (_) {
-                                      final customersController = Get.find<CustomersController>();
-                                      final customer = customersController.findById(sale.customerId);
-                                      if (customer != null) {
-                                        return Padding(
-                                          padding: const EdgeInsets.only(top: 2),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.person_outline, size: 12, color: cs.onSurfaceVariant),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                customer.name,
-                                                style: theme.textTheme.bodySmall?.copyWith(
+                                    Builder(
+                                      builder: (_) {
+                                        final customersController =
+                                            Get.find<CustomersController>();
+                                        final customer = customersController
+                                            .findById(sale.customerId);
+                                        if (customer != null) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 2,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.person_outline,
+                                                  size: 12,
                                                   color: cs.onSurfaceVariant,
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }
-                                      return const SizedBox.shrink();
-                                    }),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  customer.name,
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color:
+                                                            cs.onSurfaceVariant,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+                                        return const SizedBox.shrink();
+                                      },
+                                    ),
                                   const SizedBox(height: 2),
                                   Wrap(
                                     spacing: AppSpacing.sm,
                                     runSpacing: AppSpacing.xs,
-                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
                                     children: [
                                       Text(
                                         Formatters.dateTime(sale.date),
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: cs.onSurfaceVariant,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
                                       ),
                                       if (sale.profit > 0)
                                         Container(
@@ -371,10 +436,12 @@ class SalesHistoryPage extends GetView<SalesController> {
                                             vertical: 1,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: AppColors.success
-                                                .withValues(alpha: 0.12),
+                                            color: AppColors.success.withValues(
+                                              alpha: 0.12,
+                                            ),
                                             borderRadius: BorderRadius.circular(
-                                                AppSpacing.radiusSm),
+                                              AppSpacing.radiusSm,
+                                            ),
                                           ),
                                           child: Text(
                                             "+${Formatters.currency(sale.profit)} profit",
@@ -396,10 +463,12 @@ class SalesHistoryPage extends GetView<SalesController> {
                                         vertical: 1,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppColors.warning
-                                            .withValues(alpha: 0.12),
+                                        color: AppColors.warning.withValues(
+                                          alpha: 0.12,
+                                        ),
                                         borderRadius: BorderRadius.circular(
-                                            AppSpacing.radiusSm),
+                                          AppSpacing.radiusSm,
+                                        ),
                                       ),
                                       child: Text(
                                         "Refunded: ${Formatters.currency(totalRefund)}",
@@ -417,16 +486,39 @@ class SalesHistoryPage extends GetView<SalesController> {
                             // Return button
                             Column(
                               children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: AppColors.warning
-                                          .withValues(alpha: 0.4),
+                                if (itemCount > 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.sm,
+                                      vertical: AppSpacing.xs,
                                     ),
-                                    borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusSm),
+                                    decoration: BoxDecoration(
+                                      color: cs.surfaceContainerHighest
+                                          .withValues(alpha: 0.6),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      "$itemCount item${itemCount == 1 ? '' : 's'}",
+                                      style: theme.textTheme.bodySmall,
+                                    ),
                                   ),
-                                  child: IconButton(
+
+                                const SizedBox(height: 2),
+
+                                Container(
+                                  // decoration: BoxDecoration(
+                                  //   border: Border.all(
+                                  //     color: AppColors.warning.withValues(
+                                  //       alpha: 0.4,
+                                  //     ),
+                                  //   ),
+                                  //   borderRadius: BorderRadius.circular(
+                                  //     AppSpacing.radiusSm,
+                                  //   ),
+                                  // ),
+                                  child: IconButton.filledTonal(
                                     onPressed: () => showReturnDialog(sale),
                                     icon: const Icon(
                                       Icons.assignment_return_outlined,
@@ -434,7 +526,9 @@ class SalesHistoryPage extends GetView<SalesController> {
                                     ),
                                     color: AppColors.warning,
                                     tooltip: "Process return",
-                                    padding: const EdgeInsets.all(AppSpacing.sm),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.sm,
+                                    ),
                                     constraints: const BoxConstraints(
                                       minWidth: 36,
                                       minHeight: 36,
@@ -453,24 +547,26 @@ class SalesHistoryPage extends GetView<SalesController> {
                               ],
                             ),
                             const SizedBox(width: AppSpacing.sm),
-                            if (itemCount > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.sm,
-                                  vertical: AppSpacing.xs,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: cs.surfaceContainerHighest
-                                      .withValues(alpha: 0.6),
-                                  borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusSm),
-                                ),
-                                child: Text(
-                                  "$itemCount item${itemCount == 1 ? '' : 's'}",
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ),
-                            const SizedBox(width: AppSpacing.sm),
+                            // if (itemCount > 0)
+                            //   Container(
+                            //     padding: const EdgeInsets.symmetric(
+                            //       horizontal: AppSpacing.sm,
+                            //       vertical: AppSpacing.xs,
+                            //     ),
+                            //     decoration: BoxDecoration(
+                            //       color: cs.surfaceContainerHighest.withValues(
+                            //         alpha: 0.6,
+                            //       ),
+                            //       borderRadius: BorderRadius.circular(
+                            //         AppSpacing.radiusSm,
+                            //       ),
+                            //     ),
+                            //     child: Text(
+                            //       "$itemCount item${itemCount == 1 ? '' : 's'}",
+                            //       style: theme.textTheme.bodySmall,
+                            //     ),
+                            //   ),
+                            // const SizedBox(width: AppSpacing.sm),
                             Icon(
                               Icons.arrow_forward_ios,
                               size: 14,
