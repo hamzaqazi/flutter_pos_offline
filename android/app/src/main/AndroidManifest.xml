@@ -9,7 +9,7 @@
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <application
-        android:label="ad_shop_pos"
+        android:label="Codynest POS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
