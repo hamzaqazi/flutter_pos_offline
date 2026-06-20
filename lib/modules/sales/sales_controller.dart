@@ -91,6 +91,14 @@ class SalesController extends GetxController {
     return 'INV-${lastNum.toString().padLeft(4, '0')}';
   }
 
+  /// Increment the invoice counter (called when a pre-peeked number is used).
+  void _incrementInvoiceCounter() {
+    final box = Hive.box('settings');
+    int lastNum = box.get('lastInvoiceNumber', defaultValue: 0) as int;
+    lastNum++;
+    box.put('lastInvoiceNumber', lastNum);
+  }
+
   /// Peek at the next invoice number without incrementing.
   /// Used for preview before sale is completed.
   String peekNextInvoiceNumber() {
@@ -128,10 +136,16 @@ class SalesController extends GetxController {
     final totalDiscount = productSavings + checkoutDiscountAmount;
     final totalProfit = cart.totalProfit - checkoutDiscountAmount;
 
-    // Generate invoice number if not provided
+    // Generate invoice number — always increment the counter
     final invNum = invoiceNumber.isNotEmpty
         ? invoiceNumber
         : _getNextInvoiceNumber();
+
+    // If an invoice number was pre-peeked, still increment the counter
+    // so the next sale gets the correct number
+    if (invoiceNumber.isNotEmpty) {
+      _incrementInvoiceCounter();
+    }
 
     final sale = SaleModel(
       id: saleId,

@@ -5,6 +5,7 @@ import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
 import 'package:ad_shop_pos/data/services/export_service.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
@@ -14,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
+import 'backup_history_page.dart';
 import 'settings_controller.dart';
 
 class SettingsPage extends GetView<SettingsController> {
@@ -211,6 +213,17 @@ class SettingsPage extends GetView<SettingsController> {
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // ---------- Auto Backup ----------
+            _SectionTile(
+              icon: Icons.schedule_outlined,
+              title: "Auto Backup",
+              subtitle: "Automatic scheduled backups to local storage",
+              color: const Color(0xFF0EA5E9),
+              children: [_AutoBackupSection()],
             ),
 
             const SizedBox(height: AppSpacing.xl),
@@ -2578,5 +2591,277 @@ class _PinLockSectionState extends State<_PinLockSection> {
     ];
 
     return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+}
+
+// =================== Auto Backup Section ===================
+class _AutoBackupSection extends StatefulWidget {
+  const _AutoBackupSection();
+
+  @override
+  State<_AutoBackupSection> createState() => _AutoBackupSectionState();
+}
+
+class _AutoBackupSectionState extends State<_AutoBackupSection> {
+  bool _backingUp = false;
+
+  Future<void> _backupNow() async {
+    setState(() => _backingUp = true);
+    final success = await AutoBackupService.backupNow();
+    if (!mounted) return;
+    setState(() => _backingUp = false);
+
+    if (success) {
+      Get.snackbar(
+        'Backup Complete',
+        'Auto-backup saved successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success.withValues(alpha: 0.15),
+        colorText: AppColors.success,
+      );
+    } else {
+      Get.snackbar(
+        'Backup Failed',
+        'Could not create backup. Try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.danger.withValues(alpha: 0.15),
+        colorText: AppColors.danger,
+      );
+    }
+    setState(() {}); // Refresh last backup time
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isEnabled = AutoBackupService.isEnabled;
+    final frequency = AutoBackupService.frequency;
+    final maxBackups = AutoBackupService.maxBackups;
+    final lastBackup = AutoBackupService.lastBackupAgo;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Automatically save backups to this device on a schedule. "
+          "Backups are stored locally and can be restored anytime.",
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Enable toggle
+        SwitchListTile(
+          value: isEnabled,
+          onChanged: (enabled) async {
+            await AutoBackupService.setEnabled(enabled);
+            setState(() {});
+          },
+          title: const Text("Enable Auto Backup"),
+          subtitle: Text(
+            isEnabled ? "Backups saved automatically" : "Manual backup only",
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          secondary: Icon(
+            isEnabled ? Icons.backup_outlined : Icons.backup_outlined,
+            color: isEnabled ? const Color(0xFF0EA5E9) : cs.onSurfaceVariant,
+          ),
+        ),
+
+        if (isEnabled) ...[
+          const SizedBox(height: AppSpacing.md),
+
+          // Frequency selector
+          Text(
+            "Backup Frequency",
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              _FreqChip(
+                label: "Daily",
+                selected: frequency == 'daily',
+                onTap: () async {
+                  await AutoBackupService.setFrequency('daily');
+                  setState(() {});
+                },
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _FreqChip(
+                label: "Weekly",
+                selected: frequency == 'weekly',
+                onTap: () async {
+                  await AutoBackupService.setFrequency('weekly');
+                  setState(() {});
+                },
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _FreqChip(
+                label: "Manual",
+                selected: frequency == 'manual',
+                onTap: () async {
+                  await AutoBackupService.setFrequency('manual');
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Keep last N backups
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "Keep last $maxBackups backups",
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+              IconButton(
+                onPressed: maxBackups > 1
+                    ? () async {
+                        await AutoBackupService.setMaxBackups(maxBackups - 1);
+                        setState(() {});
+                      }
+                    : null,
+                icon: const Icon(Icons.remove_circle_outline, size: 20),
+              ),
+              IconButton(
+                onPressed: maxBackups < 30
+                    ? () async {
+                        await AutoBackupService.setMaxBackups(maxBackups + 1);
+                        setState(() {});
+                      }
+                    : null,
+                icon: const Icon(Icons.add_circle_outline, size: 20),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Last backup info
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.schedule_outlined,
+                  size: 16,
+                  color: cs.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  "Last backup: $lastBackup",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Backup now button
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: _backingUp ? null : _backupNow,
+              icon: _backingUp
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.backup_outlined, size: 20),
+              label: Text(
+                _backingUp ? "Backing up..." : "Backup Now",
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: cs.onPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF0EA5E9),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          // View backup history
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Get.toNamed('/backup-history'),
+              icon: const Icon(Icons.history_outlined, size: 18),
+              label: const Text("View Backup History"),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _FreqChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FreqChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFF0EA5E9).withValues(alpha: 0.12)
+              : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFF0EA5E9)
+                : cs.outlineVariant,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: selected ? const Color(0xFF0EA5E9) : cs.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+              ),
+        ),
+      ),
+    );
   }
 }
