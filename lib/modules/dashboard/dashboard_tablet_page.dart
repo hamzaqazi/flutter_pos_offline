@@ -34,11 +34,19 @@ class DashboardTabletPage extends GetView<DashboardController> {
             ),
 
             // ─── Vertical divider ───
-            Container(width: 1, color: cs.outlineVariant.withValues(alpha: 0.5)),
+            Container(
+              width: 1,
+              color: cs.outlineVariant.withValues(alpha: 0.5),
+            ),
 
             // ─── Right panel: stats + overview cards ───
             Expanded(
-              child: _RightPanel(theme: theme, cs: cs, resp: resp, controller: controller),
+              child: _RightPanel(
+                theme: theme,
+                cs: cs,
+                resp: resp,
+                controller: controller,
+              ),
             ),
           ],
         ),
@@ -52,7 +60,11 @@ class DashboardTabletPage extends GetView<DashboardController> {
 // ────────────────────────────────────────────────────────────
 
 class _LeftPanel extends StatelessWidget {
-  const _LeftPanel({required this.cs, required this.theme, required this.controller});
+  const _LeftPanel({
+    required this.cs,
+    required this.theme,
+    required this.controller,
+  });
 
   final ColorScheme cs;
   final ThemeData theme;
@@ -67,10 +79,7 @@ class _LeftPanel extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.seed,
-            AppColors.seed.withValues(alpha: 0.85),
-          ],
+          colors: [AppColors.seed, AppColors.seed.withValues(alpha: 0.85)],
         ),
       ),
       child: Padding(
@@ -97,7 +106,9 @@ class _LeftPanel extends StatelessWidget {
                         width: 36,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => const Icon(
-                          Icons.storefront, size: 36, color: Colors.white,
+                          Icons.storefront,
+                          size: 36,
+                          color: Colors.white,
                         ),
                       );
                     }
@@ -165,15 +176,16 @@ class _LeftPanel extends StatelessWidget {
                 if (!LicenseService.isActivated) return const SizedBox.shrink();
                 final days = LicenseService.daysUntilExpiry;
                 final expiresAt = LicenseService.expiresAt;
-                if (days == null || expiresAt == null) return const SizedBox.shrink();
+                if (days == null || expiresAt == null)
+                  return const SizedBox.shrink();
 
                 final isCritical = days <= 7;
                 final isWarning = days <= 30;
                 final label = isCritical
                     ? '$days day${days == 1 ? '' : 's'} left!'
                     : isWarning
-                        ? '$days days left'
-                        : 'License active';
+                    ? '$days days left'
+                    : 'License active';
 
                 return Container(
                   padding: const EdgeInsets.all(AppSpacing.md),
@@ -187,8 +199,8 @@ class _LeftPanel extends StatelessWidget {
                         isCritical
                             ? Icons.warning_amber_rounded
                             : isWarning
-                                ? Icons.info_outline
-                                : Icons.verified_outlined,
+                            ? Icons.info_outline
+                            : Icons.verified_outlined,
                         color: Colors.white,
                         size: 20,
                       ),
@@ -257,19 +269,24 @@ class _LeftPanel extends StatelessWidget {
             // Theme + settings buttons
             Row(
               children: [
-                Obx(() => IconButton(
-                  onPressed: themeController.toggle,
-                  icon: Icon(
-                    themeController.isDark.value
-                        ? Icons.light_mode_outlined
-                        : Icons.dark_mode_outlined,
-                    color: Colors.white70,
+                Obx(
+                  () => IconButton(
+                    onPressed: themeController.toggle,
+                    icon: Icon(
+                      themeController.isDark.value
+                          ? Icons.light_mode_outlined
+                          : Icons.dark_mode_outlined,
+                      color: Colors.white70,
+                    ),
+                    tooltip: "Toggle theme",
                   ),
-                  tooltip: "Toggle theme",
-                )),
+                ),
                 IconButton(
                   onPressed: () => Get.toNamed('/settings'),
-                  icon: const Icon(Icons.settings_outlined, color: Colors.white70),
+                  icon: const Icon(
+                    Icons.settings_outlined,
+                    color: Colors.white70,
+                  ),
                   tooltip: "Settings",
                 ),
               ],
@@ -328,13 +345,15 @@ class _RightPanel extends StatelessWidget {
               ),
               _ObxStatCard(
                 label: "Revenue",
-                valueGetter: () => Formatters.currency(controller.totalRevenue.value),
+                valueGetter: () =>
+                    Formatters.currency(controller.totalRevenue.value),
                 icon: Icons.payments_outlined,
                 color: AppColors.success,
               ),
               _ObxStatCard(
                 label: "Profit",
-                valueGetter: () => Formatters.currency(controller.totalProfit.value),
+                valueGetter: () =>
+                    Formatters.currency(controller.totalProfit.value),
                 icon: Icons.trending_up_outlined,
                 color: const Color(0xFF8B5CF6),
               ),
@@ -393,34 +412,36 @@ class _TodaySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+    return Obx(
+      () => Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        child: Column(
+          children: [
+            _TodayStatRow(
+              icon: Icons.receipt_long_outlined,
+              label: "Sales",
+              value: controller.todaySales.value.toString(),
+            ),
+            Divider(color: Colors.white24, height: AppSpacing.lg),
+            _TodayStatRow(
+              icon: Icons.payments_outlined,
+              label: "Revenue",
+              value: Formatters.currency(controller.todayRevenue.value),
+            ),
+            Divider(color: Colors.white24, height: AppSpacing.lg),
+            _TodayStatRow(
+              icon: Icons.trending_up_outlined,
+              label: "Profit",
+              value: Formatters.currency(controller.todayProfit.value),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        children: [
-          _TodayStatRow(
-            icon: Icons.receipt_long_outlined,
-            label: "Sales",
-            value: controller.todaySales.value.toString(),
-          ),
-          Divider(color: Colors.white24, height: AppSpacing.lg),
-          _TodayStatRow(
-            icon: Icons.payments_outlined,
-            label: "Revenue",
-            value: Formatters.currency(controller.todayRevenue.value),
-          ),
-          Divider(color: Colors.white24, height: AppSpacing.lg),
-          _TodayStatRow(
-            icon: Icons.trending_up_outlined,
-            label: "Profit",
-            value: Formatters.currency(controller.todayProfit.value),
-          ),
-        ],
-      ),
-    ));
+    );
   }
 }
 
@@ -441,7 +462,10 @@ class _TodayStatRow extends StatelessWidget {
       children: [
         Icon(icon, color: Colors.white70, size: 18),
         const SizedBox(width: AppSpacing.sm),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
+        ),
         const Spacer(),
         FittedBox(
           fit: BoxFit.scaleDown,
@@ -517,10 +541,7 @@ class _StatCardGrid extends StatelessWidget {
   final int columns;
   final List<Widget> children;
 
-  const _StatCardGrid({
-    required this.columns,
-    required this.children,
-  });
+  const _StatCardGrid({required this.columns, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -558,13 +579,15 @@ class _ObxStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => _StatCard(
-      label: label,
-      value: valueGetter(),
-      icon: icon,
-      color: color,
-      onTap: onTap,
-    ));
+    return Obx(
+      () => _StatCard(
+        label: label,
+        value: valueGetter(),
+        icon: icon,
+        color: color,
+        onTap: onTap,
+      ),
+    );
   }
 }
 
@@ -591,7 +614,7 @@ class _StatCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -643,55 +666,61 @@ class _NotificationsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-    final theme = Theme.of(context);
-    final threshold = SettingsService.getSettings().lowStockThreshold;
-    final lowStock = controller.lowStockCount.value;
-    final returns = controller.totalReturnCount.value;
-    final refunds = controller.totalRefunds.value;
+      final theme = Theme.of(context);
+      final threshold = SettingsService.getSettings().lowStockThreshold;
+      final lowStock = controller.lowStockCount.value;
+      final returns = controller.totalReturnCount.value;
+      final refunds = controller.totalRefunds.value;
 
-    if (lowStock == 0 && returns == 0) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            children: [
-              Icon(Icons.check_circle_outline, size: 40,
-                  color: AppColors.success.withValues(alpha: 0.5)),
-              const SizedBox(height: AppSpacing.sm),
-              Text("All good! No alerts right now.",
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+      if (lowStock == 0 && returns == 0) {
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 40,
+                  color: AppColors.success.withValues(alpha: 0.5),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  "All good! No alerts right now.",
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    }
+        );
+      }
 
-    return Column(
-      children: [
-        if (lowStock > 0)
-          _NotificationCard(
-            icon: Icons.warning_amber_rounded,
-            title: "Low Stock Alert",
-            subtitle: "$lowStock product${lowStock == 1 ? '' : 's'} at or below $threshold units",
-            color: AppColors.warning,
-            onTap: () => Get.toNamed('/low-stock'),
-          ),
-        if (returns > 0) ...[
-          const SizedBox(height: AppSpacing.sm),
-          _NotificationCard(
-            icon: Icons.undo_outlined,
-            title: "Returns",
-            subtitle: "$returns return${returns == 1 ? '' : 's'} processed (${Formatters.currency(refunds)})",
-            color: AppColors.danger,
-            onTap: () => Get.toNamed('/returns'),
-          ),
+      return Column(
+        children: [
+          if (lowStock > 0)
+            _NotificationCard(
+              icon: Icons.warning_amber_rounded,
+              title: "Low Stock Alert",
+              subtitle:
+                  "$lowStock product${lowStock == 1 ? '' : 's'} at or below $threshold units",
+              color: AppColors.warning,
+              onTap: () => Get.toNamed('/low-stock'),
+            ),
+          if (returns > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _NotificationCard(
+              icon: Icons.undo_outlined,
+              title: "Returns",
+              subtitle:
+                  "$returns return${returns == 1 ? '' : 's'} processed (${Formatters.currency(refunds)})",
+              color: AppColors.danger,
+              onTap: () => Get.toNamed('/returns'),
+            ),
+          ],
         ],
-      ],
-    );
-    });  // close Obx
+      );
+    }); // close Obx
   }
 }
 
@@ -873,8 +902,19 @@ class _ActionChip extends StatelessWidget {
 
 String formatDate(DateTime date) {
   const months = [
-    '', 'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    '',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
   return '${date.day} ${months[date.month]} ${date.year}';
 }
