@@ -2567,6 +2567,33 @@ class _PinLockSectionState extends State<_PinLockSection> {
                   },
                 ),
               ],
+              // Device ID
+              const SizedBox(height: 4),
+              // ---------- Device ID + Support Info ----------
+              FutureBuilder<String>(
+                future: LicenseService.deviceId,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const SizedBox.shrink();
+                  final deviceId = snapshot.data!;
+                  return Row(
+                    children: [
+                      Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          // 'Device: ${deviceId.length > 20 ? deviceId.substring(0, 20) : deviceId}...',
+                          'Device ID: $deviceId',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         ),
@@ -2848,18 +2875,16 @@ class _FreqChip extends StatelessWidget {
               : cs.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: selected
-                ? const Color(0xFF0EA5E9)
-                : cs.outlineVariant,
+            color: selected ? const Color(0xFF0EA5E9) : cs.outlineVariant,
             width: selected ? 2 : 1,
           ),
         ),
         child: Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: selected ? const Color(0xFF0EA5E9) : cs.onSurfaceVariant,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-              ),
+            color: selected ? const Color(0xFF0EA5E9) : cs.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+          ),
         ),
       ),
     );
