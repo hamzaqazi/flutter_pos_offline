@@ -68,7 +68,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: Column(
@@ -79,28 +79,34 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppColors.seed,
-                            AppColors.seed.withValues(alpha: 0.75),
-                          ],
+                        // gradient: LinearGradient(
+                        //   begin: Alignment.topLeft,
+                        //   end: Alignment.bottomRight,
+                        //   colors: [
+                        //     AppColors.seed,
+                        //     AppColors.seed.withValues(alpha: 0.75),
+                        //   ],
+                        // ),
+                        border: Border.all(
+                          color: cs.primary.withValues(alpha: 0.3),
+                          width: 2,
                         ),
                         borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.seed.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                        // boxShadow: [
+                        //   BoxShadow(
+                        //     color: AppColors.seed.withValues(alpha: 0.3),
+                        //     blurRadius: 20,
+                        //     offset: const Offset(0, 8),
+                        //   ),
+                        // ],
                       ),
                       child: const Center(
-                        child: Icon(
-                          Icons.point_of_sale,
-                          color: Colors.white,
-                          size: 50,
+                        child: Image(
+                          image: AssetImage(
+                            'lib/assets/images/cn_pos_logo_rm.png',
+                          ),
+                          width: 80,
+                          height: 80,
                         ),
                       ),
                     ),
@@ -108,10 +114,10 @@ class _ActivationScreenState extends State<ActivationScreen> {
 
                     // ---------- Title ----------
                     Text(
-                      'Shop POS',
+                      'Codynest POS',
                       style: theme.textTheme.displaySmall?.copyWith(
                         fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
+                        // letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -120,6 +126,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
@@ -131,12 +138,12 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         padding: const EdgeInsets.all(AppSpacing.lg),
                         margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                         decoration: BoxDecoration(
-                          color: AppColors.warning.withValues(alpha: 0.1),
+                          color: AppColors.danger.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusMd,
                           ),
                           border: Border.all(
-                            color: AppColors.warning.withValues(alpha: 0.4),
+                            color: AppColors.danger.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Column(
@@ -145,7 +152,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                               children: [
                                 Icon(
                                   Icons.warning_amber_rounded,
-                                  color: AppColors.warning,
+                                  color: AppColors.danger.withValues(
+                                    alpha: 0.9,
+                                  ),
                                   size: 24,
                                 ),
                                 const SizedBox(width: AppSpacing.md),
@@ -154,7 +163,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                     'License Deactivated',
                                     style: theme.textTheme.titleSmall?.copyWith(
                                       fontWeight: FontWeight.w800,
-                                      color: AppColors.warning,
+                                      color: AppColors.danger.withValues(
+                                        alpha: 0.9,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -164,7 +175,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                             Text(
                               LicenseService.deactivationReason,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.warning.withValues(alpha: 0.9),
+                                color: AppColors.danger.withValues(alpha: 0.9),
                                 height: 1.5,
                               ),
                             ),
@@ -174,13 +185,17 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                 Icon(
                                   Icons.call,
                                   size: 14,
-                                  color: AppColors.warning,
+                                  color: AppColors.danger.withValues(
+                                    alpha: 0.9,
+                                  ),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Contact: 0315-3507075',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.warning,
+                                    color: AppColors.danger.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
