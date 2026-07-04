@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/routes/app_routes.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
@@ -28,6 +30,18 @@ void main() async {
   await Hive.openBox('staff');
   await Hive.openBox('categories');
   await Hive.openBox('held_carts');
+
+  // Initialize Workmanager for auto-backup scheduling
+  try {
+    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  } catch (e) {
+    debugPrint('⚠️ Workmanager init failed: $e');
+  }
+
+  // Schedule auto-backup if enabled
+  if (AutoBackupService.isEnabled) {
+    await AutoBackupService.scheduleAutoBackup();
+  }
 
   runApp(const PosApp());
 }
@@ -62,11 +76,13 @@ class _PosAppState extends State<PosApp> {
     // Already activated — verify with Firestore (with 8-second timeout)
     bool stillValid;
     try {
-      stillValid = await LicenseService.verifyActiveLicense()
-          .timeout(const Duration(seconds: 8), onTimeout: () {
-        // Timeout — trust the saved activation (offline mode)
-        return LicenseService.isActivated;
-      });
+      stillValid = await LicenseService.verifyActiveLicense().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          // Timeout — trust the saved activation (offline mode)
+          return LicenseService.isActivated;
+        },
+      );
     } catch (e) {
       // Any error — trust saved activation
       stillValid = LicenseService.isActivated;
@@ -88,6 +104,11 @@ class _PosAppState extends State<PosApp> {
           : Routes.dashboard;
       _checking = false;
     });
+
+    // Check if auto-backup is due (runs in background, doesn't block UI)
+    if (AutoBackupService.isEnabled) {
+      AutoBackupService.checkAndRunIfNeeded();
+    }
   }
 
   @override
@@ -102,7 +123,13 @@ class _PosAppState extends State<PosApp> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.storefront, size: 64, color: AppColors.seed),
+                // Icon(Icons.storefront, size: 64, color: AppColors.seed),
+                // App logo
+                Image.asset(
+                  'lib/assets/images/cn_pos_logo_rm.png',
+                  height: 120,
+                ),
+
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),

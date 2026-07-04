@@ -12,6 +12,7 @@ import 'package:ad_shop_pos/modules/returns/returns_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_history_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_page.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
+import 'package:ad_shop_pos/modules/settings/backup_history_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_page.dart';
 import 'package:ad_shop_pos/modules/staff/staff_page.dart';
 import 'package:get/get.dart';
@@ -36,5 +37,6 @@ class AppPages {
     GetPage(name: Routes.activation, page: () => const ActivationScreen()),
     GetPage(name: Routes.pinSetup, page: () => const PinSetupScreen()),
     GetPage(name: Routes.pinLock, page: () => const PinLockScreen()),
+    GetPage(name: Routes.backupHistory, page: () => const BackupHistoryPage()),
   ];
 }

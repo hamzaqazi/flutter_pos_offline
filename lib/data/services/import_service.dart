@@ -183,14 +183,43 @@ class ImportService {
   }
 
   /// Clear all data from Hive boxes (used before replace import).
+  /// Preserves license and auto-backup data so the app stays activated.
   static Future<void> _clearAllData() async {
+    // Save license data before wiping settings box
+    final settingsBox = Hive.box('settings');
+    final preservedKeys = <String, dynamic>{};
+    for (final key in [
+      'license_activated',
+      'license_key',
+      'license_shopName',
+      'license_expiresAt',
+      'license_pin',
+      'license_pinEnabled',
+      'license_deactivationReason',
+      'autoBackup_enabled',
+      'autoBackup_frequency',
+      'autoBackup_lastBackup',
+      'autoBackup_maxBackups',
+      'autoBackup_keepLast',
+    ]) {
+      final value = settingsBox.get(key);
+      if (value != null) {
+        preservedKeys[key] = value;
+      }
+    }
+
     await HiveService.productBox.clear();
     await HiveService.salesBox.clear();
     await Hive.box('expenses').clear();
     await HiveService.returnsBox.clear();
     await HiveService.customersBox.clear();
     await HiveService.staffBox.clear();
-    await Hive.box('settings').clear();
+    await settingsBox.clear();
+
+    // Restore preserved license + auto-backup data
+    for (final entry in preservedKeys.entries) {
+      await settingsBox.put(entry.key, entry.value);
+    }
   }
 
   /// Reload all controllers so they pick up the imported data.

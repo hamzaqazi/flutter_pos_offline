@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
@@ -463,12 +465,34 @@ class _Header extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                child: const Icon(Icons.point_of_sale, color: Colors.white),
+                child: Obx(() {
+                  final settings = Get.find<SettingsController>();
+                  final logoPath = settings.receiptSettings.value.logoPath;
+                  if (logoPath.isNotEmpty) {
+                    return Image.file(
+                      File(logoPath),
+                      height: 32,
+                      width: 32,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.storefront,
+                          size: 32,
+                          color: Colors.white,
+                        );
+                      },
+                    );
+                  }
+                  return Image.asset(
+                    'lib/assets/images/cn_pos_logo_rm.png',
+                    height: 32,
+                  );
+                }),
               ),
               const SizedBox(width: AppSpacing.md),
               Obx(() {
@@ -484,15 +508,28 @@ class _Header extends StatelessWidget {
               }),
               const Spacer(),
               Obx(
-                () => IconButton(
-                  onPressed: themeController.toggle,
-                  icon: Icon(
-                    themeController.isDark.value
-                        ? Icons.light_mode_outlined
-                        : Icons.dark_mode_outlined,
-                    color: Colors.white,
-                  ),
-                  tooltip: "Toggle theme",
+                () => Row(
+                  children: [
+                    IconButton(
+                      onPressed: themeController.toggle,
+                      icon: Icon(
+                        themeController.isDark.value
+                            ? Icons.light_mode_outlined
+                            : Icons.dark_mode_outlined,
+                        color: Colors.white,
+                      ),
+                      tooltip: "Toggle theme",
+                    ),
+                    // settings button
+                    IconButton(
+                      onPressed: () => Get.toNamed('/settings'),
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: Colors.white,
+                      ),
+                      tooltip: "Settings",
+                    ),
+                  ],
                 ),
               ),
             ],

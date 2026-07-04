@@ -38,8 +38,7 @@ void showReturnDialog(SaleModel sale) {
                   int.tryParse(qtyControllers[i].text.trim()) ?? 0;
               if (returnQty > 0) {
                 totalRefund += returnQty * item.product.discountedPrice;
-                totalProfitReversed +=
-                    returnQty * item.product.profitPerUnit;
+                totalProfitReversed += returnQty * item.product.profitPerUnit;
               }
             }
 
@@ -56,8 +55,9 @@ void showReturnDialog(SaleModel sale) {
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withValues(alpha: 0.12),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                         child: const Icon(
                           Icons.assignment_return,
@@ -69,8 +69,10 @@ void showReturnDialog(SaleModel sale) {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Process Return",
-                                style: theme.textTheme.titleLarge),
+                            Text(
+                              "Process Return",
+                              style: theme.textTheme.titleLarge,
+                            ),
                             Text(
                               "Sale ${Formatters.dateTime(sale.date)} • ${Formatters.currency(sale.total)}",
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -115,43 +117,43 @@ void showReturnDialog(SaleModel sale) {
                                       item.product.name,
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                     if (item.product.hasBrand)
                                       Text(
                                         item.product.brand,
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: cs.onSurfaceVariant,
-                                          fontSize: 11,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                              fontSize: 11,
+                                            ),
                                       ),
                                     const SizedBox(height: 4),
                                     Text(
                                       "Sold: ${item.quantity} × ${Formatters.currency(item.product.discountedPrice)}",
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: cs.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
                                     ),
                                     if (alreadyReturned > 0)
                                       Text(
                                         "Already returned: $alreadyReturned",
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: AppColors.warning,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.warning,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                     if (maxReturnable <= 0)
                                       Text(
                                         "Fully returned",
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: AppColors.danger,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.danger,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                   ],
                                 ),
@@ -173,7 +175,8 @@ void showReturnDialog(SaleModel sale) {
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusSm),
+                                        AppSpacing.radiusSm,
+                                      ),
                                     ),
                                   ),
                                   onChanged: (_) => setState(() {}),
@@ -190,7 +193,8 @@ void showReturnDialog(SaleModel sale) {
                 // Reason field
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg),
+                    horizontal: AppSpacing.lg,
+                  ),
                   child: TextField(
                     controller: reasonController,
                     textCapitalization: TextCapitalization.sentences,
@@ -208,12 +212,12 @@ void showReturnDialog(SaleModel sale) {
                 if (totalRefund > 0)
                   Container(
                     margin: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg),
+                      horizontal: AppSpacing.lg,
+                    ),
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.warning.withValues(alpha: 0.08),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusSm),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       border: Border.all(
                         color: AppColors.warning.withValues(alpha: 0.3),
                       ),
@@ -221,11 +225,12 @@ void showReturnDialog(SaleModel sale) {
                     child: Column(
                       children: [
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("Refund amount",
-                                style: theme.textTheme.bodyMedium),
+                            Text(
+                              "Refund amount",
+                              style: theme.textTheme.bodyMedium,
+                            ),
                             Text(
                               Formatters.currency(totalRefund),
                               style: theme.textTheme.titleMedium?.copyWith(
@@ -237,13 +242,14 @@ void showReturnDialog(SaleModel sale) {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("Profit reversed",
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                )),
+                            Text(
+                              "Profit reversed",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
                             Text(
                               "-${Formatters.currency(totalProfitReversed)}",
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -275,19 +281,20 @@ void showReturnDialog(SaleModel sale) {
                               ? () {
                                   // Build return items
                                   final returnItems = <ReturnItemModel>[];
-                                  for (int i = 0;
-                                      i < sale.items.length;
-                                      i++) {
+                                  for (int i = 0; i < sale.items.length; i++) {
                                     final item = sale.items[i];
-                                    final returnQty = int.tryParse(
-                                            qtyControllers[i].text
-                                                .trim()) ??
+                                    final returnQty =
+                                        int.tryParse(
+                                          qtyControllers[i].text.trim(),
+                                        ) ??
                                         0;
 
                                     // Validate
-                                    final alreadyReturned =
-                                        returnsController.alreadyReturnedQty(
-                                            sale.id, item.product.id);
+                                    final alreadyReturned = returnsController
+                                        .alreadyReturnedQty(
+                                          sale.id,
+                                          item.product.id,
+                                        );
                                     final maxReturnable =
                                         item.quantity - alreadyReturned;
 
@@ -313,7 +320,8 @@ void showReturnDialog(SaleModel sale) {
 
                                   // Close dialog FIRST, then process return
                                   // This avoids Get.back() conflicting with Get.snackbar
-                                  final itemsToReturn = List<ReturnItemModel>.from(returnItems);
+                                  final itemsToReturn =
+                                      List<ReturnItemModel>.from(returnItems);
                                   final reason = reasonController.text.trim();
 
                                   Navigator.of(context).pop();
@@ -331,7 +339,10 @@ void showReturnDialog(SaleModel sale) {
                           style: FilledButton.styleFrom(
                             backgroundColor: AppColors.warning,
                           ),
-                          child: const Text("Process Refund"),
+                          child: const Text(
+                            "Process Refund",
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
                       ),
                     ],

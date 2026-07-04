@@ -17,4 +17,5 @@ abstract class Routes {
   static const inventory = '/inventory';
   static const invoice = '/invoice';
   static const scanner = '/scanner';
+  static const backupHistory = '/backup-history';
 }
