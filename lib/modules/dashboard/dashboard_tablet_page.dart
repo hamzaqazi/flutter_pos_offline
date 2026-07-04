@@ -26,7 +26,6 @@ class DashboardTabletPage extends GetView<DashboardController> {
     return Scaffold(
       body: SafeArea(
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ─── Left panel: header + license + quick actions ───
             SizedBox(
@@ -156,7 +155,7 @@ class _LeftPanel extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
 
-            Obx(() => _TodaySummaryCard(controller: controller)),
+            _TodaySummaryCard(controller: controller),
 
             const SizedBox(height: AppSpacing.xl),
 
@@ -222,7 +221,7 @@ class _LeftPanel extends StatelessWidget {
               },
             ),
 
-            const Spacer(),
+            const SizedBox(height: AppSpacing.xl),
 
             // ─── Quick Actions ───
             const Text(
@@ -310,37 +309,37 @@ class _RightPanel extends StatelessWidget {
           Text("All-Time Overview", style: theme.textTheme.titleMedium),
           const SizedBox(height: AppSpacing.md),
 
-          Obx(() => _StatCardGrid(
+          _StatCardGrid(
             columns: resp.statGridColumns,
             children: [
-              _StatCard(
+              _ObxStatCard(
                 label: "Products",
-                value: controller.totalProducts.value.toString(),
+                valueGetter: () => controller.totalProducts.value.toString(),
                 icon: Icons.inventory_2_outlined,
                 color: AppColors.seed,
                 onTap: () => Get.toNamed('/products'),
               ),
-              _StatCard(
+              _ObxStatCard(
                 label: "Sales",
-                value: controller.totalSales.value.toString(),
+                valueGetter: () => controller.totalSales.value.toString(),
                 icon: Icons.receipt_long_outlined,
                 color: AppColors.accent,
                 onTap: () => Get.toNamed('/sales'),
               ),
-              _StatCard(
+              _ObxStatCard(
                 label: "Revenue",
-                value: Formatters.currency(controller.totalRevenue.value),
+                valueGetter: () => Formatters.currency(controller.totalRevenue.value),
                 icon: Icons.payments_outlined,
                 color: AppColors.success,
               ),
-              _StatCard(
+              _ObxStatCard(
                 label: "Profit",
-                value: Formatters.currency(controller.totalProfit.value),
+                valueGetter: () => Formatters.currency(controller.totalProfit.value),
                 icon: Icons.trending_up_outlined,
                 color: const Color(0xFF8B5CF6),
               ),
             ],
-          )),
+          ),
 
           const SizedBox(height: AppSpacing.xl),
 
@@ -356,7 +355,7 @@ class _RightPanel extends StatelessWidget {
                   children: [
                     Text("Notifications", style: theme.textTheme.titleMedium),
                     const SizedBox(height: AppSpacing.md),
-                    Obx(() => _NotificationsList(controller: controller)),
+                    _NotificationsList(controller: controller),
                   ],
                 ),
               ),
@@ -394,7 +393,7 @@ class _TodaySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Obx(() => Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.15),
@@ -421,7 +420,7 @@ class _TodaySummaryCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -541,6 +540,34 @@ class _StatCardGrid extends StatelessWidget {
 // STAT CARD (for right panel)
 // ────────────────────────────────────────────────────────────
 
+/// Stat card that wraps itself in Obx for reactive updates.
+class _ObxStatCard extends StatelessWidget {
+  const _ObxStatCard({
+    required this.label,
+    required this.valueGetter,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
+
+  final String label;
+  final String Function() valueGetter;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() => _StatCard(
+      label: label,
+      value: valueGetter(),
+      icon: icon,
+      color: color,
+      onTap: onTap,
+    ));
+  }
+}
+
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.label,
@@ -625,6 +652,7 @@ class _NotificationsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Obx(() {
     final theme = Theme.of(context);
     final threshold = SettingsService.getSettings().lowStockThreshold;
     final lowStock = controller.lowStockCount.value;
@@ -673,6 +701,7 @@ class _NotificationsList extends StatelessWidget {
         ],
       ],
     );
+    });  // close Obx
   }
 }
 
@@ -821,18 +850,24 @@ class _ActionChip extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 2),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
