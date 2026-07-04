@@ -31,7 +31,7 @@ class DashboardTabletPage extends GetView<DashboardController> {
             // ─── Left panel: header + license + quick actions ───
             SizedBox(
               width: resp.width >= 1200 ? 360 : 300,
-              child: _LeftPanel(cs: cs, theme: theme),
+              child: _LeftPanel(cs: cs, theme: theme, controller: controller),
             ),
 
             // ─── Vertical divider ───
@@ -39,7 +39,7 @@ class DashboardTabletPage extends GetView<DashboardController> {
 
             // ─── Right panel: stats + overview cards ───
             Expanded(
-              child: _RightPanel(theme: theme, cs: cs, resp: resp),
+              child: _RightPanel(theme: theme, cs: cs, resp: resp, controller: controller),
             ),
           ],
         ),
@@ -53,10 +53,11 @@ class DashboardTabletPage extends GetView<DashboardController> {
 // ────────────────────────────────────────────────────────────
 
 class _LeftPanel extends StatelessWidget {
-  const _LeftPanel({required this.cs, required this.theme});
+  const _LeftPanel({required this.cs, required this.theme, required this.controller});
 
   final ColorScheme cs;
   final ThemeData theme;
+  final DashboardController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -290,11 +291,13 @@ class _RightPanel extends StatelessWidget {
     required this.theme,
     required this.cs,
     required this.resp,
+    required this.controller,
   });
 
   final ThemeData theme;
   final ColorScheme cs;
   final Responsive resp;
+  final DashboardController controller;
 
   @override
   Widget build(BuildContext context) {
