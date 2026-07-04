@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/utils/responsive.dart';
+import 'package:ad_shop_pos/modules/dashboard/dashboard_tablet_page.dart';
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
@@ -20,6 +22,12 @@ class DashboardPage extends GetView<DashboardController> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+
+    // Use tablet layout for wide screens, phone layout for narrow
+    final resp = Responsive.of(context);
+    if (resp.isTabletOrLarger) {
+      return const DashboardTabletPage();
+    }
 
     return Scaffold(
       body: SafeArea(
