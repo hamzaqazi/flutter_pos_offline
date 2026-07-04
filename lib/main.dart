@@ -76,11 +76,13 @@ class _PosAppState extends State<PosApp> {
     // Already activated — verify with Firestore (with 8-second timeout)
     bool stillValid;
     try {
-      stillValid = await LicenseService.verifyActiveLicense()
-          .timeout(const Duration(seconds: 8), onTimeout: () {
-        // Timeout — trust the saved activation (offline mode)
-        return LicenseService.isActivated;
-      });
+      stillValid = await LicenseService.verifyActiveLicense().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          // Timeout — trust the saved activation (offline mode)
+          return LicenseService.isActivated;
+        },
+      );
     } catch (e) {
       // Any error — trust saved activation
       stillValid = LicenseService.isActivated;
@@ -121,7 +123,13 @@ class _PosAppState extends State<PosApp> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.storefront, size: 64, color: AppColors.seed),
+                // Icon(Icons.storefront, size: 64, color: AppColors.seed),
+                // App logo
+                Image.asset(
+                  'lib/assets/images/cn_pos_logo_rm.png',
+                  height: 120,
+                ),
+
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),

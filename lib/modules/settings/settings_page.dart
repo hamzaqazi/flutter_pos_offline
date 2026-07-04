@@ -752,6 +752,7 @@ class _ShopInfoFormState extends State<_ShopInfoForm> {
 
     return Column(
       children: [
+        const SizedBox(height: AppSpacing.xs),
         TextField(
           controller: _shopNameController,
           textCapitalization: TextCapitalization.words,
