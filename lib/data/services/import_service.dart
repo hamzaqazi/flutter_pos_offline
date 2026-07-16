@@ -19,8 +19,8 @@ class ImportService {
   static Future<Map<String, dynamic>?> pickBackupFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
+        type: FileType.any,
+        // allowedExtensions: ['json'],
         dialogTitle: 'Select Backup File',
       );
 
@@ -152,7 +152,10 @@ class ImportService {
       // Import receipt settings
       if (data['receiptSettings'] != null) {
         final settingsBox = Hive.box('settings');
-        settingsBox.put('receipt', Map<String, dynamic>.from(data['receiptSettings']));
+        settingsBox.put(
+          'receipt',
+          Map<String, dynamic>.from(data['receiptSettings']),
+        );
       }
 
       // Import categories
