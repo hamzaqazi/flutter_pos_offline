@@ -88,7 +88,7 @@ class ReportsController extends GetxController {
     return cogs - returnedCOGS;
   }
 
-  int get totalTransactions => filteredSales.length - totalReturnTransactions;
+  int get totalTransactions => filteredSales.length;
 
   int get totalItemsSold {
     final sold = filteredSales.fold(0, (sum, s) {
