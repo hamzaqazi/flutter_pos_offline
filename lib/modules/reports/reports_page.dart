@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/tooltip_label.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/modules/reports/charts_tab.dart';
@@ -131,13 +132,15 @@ class _SummaryTab extends GetView<ReportsController> {
                       Expanded(
                         child: _BannerStat(
                           label: "Revenue",
+                          tooltip: FinancialTooltips.revenue,
                           value: Formatters.currency(controller.totalRevenue),
                         ),
                       ),
                       Container(width: 1, height: 36, color: Colors.white24),
                       Expanded(
                         child: _BannerStat(
-                          label: "Profit",
+                          label: "Net Profit",
+                          tooltip: FinancialTooltips.netProfit,
                           value: Formatters.currency(controller.netProfit),
                         ),
                       ),
@@ -149,6 +152,8 @@ class _SummaryTab extends GetView<ReportsController> {
                       Expanded(
                         child: _BannerStat(
                           label: "Net Margin",
+                          tooltip: FinancialTooltips.netMargin,
+                          tooltip: FinancialTooltips.netMargin,
                           value: "${controller.netMargin.toStringAsFixed(1)}%",
                         ),
                       ),
@@ -156,6 +161,7 @@ class _SummaryTab extends GetView<ReportsController> {
                       Expanded(
                         child: _BannerStat(
                           label: "Avg. Sale",
+                          tooltip: FinancialTooltips.avgSale,
                           value: Formatters.currency(
                             controller.averageTransaction,
                           ),
@@ -228,6 +234,7 @@ class _SummaryTab extends GetView<ReportsController> {
                   child: _StatBox(
                     icon: Icons.money_off_outlined,
                     label: "Expenses",
+                    tooltip: FinancialTooltips.expenses,
                     value: Formatters.currency(controller.totalExpenses),
                     color: const Color(0xFFEF4444),
                   ),
@@ -241,6 +248,7 @@ class _SummaryTab extends GetView<ReportsController> {
                   child: _StatBox(
                     icon: Icons.assignment_return_outlined,
                     label: "Refunds",
+                    tooltip: FinancialTooltips.refunds,
                     value: Formatters.currency(controller.totalRefunds),
                     color: AppColors.warning,
                   ),
@@ -543,6 +551,7 @@ class _ExpensesTab extends GetView<ReportsController> {
                       Expanded(
                         child: _BannerStat(
                           label: "Gross Profit",
+                          tooltip: FinancialTooltips.grossProfit,
                           value: Formatters.currency(controller.totalProfit),
                         ),
                       ),
@@ -561,6 +570,7 @@ class _ExpensesTab extends GetView<ReportsController> {
                       Expanded(
                         child: _BannerStat(
                           label: "Net Profit",
+                          tooltip: FinancialTooltips.netProfit,
                           value: Formatters.currency(controller.netProfit),
                         ),
                       ),
@@ -568,6 +578,7 @@ class _ExpensesTab extends GetView<ReportsController> {
                       Expanded(
                         child: _BannerStat(
                           label: "Net Margin",
+                          tooltip: FinancialTooltips.netMargin,
                           value: "${controller.netMargin.toStringAsFixed(1)}%",
                         ),
                       ),
@@ -852,9 +863,10 @@ class _InventoryTile extends StatelessWidget {
 // =================== Shared Widgets ===================
 
 class _BannerStat extends StatelessWidget {
-  const _BannerStat({required this.label, required this.value});
+  const _BannerStat({required this.label, required this.value, this.tooltip});
   final String label;
   final String value;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -872,10 +884,18 @@ class _BannerStat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white70, fontSize: 11),
-        ),
+        if (tooltip != null)
+          TooltipLabel(
+            label: label,
+            tooltip: tooltip!,
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+            iconColor: Colors.white54,
+          )
+        else
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
       ],
     );
   }
@@ -887,12 +907,14 @@ class _StatBox extends StatelessWidget {
     required this.label,
     required this.value,
     required this.color,
+    this.tooltip,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final Color color;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -915,12 +937,21 @@ class _StatBox extends StatelessWidget {
                 ),
               ),
             ),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            if (tooltip != null)
+              TooltipLabel(
+                label: label,
+                tooltip: tooltip!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              )
+            else
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
           ],
         ),
       ),
