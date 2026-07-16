@@ -174,9 +174,13 @@ class ReportsController extends GetxController {
     for (final ret in dateReturns) {
       for (final retItem in ret.items) {
         // Find matching product in map by name
-        final matchKey = map.keys.firstWhereOrNull(
-          (k) => k.startsWith('${retItem.name}|'),
-        );
+        String? matchKey;
+        for (final k in map.keys) {
+          if (k.startsWith('${retItem.name}|')) {
+            matchKey = k;
+            break;
+          }
+        }
         if (matchKey != null) {
           final data = map[matchKey]!;
           data.quantity -= retItem.returnQty;
