@@ -153,7 +153,7 @@ class _SummaryTab extends GetView<ReportsController> {
                         child: _BannerStat(
                           label: "Net Margin",
                           tooltip: FinancialTooltips.netMargin,
-                          tooltip: FinancialTooltips.netMargin,
+                          // tooltip: FinancialTooltips.netMargin,
                           value: "${controller.netMargin.toStringAsFixed(1)}%",
                         ),
                       ),

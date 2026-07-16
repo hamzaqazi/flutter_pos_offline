@@ -188,17 +188,29 @@ class DashboardPage extends GetView<DashboardController> {
                                 Expanded(
                                   child: _TodayStatSmall(
                                     label: "Expenses",
-                                    value: Formatters.currency(controller.todayExpenses.value),
+                                    value: Formatters.currency(
+                                      controller.todayExpenses.value,
+                                    ),
                                   ),
                                 ),
-                                Container(width: 1, height: 24, color: Colors.white24),
+                                Container(
+                                  width: 1,
+                                  height: 24,
+                                  color: Colors.white24,
+                                ),
                                 Expanded(
                                   child: _TodayStatSmall(
                                     label: "Net Profit",
                                     value: Formatters.currency(
-                                      controller.todayProfit.value - controller.todayExpenses.value,
+                                      controller.todayProfit.value -
+                                          controller.todayExpenses.value,
                                     ),
-                                    valueColor: (controller.todayProfit.value - controller.todayExpenses.value) >= 0
+                                    valueColor:
+                                        (controller.todayProfit.value -
+                                                controller
+                                                    .todayExpenses
+                                                    .value) >=
+                                            0
                                         ? Colors.white
                                         : const Color(0xFFFFA726),
                                   ),
@@ -215,7 +227,8 @@ class DashboardPage extends GetView<DashboardController> {
 
                   TooltipLabel(
                     label: "All-Time Overview",
-                    tooltip: 'Your total business performance since you started using the app',
+                    tooltip:
+                        'Your total business performance since you started using the app',
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -277,6 +290,7 @@ class DashboardPage extends GetView<DashboardController> {
                               : "0%",
                           icon: Icons.pie_chart_outline,
                           color: const Color(0xFFEC4899), // Pink
+                          tooltip: FinancialTooltips.netMargin,
                         ),
                         _StatCard(
                           label: "Refunds",
