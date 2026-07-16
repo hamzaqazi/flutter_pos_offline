@@ -27,8 +27,23 @@ class SalesHistoryPage extends GetView<SalesController> {
 
         // Filtered sales
         final sales = controller.filteredSales;
-        final totalRevenue = sales.fold<double>(0, (sum, s) => sum + s.total);
-        final totalProfit = sales.fold<double>(0, (sum, s) => sum + s.profit);
+        final returnsCtrl = Get.find<ReturnsController>();
+
+        // Calculate refunds for filtered sales
+        final saleIds = sales.map((s) => s.id).toSet();
+        final filteredReturns = returnsCtrl.returns
+            .where((r) => saleIds.contains(r.saleId))
+            .toList();
+        final totalRefundAmount = filteredReturns.fold<double>(
+          0, (sum, r) => sum + r.refundAmount,
+        );
+        final totalProfitReversed = filteredReturns.fold<double>(
+          0, (sum, r) => sum + r.refundProfit,
+        );
+
+        final totalRevenue = sales.fold<double>(0, (sum, s) => sum + s.total) - totalRefundAmount;
+        final totalGrossProfit = sales.fold<double>(0, (sum, s) => sum + s.profit);
+        final totalProfit = totalGrossProfit - totalProfitReversed;
         final totalDiscount = sales.fold<double>(
           0,
           (sum, s) => sum + s.discount,
@@ -62,7 +77,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                       Container(width: 1, height: 36, color: Colors.white24),
                       Expanded(
                         child: _BannerStat(
-                          label: "Profit",
+                          label: totalProfitReversed > 0 ? "Net Profit" : "Profit",
                           value: Formatters.currency(totalProfit),
                         ),
                       ),
@@ -75,6 +90,39 @@ class SalesHistoryPage extends GetView<SalesController> {
                       ),
                     ],
                   ),
+                  if (totalProfitReversed > 0) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.assignment_return_outlined,
+                            color: Colors.white70,
+                            size: 14,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            "Refunds: ${Formatters.currency(totalRefundAmount)} (profit reversed: ${Formatters.currency(totalProfitReversed)})",
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   if (totalDiscount > 0) ...[
                     const SizedBox(height: AppSpacing.sm),
                     Container(
@@ -268,6 +316,11 @@ class SalesHistoryPage extends GetView<SalesController> {
                     0,
                     (sum, r) => sum + r.refundAmount,
                   );
+                  final saleProfitReversed = saleReturns.fold<double>(
+                    0,
+                    (sum, r) => sum + r.refundProfit,
+                  );
+                  final saleNetProfit = sale.profit - saleProfitReversed;
 
                   return Card(
                     clipBehavior: Clip.antiAlias,
@@ -436,17 +489,22 @@ class SalesHistoryPage extends GetView<SalesController> {
                                             vertical: 1,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: AppColors.success.withValues(
-                                              alpha: 0.12,
-                                            ),
+                                            color: (saleProfitReversed > 0
+                                                    ? AppColors.warning
+                                                    : AppColors.success)
+                                                .withValues(alpha: 0.12),
                                             borderRadius: BorderRadius.circular(
                                               AppSpacing.radiusSm,
                                             ),
                                           ),
                                           child: Text(
-                                            "+${Formatters.currency(sale.profit)} profit",
-                                            style: const TextStyle(
-                                              color: AppColors.success,
+                                            saleProfitReversed > 0
+                                                ? "${Formatters.currency(saleNetProfit)} net profit"
+                                                : "+${Formatters.currency(sale.profit)} profit",
+                                            style: TextStyle(
+                                              color: saleProfitReversed > 0
+                                                  ? AppColors.warning
+                                                  : AppColors.success,
                                               fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -471,7 +529,9 @@ class SalesHistoryPage extends GetView<SalesController> {
                                         ),
                                       ),
                                       child: Text(
-                                        "Refunded: ${Formatters.currency(totalRefund)}",
+                                        saleProfitReversed > 0
+                                            ? "Refunded: ${Formatters.currency(totalRefund)} (profit −${Formatters.currency(saleProfitReversed)})"
+                                            : "Refunded: ${Formatters.currency(totalRefund)}",
                                         style: const TextStyle(
                                           color: AppColors.warning,
                                           fontSize: 10,
