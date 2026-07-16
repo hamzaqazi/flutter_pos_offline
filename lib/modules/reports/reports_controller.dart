@@ -58,8 +58,10 @@ class ReportsController extends GetxController {
 
   // =================== Sales Summary ===================
 
-  double get totalRevenue =>
-      filteredSales.fold(0, (sum, s) => sum + s.total);
+  double get totalRevenue {
+    final gross = filteredSales.fold(0.0, (sum, s) => sum + s.total);
+    return gross - totalRefunds;
+  }
 
   double get totalGrossProfit =>
       filteredSales.fold(0, (sum, s) => sum + s.profit);

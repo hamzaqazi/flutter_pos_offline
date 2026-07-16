@@ -53,10 +53,12 @@ class DashboardController extends GetxController {
   void _recalcSales() {
     // All-time stats
     totalSales.value = salesController.sales.length;
-    totalRevenue.value = salesController.sales.fold<double>(
+    // Net revenue = gross sales - refunds
+    final grossRevenue = salesController.sales.fold<double>(
       0,
       (sum, sale) => sum + sale.total,
     );
+    totalRevenue.value = grossRevenue - returnsController.totalRefunds;
     totalGrossProfit.value = salesController.sales.fold<double>(
       0,
       (sum, sale) => sum + sale.profit,
@@ -79,7 +81,15 @@ class DashboardController extends GetxController {
       s.date.year == now.year && s.date.month == now.month && s.date.day == now.day
     ).toList();
     todaySales.value = todaySalesList.length;
-    todayRevenue.value = todaySalesList.fold<double>(0, (sum, s) => sum + s.total);
+    // Today's net revenue = gross sales - refunds
+    final todayGrossRevenue = todaySalesList.fold<double>(0, (sum, s) => sum + s.total);
+    final todayRefundAmount = returnsController.returns
+        .where((r) =>
+            r.date.year == now.year &&
+            r.date.month == now.month &&
+            r.date.day == now.day)
+        .fold<double>(0, (sum, r) => sum + r.refundAmount);
+    todayRevenue.value = todayGrossRevenue - todayRefundAmount;
     todayGrossProfit.value = todaySalesList.fold<double>(0, (sum, s) => sum + s.profit);
 
     // Today's returns
