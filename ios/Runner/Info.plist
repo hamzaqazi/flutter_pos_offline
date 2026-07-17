@@ -53,5 +53,16 @@
 		<string>This app needs Bluetooth to connect to thermal printers for receipt printing</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app needs location access to discover nearby Bluetooth printers</string>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.21334425002-gqjv2hsv0kabsjaoqctdo1ecdbpbeemk</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>

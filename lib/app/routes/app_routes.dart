@@ -18,4 +18,5 @@ abstract class Routes {
   static const invoice = '/invoice';
   static const scanner = '/scanner';
   static const backupHistory = '/backup-history';
+  static const driveBackup = '/drive-backup';
 }

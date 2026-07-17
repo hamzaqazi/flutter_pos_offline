@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
 import 'package:ad_shop_pos/data/services/export_service.dart';
 import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
+import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
@@ -224,6 +225,17 @@ class SettingsPage extends GetView<SettingsController> {
               subtitle: "Automatic scheduled backups to local storage",
               color: const Color(0xFF0EA5E9),
               children: [_AutoBackupSection()],
+            ),
+
+            const SizedBox(height: AppSpacing.md),
+
+            // ---------- Google Drive Backup ----------
+            _SectionTile(
+              icon: Icons.cloud_outlined,
+              title: "Google Drive Backup",
+              subtitle: "Back up to your own Google Drive account",
+              color: const Color(0xFF16A34A),
+              children: [_DriveBackupSection()],
             ),
 
             const SizedBox(height: AppSpacing.xl),
@@ -2888,6 +2900,275 @@ class _FreqChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// =================== Google Drive Backup Section ===================
+class _DriveBackupSection extends StatefulWidget {
+  const _DriveBackupSection();
+
+  @override
+  State<_DriveBackupSection> createState() => _DriveBackupSectionState();
+}
+
+class _DriveBackupSectionState extends State<_DriveBackupSection> {
+  static const _driveGreen = Color(0xFF16A34A);
+  bool _busy = false;
+
+  Future<void> _signIn() async {
+    setState(() => _busy = true);
+    final ok = await GoogleDriveService.signIn();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok) {
+      setState(() {});
+      Get.snackbar(
+        'Signed in',
+        'Connected to ${GoogleDriveService.accountEmail}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: _driveGreen.withValues(alpha: 0.15),
+        colorText: _driveGreen,
+      );
+    } else {
+      Get.snackbar(
+        'Sign-in failed',
+        'Could not connect to Google Drive. Make sure Drive access is '
+            'configured and try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.danger.withValues(alpha: 0.15),
+        colorText: AppColors.danger,
+        duration: const Duration(seconds: 5),
+      );
+    }
+  }
+
+  Future<void> _signOut() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disconnect Google Drive?'),
+        content: const Text(
+          'The app will stop uploading backups to Google Drive. Backups '
+          'already in Drive are kept.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text('Disconnect'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await GoogleDriveService.signOut();
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  Future<void> _backupToDriveNow() async {
+    setState(() => _busy = true);
+    final ok = await AutoBackupService.uploadToDriveNow();
+    if (!mounted) return;
+    setState(() => _busy = false);
+    setState(() {});
+    Get.snackbar(
+      ok ? 'Backup uploaded' : 'Upload failed',
+      ok
+          ? 'Backup uploaded to Google Drive'
+          : 'Could not upload backup to Google Drive',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: (ok ? _driveGreen : AppColors.danger)
+          .withValues(alpha: 0.15),
+      colorText: ok ? _driveGreen : AppColors.danger,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final signedIn = GoogleDriveService.isSignedIn;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Sign in with Google to store backups in your own Google Drive. "
+          "The app stays signed in and keeps the ${GoogleDriveService.maxDriveBackups} "
+          "most recent backups in Drive — older ones are removed automatically.",
+          style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        if (!signedIn) ...[
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: _busy ? null : _signIn,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.login, size: 20),
+              label: Text(
+                _busy ? "Connecting..." : "Sign in with Google",
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: cs.onPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: FilledButton.styleFrom(backgroundColor: _driveGreen),
+            ),
+          ),
+        ] else ...[
+          // Account tile
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: _driveGreen.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(color: _driveGreen.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: _driveGreen.withValues(alpha: 0.15),
+                  backgroundImage: GoogleDriveService.accountPhoto.isNotEmpty
+                      ? NetworkImage(GoogleDriveService.accountPhoto)
+                      : null,
+                  child: GoogleDriveService.accountPhoto.isEmpty
+                      ? Icon(Icons.person, color: _driveGreen, size: 20)
+                      : null,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (GoogleDriveService.accountName.isNotEmpty)
+                        Text(
+                          GoogleDriveService.accountName,
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      Text(
+                        GoogleDriveService.accountEmail,
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: _signOut,
+                  style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                  child: const Text('Sign out'),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Auto-upload toggle
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: GoogleDriveService.isEnabled,
+            onChanged: (v) async {
+              await GoogleDriveService.setEnabled(v);
+              setState(() {});
+            },
+            title: const Text("Upload auto-backups to Drive"),
+            subtitle: Text(
+              GoogleDriveService.isEnabled
+                  ? "Each scheduled backup is also uploaded to Drive"
+                  : "Backups stay on this device only",
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            secondary: Icon(Icons.cloud_upload_outlined, color: _driveGreen),
+          ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          // Last Drive backup info
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.cloud_done_outlined,
+                    size: 16, color: cs.onSurfaceVariant),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  "Last Drive backup: ${GoogleDriveService.lastDriveBackupAgo}",
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Backup to Drive now
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: _busy ? null : _backupToDriveNow,
+              icon: _busy
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.cloud_upload_outlined, size: 20),
+              label: Text(
+                _busy ? "Uploading..." : "Back up to Drive now",
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: cs.onPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              style: FilledButton.styleFrom(backgroundColor: _driveGreen),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          // Restore from Drive
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Get.toNamed('/drive-backup'),
+              icon: const Icon(Icons.cloud_download_outlined, size: 18),
+              label: const Text("Restore from Drive"),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
