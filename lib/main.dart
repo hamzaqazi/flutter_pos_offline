@@ -70,8 +70,35 @@ class _PosAppState extends State<PosApp> {
   }
 
   Future<void> _determineStartRoute() async {
+    // ── First install: start 14-day trial ──
+    if (LicenseService.isFirstInstall) {
+      await LicenseService.startTrial();
+      debugPrint('🎉 First install — 14-day trial started');
+    }
+
+    // ── Check if trial just expired ──
+    if (LicenseService.trialJustExpired) {
+      LicenseService.expireTrial();
+      debugPrint('⚠️ Trial expired — downgraded to free tier');
+    }
+
+    // ── Trial active (no license key needed) → go to app ──
+    if (LicenseService.isTrialActive && !LicenseService.isActivated) {
+      setState(() {
+        _initialRoute = LicenseService.isPinEnabled
+            ? Routes.pinLock
+            : Routes.dashboard;
+        _checking = false;
+      });
+      // Auto-backup check
+      if (AutoBackupService.isEnabled) {
+        AutoBackupService.checkAndRunIfNeeded();
+      }
+      return;
+    }
+
+    // ── Not activated (no trial, no license) → activation screen ──
     if (!LicenseService.isActivated) {
-      // Not activated → show activation screen
       setState(() {
         _initialRoute = Routes.activation;
         _checking = false;
@@ -79,7 +106,7 @@ class _PosAppState extends State<PosApp> {
       return;
     }
 
-    // Already activated — verify with Firestore (with 8-second timeout)
+    // ── Activated — verify with Firestore (with 8-second timeout) ──
     bool stillValid;
     try {
       stillValid = await LicenseService.verifyActiveLicense().timeout(
@@ -139,9 +166,11 @@ class _PosAppState extends State<PosApp> {
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
-                const Text(
-                  'Verifying license...',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                Text(
+                  LicenseService.isFirstInstall
+                      ? 'Setting up your trial...'
+                      : 'Verifying license...',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),

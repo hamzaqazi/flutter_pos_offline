@@ -131,6 +131,54 @@ class _ActivationScreenState extends State<ActivationScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
+                    // ---------- Trial Expired Banner ----------
+                    if (LicenseService.trialStartDate != null && !LicenseService.isTrialActive && !LicenseService.isActivated)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
+                          border: Border.all(
+                            color: AppColors.warning.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.timer_off_outlined,
+                                  color: AppColors.warning,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    'Free Trial Expired',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.warning,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              'Your 14-day free trial has ended. Activate a license to continue using all features, or continue with the free plan (limited to ${LicenseService.freeMaxProducts} products).',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.warning.withValues(alpha: 0.9),
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                     // ---------- Deactivation Reason Banner ----------
                     if (LicenseService.hasDeactivationReason)
                       Container(
@@ -386,6 +434,103 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // ---------- Try Free Trial ----------'
+                    if (!LicenseService.isTrialActive && !LicenseService.isActivated)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.seed.withValues(alpha: 0.08),
+                              AppColors.seed.withValues(alpha: 0.03),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
+                          ),
+                          border: Border.all(
+                            color: AppColors.seed.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.celebration_outlined,
+                              color: AppColors.seed,
+                              size: 32,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              'Try Free for 14 Days',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.seed,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Full access to all Premium features. No credit card required.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: OutlinedButton.icon(
+                                onPressed: () async {
+                                  await LicenseService.startTrial();
+                                  LicenseService.clearDeactivationReason();
+                                  Get.offAllNamed('/pin-setup');
+                                },
+                                icon: const Icon(Icons.rocket_launch_outlined, size: 18),
+                                label: Text(
+                                  'Start Free Trial',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.seed,
+                                  side: BorderSide(
+                                    color: AppColors.seed.withValues(alpha: 0.5),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Continue with Free Plan (for expired trial users)
+                    if (LicenseService.trialStartDate != null && !LicenseService.isTrialActive && !LicenseService.isActivated)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: TextButton(
+                          onPressed: () {
+                            Get.offAllNamed('/dashboard');
+                          },
+                          child: Text(
+                            'Continue with Free Plan (${LicenseService.freeMaxProducts} products max)',
+                            style: TextStyle(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
 
                     const SizedBox(height: AppSpacing.xl),
 

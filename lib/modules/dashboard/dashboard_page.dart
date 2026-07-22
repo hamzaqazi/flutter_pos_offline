@@ -39,13 +39,176 @@ class DashboardPage extends GetView<DashboardController> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // ---------- Today's Summary ----------
+                  // ---------- Trial Banner ----------
+                  if (LicenseService.isTrialActive)
+                    Builder(
+                      builder: (context) {
+                        final days = LicenseService.trialDaysRemaining;
+                        final isUrgent = days <= 3;
+                        final color = isUrgent ? AppColors.warning : AppColors.seed;
+                        return Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
+                            border: Border.all(
+                              color: color.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isUrgent
+                                    ? Icons.timer_outlined
+                                    : Icons.celebration_outlined,
+                                color: color,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isUrgent
+                                          ? 'Trial expires in $days day${days == 1 ? '' : 's'}!'
+                                          : 'Free Trial — $days days remaining',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: color,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Upgrade to keep all Premium features',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 18,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                  // ---------- Free Tier Banner ----------
+                  if (LicenseService.isFreeTier)
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
+                        border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.workspace_premium_outlined,
+                            color: AppColors.warning,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Free Plan — Limited Features',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.warning,
+                                  ),
+                                ),
+                                Text(
+                                  'Upgrade to unlock Returns, Reports, and more',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 18,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // ---------- License Info Banner ----------
                   Builder(
                     builder: (context) {
                       if (!LicenseService.isActivated)
                         return const SizedBox.shrink();
+                      // Lifetime plans have no expiry — show plan info instead
                       final days = LicenseService.daysUntilExpiry;
                       final expiresAt = LicenseService.expiresAt;
+                      if (days == null && LicenseService.storedPlan == 'lifetime') {
+                        return Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.seed.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
+                            border: Border.all(
+                              color: AppColors.seed.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.workspace_premium,
+                                color: AppColors.seed,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Lifetime License — Active',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.seed,
+                                      ),
+                                    ),
+                                    Text(
+                                      LicenseService.shopName,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 18,
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                       if (days == null || expiresAt == null)
                         return const SizedBox.shrink();
 

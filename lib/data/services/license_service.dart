@@ -7,12 +7,29 @@ import 'dart:io';
 /// Service for license key validation via Firebase Firestore.
 ///
 /// Firestore collection: `licenses`
-/// Document ID = license key (e.g. "AHMED-2026")
-/// Fields: shopName, active, maxDevices, expiresAt, registeredDevices[]
+/// Document ID = license key (e.g. "CNPO-K7ZM-2XN4-PQ9R")
+/// Fields: shopName, active, plan, maxDevices, expiresAt, registeredDevices[],
+///         customerPhone, activatedAt
+///
+/// Plans: "free", "monthly", "yearly", "lifetime"
+/// Trial: 14-day free trial on first install, all premium features unlocked.
 class LicenseService {
   static final _box = Hive.box('settings');
 
-  /// Check if this device is already activated.
+  // =================== Trial Constants ===================
+
+  /// Number of days the free trial lasts.
+  static const int trialDurationDays = 14;
+
+  /// Maximum products allowed on the free plan.
+  static const int freeMaxProducts = 25;
+
+  /// Number of days to trust premium status when offline.
+  static const int offlineGraceDays = 3;
+
+  // =================== Activation Status ===================
+
+  /// Check if this device is already activated (has a paid license key).
   static bool get isActivated {
     return _box.get('license_activated', defaultValue: false) as bool;
   }
@@ -41,7 +58,7 @@ class LicenseService {
     return exp.isBefore(DateTime.now());
   }
 
-  /// Days until license expires (null if no expiry).
+  /// Days until license expires (null if no expiry / lifetime).
   static int? get daysUntilExpiry {
     final exp = expiresAt;
     if (exp == null) return null;
@@ -64,6 +81,126 @@ class LicenseService {
     _box.delete('license_deactivationReason');
   }
 
+  // =================== Plan & Premium ===================
+
+  /// Get the current plan type.
+  /// Returns: "trial", "free", "monthly", "yearly", "lifetime"
+  static String get plan {
+    if (isTrialActive) return 'trial';
+    if (isActivated) {
+      return _box.get('license_plan', defaultValue: 'free') as String;
+    }
+    return 'free';
+  }
+
+  /// Get the stored plan (without trial override). Used for display purposes.
+  static String get storedPlan {
+    return _box.get('license_plan', defaultValue: 'free') as String;
+  }
+
+  /// Check if the user has premium access (paid plan OR active trial).
+  static bool get isPremium {
+    // Trial gives full premium access
+    if (isTrialActive) return true;
+
+    // No activation = no premium
+    if (!isActivated) return false;
+
+    // Lifetime never expires
+    final p = storedPlan;
+    if (p == 'lifetime') return true;
+
+    // Monthly / yearly — check expiry
+    if (p == 'monthly' || p == 'yearly') {
+      if (isExpired) return false;
+
+      // Offline grace: trust premium for N days without verification
+      final lastVerifiedStr = _box.get('license_lastVerified') as String?;
+      if (lastVerifiedStr != null) {
+        final lastVerified = DateTime.tryParse(lastVerifiedStr);
+        if (lastVerified != null) {
+          final daysSinceVerification =
+              DateTime.now().difference(lastVerified).inDays;
+          if (daysSinceVerification < offlineGraceDays) {
+            return true;
+          }
+        }
+      }
+
+      // If we recently verified (or can't check), trust the saved plan
+      return p != 'free';
+    }
+
+    return false;
+  }
+
+  /// Check if user is on the free tier (no premium, no trial).
+  static bool get isFreeTier {
+    return !isPremium && !isTrialActive;
+  }
+
+  /// Maximum number of products allowed for current plan.
+  static int get maxProducts {
+    if (isPremium) return 999999; // Unlimited
+    return freeMaxProducts;
+  }
+
+  // =================== Trial ===================
+
+  /// Check if this is the first time the app is launched (no trial or activation).
+  static bool get isFirstInstall {
+    return !_box.containsKey('trial_startDate') && !isActivated;
+  }
+
+  /// Get the trial start date.
+  static DateTime? get trialStartDate {
+    final str = _box.get('trial_startDate') as String?;
+    if (str == null || str.isEmpty) return null;
+    return DateTime.tryParse(str);
+  }
+
+  /// Check if the trial is currently active.
+  static bool get isTrialActive {
+    final start = trialStartDate;
+    if (start == null) return false;
+    if (_box.get('trial_expired', defaultValue: false) as bool) return false;
+    final daysElapsed = DateTime.now().difference(start).inDays;
+    return daysElapsed < trialDurationDays;
+  }
+
+  /// Days remaining in the trial (0 if expired or no trial).
+  static int get trialDaysRemaining {
+    final start = trialStartDate;
+    if (start == null) return 0;
+    final daysElapsed = DateTime.now().difference(start).inDays;
+    final remaining = trialDurationDays - daysElapsed;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  /// Start the 14-day free trial.
+  static Future<void> startTrial() async {
+    await _box.put('trial_startDate', DateTime.now().toIso8601String());
+    await _box.put('trial_expired', false);
+  }
+
+  /// Mark the trial as expired (called when trial days run out).
+  static void expireTrial() {
+    _box.put('trial_expired', true);
+  }
+
+  /// Check if trial has just expired (was active but now expired).
+  /// Used to show "trial expired" message once.
+  static bool get trialJustExpired {
+    final start = trialStartDate;
+    if (start == null) return false;
+    final wasNotExpired = !(_box.get('trial_expired', defaultValue: false) as bool);
+    final daysElapsed = DateTime.now().difference(start).inDays;
+    final isNowExpired = daysElapsed >= trialDurationDays;
+    return wasNotExpired && isNowExpired;
+  }
+
+  // =================== PIN Lock ===================
+
   /// Check if PIN lock is enabled.
   static bool get isPinEnabled {
     return _box.get('license_pinEnabled', defaultValue: false) as bool;
@@ -73,6 +210,24 @@ class LicenseService {
   static String get storedPin {
     return _box.get('license_pin', defaultValue: '') as String;
   }
+
+  /// Set PIN lock.
+  static Future<void> setPin(String pin) async {
+    await _box.put('license_pin', pin);
+    await _box.put('license_pinEnabled', pin.isNotEmpty);
+  }
+
+  /// Toggle PIN lock on/off.
+  static Future<void> togglePin(bool enabled) async {
+    await _box.put('license_pinEnabled', enabled);
+  }
+
+  /// Verify a PIN.
+  static bool verifyPin(String pin) {
+    return pin == storedPin;
+  }
+
+  // =================== Device Info ===================
 
   /// Get this device's unique ID.
   static Future<String> get deviceId async {
@@ -86,6 +241,8 @@ class LicenseService {
     }
     return 'unknown';
   }
+
+  // =================== License Validation ===================
 
   /// Validate a license key against Firestore.
   /// Returns a LicenseResult with success/failure and details.
@@ -126,6 +283,7 @@ class LicenseService {
       }
 
       final shopName = data['shopName'] as String? ?? 'My Shop';
+      final plan = data['plan'] as String? ?? 'lifetime';
       final maxDevices = data['maxDevices'] as int? ?? 3;
       final registeredDevices = List<String>.from(
         data['registeredDevices'] ?? [],
@@ -157,6 +315,7 @@ class LicenseService {
       await _saveActivation(
         key: key.trim().toUpperCase(),
         shopName: shopName,
+        plan: plan,
         expiresAt: data['expiresAt'] != null
             ? (data['expiresAt'] as Timestamp).toDate()
             : null,
@@ -166,6 +325,7 @@ class LicenseService {
         success: true,
         message: 'Activated successfully!',
         shopName: shopName,
+        plan: plan,
         expiresAt: data['expiresAt'] != null
             ? (data['expiresAt'] as Timestamp).toDate()
             : null,
@@ -174,9 +334,10 @@ class LicenseService {
       debugPrint('🔥 LICENSE ERROR: $e');
       debugPrint('STACK TRACE: $s');
 
-      // Show user-friendly message instead of raw exception
-      String userMessage = 'Connection error. Please check your internet and try again.';
-      if (e.toString().contains('permission-denied') || e.toString().contains('PERMISSION_DENIED')) {
+      String userMessage =
+          'Connection error. Please check your internet and try again.';
+      if (e.toString().contains('permission-denied') ||
+          e.toString().contains('PERMISSION_DENIED')) {
         userMessage = 'Access denied. Please contact support.';
       } else if (e.toString().contains('not-found')) {
         userMessage = 'Invalid license key. Please check and try again.';
@@ -188,6 +349,16 @@ class LicenseService {
 
   /// Background check — verify license is still active (called on app start).
   static Future<bool> verifyActiveLicense() async {
+    // Check trial status first
+    if (isTrialActive && !isActivated) {
+      // Trial user — no Firestore check needed
+      // But check if trial just expired
+      if (trialJustExpired) {
+        expireTrial();
+      }
+      return isTrialActive;
+    }
+
     if (!isActivated) return false;
 
     try {
@@ -223,41 +394,43 @@ class LicenseService {
         }
       }
 
+      // Update plan from Firestore (in case it was changed server-side)
+      final serverPlan = doc.data()?['plan'] as String? ?? storedPlan;
+      if (serverPlan != storedPlan) {
+        await _box.put('license_plan', serverPlan);
+      }
+
+      // Save last verified timestamp for offline grace
+      await _box.put(
+          'license_lastVerified', DateTime.now().toIso8601String());
+
       return true;
     } catch (e) {
-      // No internet — trust the saved activation
+      // No internet — trust the saved activation (with offline grace)
       return isActivated;
     }
   }
+
+  // =================== Save / Deactivate ===================
 
   /// Save activation details locally.
   static Future<void> _saveActivation({
     required String key,
     required String shopName,
+    String plan = 'lifetime',
     DateTime? expiresAt,
   }) async {
     await _box.put('license_activated', true);
     await _box.put('license_key', key);
     await _box.put('license_shopName', shopName);
+    await _box.put('license_plan', plan);
+    await _box.put(
+        'license_lastVerified', DateTime.now().toIso8601String());
     if (expiresAt != null) {
       await _box.put('license_expiresAt', expiresAt.toIso8601String());
+    } else {
+      await _box.delete('license_expiresAt');
     }
-  }
-
-  /// Set PIN lock (optional feature).
-  static Future<void> setPin(String pin) async {
-    await _box.put('license_pin', pin);
-    await _box.put('license_pinEnabled', pin.isNotEmpty);
-  }
-
-  /// Toggle PIN lock on/off.
-  static Future<void> togglePin(bool enabled) async {
-    await _box.put('license_pinEnabled', enabled);
-  }
-
-  /// Verify a PIN.
-  static bool verifyPin(String pin) {
-    return pin == storedPin;
   }
 
   /// Deactivate this device (local wipe).
@@ -275,8 +448,11 @@ class LicenseService {
     await _box.delete('license_key');
     await _box.delete('license_shopName');
     await _box.delete('license_expiresAt');
+    await _box.delete('license_plan');
+    await _box.delete('license_lastVerified');
     await _box.delete('license_pin');
     await _box.delete('license_pinEnabled');
+    // Keep trial_startDate so we know trial was used — don't delete it
   }
 
   /// Remove this device from Firestore registeredDevices list.
@@ -305,16 +481,56 @@ class LicenseService {
             .update({'registeredDevices': registeredDevices});
       }
     } catch (e) {
-      // Silently fail — don't block deactivation if network is down
       debugPrint('⚠️ Failed to unregister device: $e');
     }
   }
 
-  static String _formatDate(DateTime date) {
-    // Format as 10 jan 2026
-    return '${date.day} ${_monthName(date.month)} ${date.year}';
+  // =================== Plan Helpers ===================
 
-    // return '${date.day}/${date.month}/${date.year}';
+  /// Human-readable plan name.
+  static String get planDisplayName {
+    switch (plan) {
+      case 'trial':
+        return 'Free Trial';
+      case 'monthly':
+        return 'Monthly';
+      case 'yearly':
+        return 'Yearly';
+      case 'lifetime':
+        return 'Lifetime';
+      case 'free':
+      default:
+        return 'Free';
+    }
+  }
+
+  /// Plan display name with emoji.
+  static String get planDisplayWithEmoji {
+    switch (plan) {
+      case 'trial':
+        return '🎉 Free Trial';
+      case 'monthly':
+        return '⭐ Monthly';
+      case 'yearly':
+        return '⭐ Yearly';
+      case 'lifetime':
+        return '👑 Lifetime';
+      case 'free':
+      default:
+        return '🆓 Free';
+    }
+  }
+
+  /// Check if the plan is a paid plan (not free/trial).
+  static bool get isPaidPlan {
+    final p = storedPlan;
+    return p == 'monthly' || p == 'yearly' || p == 'lifetime';
+  }
+
+  // =================== Formatting ===================
+
+  static String _formatDate(DateTime date) {
+    return '${date.day} ${_monthName(date.month)} ${date.year}';
   }
 
   static String _monthName(int month) {
@@ -337,16 +553,19 @@ class LicenseService {
   }
 }
 
+/// Result of a license validation attempt.
 class LicenseResult {
   final bool success;
   final String message;
   final String? shopName;
+  final String? plan;
   final DateTime? expiresAt;
 
   LicenseResult({
     required this.success,
     required this.message,
     this.shopName,
+    this.plan,
     this.expiresAt,
   });
 }

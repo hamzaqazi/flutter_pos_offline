@@ -9,6 +9,7 @@ import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -2507,7 +2508,7 @@ class _PinLockSectionState extends State<_PinLockSection> {
           ),
         ],
         const SizedBox(height: AppSpacing.md),
-        // License info
+        // License & Plan info
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -2517,41 +2518,98 @@ class _PinLockSectionState extends State<_PinLockSection> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Plan badge
               Row(
                 children: [
-                  Icon(
-                    Icons.vpn_key_outlined,
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    "License: ${LicenseService.licenseKey}",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w600,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: LicenseService.isPremium
+                          ? AppColors.seed.withValues(alpha: 0.15)
+                          : AppColors.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Text(
+                      LicenseService.planDisplayWithEmoji,
+                      style: TextStyle(
+                        color: LicenseService.isPremium
+                            ? AppColors.seed
+                            : AppColors.warning,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
+                  const Spacer(),
+                  if (LicenseService.isTrialActive)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      ),
+                      child: Text(
+                        '${LicenseService.trialDaysRemaining} days left',
+                        style: const TextStyle(
+                          color: AppColors.warning,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.store_outlined,
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    "Shop: ${LicenseService.shopName}",
-                    style: theme.textTheme.bodySmall?.copyWith(
+              const SizedBox(height: AppSpacing.sm),
+
+              // License key (only if activated)
+              if (LicenseService.isActivated) ...[
+                Row(
+                  children: [
+                    Icon(
+                      Icons.vpn_key_outlined,
+                      size: 16,
                       color: cs.onSurfaceVariant,
                     ),
-                  ),
-                ],
-              ),
-              if (LicenseService.expiresAt != null) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      "Key: ${LicenseService.licenseKey}",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+              ],
+
+              // Shop name
+              if (LicenseService.shopName.isNotEmpty)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.store_outlined,
+                      size: 16,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      "Shop: ${LicenseService.shopName}",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+
+              // Expiry (for paid plans)
+              if (LicenseService.isActivated && LicenseService.expiresAt != null) ...[
                 const SizedBox(height: 4),
                 Builder(
                   builder: (_) {
@@ -2580,9 +2638,9 @@ class _PinLockSectionState extends State<_PinLockSection> {
                   },
                 ),
               ],
+
               // Device ID
               const SizedBox(height: 4),
-              // ---------- Device ID + Support Info ----------
               FutureBuilder<String>(
                 future: LicenseService.deviceId,
                 builder: (context, snapshot) {
@@ -2594,8 +2652,7 @@ class _PinLockSectionState extends State<_PinLockSection> {
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
-                          // 'Device: ${deviceId.length > 20 ? deviceId.substring(0, 20) : deviceId}...',
-                          'Device ID: $deviceId',
+                          'Device: $deviceId',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
                             fontFamily: 'monospace',
@@ -2607,6 +2664,36 @@ class _PinLockSectionState extends State<_PinLockSection> {
                   );
                 },
               ),
+
+              // Upgrade button (for free/trial users)
+              if (!LicenseService.isPaidPlan)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.md),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 36,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        // Show upgrade sheet
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                          ),
+                          builder: (_) => _LicenseUpgradeSheet(),
+                        );
+                      },
+                      icon: const Icon(Icons.workspace_premium_outlined, size: 16),
+                      label: const Text('Upgrade to Premium', style: TextStyle(fontSize: 12)),
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -3169,6 +3256,137 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Simple upgrade sheet used from Settings license section.
+/// Reuses the same upgrade sheet from PremiumGate.
+class _LicenseUpgradeSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // This just wraps the premium gate's upgrade sheet
+    // We import it from premium_gate.dart
+    // For simplicity, we'll use a simple version here
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final _keyController = TextEditingController();
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Upgrade to Premium',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Contact us to purchase a license key',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Contact info
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.seed.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(
+                color: AppColors.seed.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.call, color: AppColors.seed, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  '0315-3507075',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.seed,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // License key entry
+          Text(
+            'Already have a key?',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _keyController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              hintText: 'XXXX-XXXX-XXXX-XXXX',
+              prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20),
+              filled: true,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: FilledButton(
+              onPressed: () async {
+                final key = _keyController.text.trim();
+                if (key.isEmpty) return;
+                final result = await LicenseService.validateLicense(key);
+                if (result.success) {
+                  Navigator.of(context).pop();
+                  Get.snackbar(
+                    'Activated! 🎉',
+                    'Your ${result.plan ?? 'premium'} plan is now active.',
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                } else {
+                  Get.snackbar(
+                    'Activation Failed',
+                    result.message,
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                }
+              },
+              child: const Text('Activate License'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
