@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/tooltip_label.dart';
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
@@ -114,7 +115,11 @@ class DashboardPage extends GetView<DashboardController> {
 
                   const SizedBox(height: AppSpacing.xl),
 
-                  Text("Today's Summary", style: theme.textTheme.titleMedium),
+                  TooltipLabel(
+                    label: "Today's Summary",
+                    tooltip: 'Your sales performance for today',
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: AppSpacing.md),
 
                   Obx(
@@ -133,43 +138,86 @@ class DashboardPage extends GetView<DashboardController> {
                           AppSpacing.radiusMd,
                         ),
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: _TodayStat(
-                              icon: Icons.receipt_long_outlined,
-                              label: "Sales",
-                              value: controller.todaySales.value.toString(),
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.white24,
-                          ),
-                          Expanded(
-                            child: _TodayStat(
-                              icon: Icons.payments_outlined,
-                              label: "Revenue",
-                              value: Formatters.currency(
-                                controller.todayRevenue.value,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _TodayStat(
+                                  icon: Icons.receipt_long_outlined,
+                                  label: "Sales",
+                                  value: controller.todaySales.value.toString(),
+                                ),
                               ),
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.white24,
-                          ),
-                          Expanded(
-                            child: _TodayStat(
-                              icon: Icons.trending_up_outlined,
-                              label: "Profit",
-                              value: Formatters.currency(
-                                controller.todayProfit.value,
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.white24,
                               ),
-                            ),
+                              Expanded(
+                                child: _TodayStat(
+                                  icon: Icons.payments_outlined,
+                                  label: "Revenue",
+                                  value: Formatters.currency(
+                                    controller.todayRevenue.value,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.white24,
+                              ),
+                              Expanded(
+                                child: _TodayStat(
+                                  icon: Icons.trending_up_outlined,
+                                  label: "Gross Profit",
+                                  value: Formatters.currency(
+                                    controller.todayProfit.value,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
+                          if (controller.todayExpenses.value > 0) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Divider(color: Colors.white24, height: 1),
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _TodayStatSmall(
+                                    label: "Expenses",
+                                    value: Formatters.currency(
+                                      controller.todayExpenses.value,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 24,
+                                  color: Colors.white24,
+                                ),
+                                Expanded(
+                                  child: _TodayStatSmall(
+                                    label: "Net Profit",
+                                    value: Formatters.currency(
+                                      controller.todayProfit.value -
+                                          controller.todayExpenses.value,
+                                    ),
+                                    valueColor:
+                                        (controller.todayProfit.value -
+                                                controller
+                                                    .todayExpenses
+                                                    .value) >=
+                                            0
+                                        ? Colors.white
+                                        : const Color(0xFFFFA726),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -177,7 +225,12 @@ class DashboardPage extends GetView<DashboardController> {
 
                   const SizedBox(height: AppSpacing.xl),
 
-                  Text("All-Time Overview", style: theme.textTheme.titleMedium),
+                  TooltipLabel(
+                    label: "All-Time Overview",
+                    tooltip:
+                        'Your total business performance since you started using the app',
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: AppSpacing.md),
 
                   // ---------- Stat cards ----------
@@ -206,6 +259,7 @@ class DashboardPage extends GetView<DashboardController> {
                         ),
                         _StatCard(
                           label: "Revenue",
+                          tooltip: FinancialTooltips.revenue,
                           value: Formatters.currency(
                             controller.totalRevenue.value,
                           ),
@@ -213,7 +267,8 @@ class DashboardPage extends GetView<DashboardController> {
                           color: AppColors.success,
                         ),
                         _StatCard(
-                          label: "Profit",
+                          label: "Gross Profit",
+                          tooltip: FinancialTooltips.grossProfit,
                           value: Formatters.currency(
                             controller.totalProfit.value,
                           ),
@@ -222,6 +277,7 @@ class DashboardPage extends GetView<DashboardController> {
                         ),
                         _StatCard(
                           label: "Low stock",
+                          tooltip: FinancialTooltips.lowStock,
                           value: controller.lowStockCount.value.toString(),
                           icon: Icons.warning_amber_rounded,
                           color: AppColors.warning,
@@ -234,6 +290,7 @@ class DashboardPage extends GetView<DashboardController> {
                               : "0%",
                           icon: Icons.pie_chart_outline,
                           color: const Color(0xFFEC4899), // Pink
+                          tooltip: FinancialTooltips.netMargin,
                         ),
                         _StatCard(
                           label: "Refunds",
@@ -560,6 +617,7 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
+    this.tooltip,
     this.onTap,
   });
 
@@ -567,6 +625,7 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final String? tooltip;
   final VoidCallback? onTap;
 
   @override
@@ -602,14 +661,22 @@ class _StatCard extends StatelessWidget {
                 ),
               ),
               Flexible(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                child: tooltip != null
+                    ? TooltipLabel(
+                        label: label,
+                        tooltip: tooltip!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : Text(
+                        label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
               ),
             ],
           ),
@@ -782,6 +849,42 @@ class _TodayStat extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
+      ],
+    );
+  }
+}
+
+class _TodayStatSmall extends StatelessWidget {
+  const _TodayStatSmall({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: TextStyle(
+              color: valueColor ?? Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/return_model.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
+import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -223,14 +224,44 @@ class _ReturnCard extends StatelessWidget {
               ),
             ),
 
-            // Sale ID reference
+            // Invoice reference
             const SizedBox(height: AppSpacing.sm),
-            Text(
-              "Sale #${returnRecord.saleId.length > 8 ? returnRecord.saleId.substring(returnRecord.saleId.length - 8) : returnRecord.saleId}",
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontSize: 10,
-              ),
+            Builder(
+              builder: (_) {
+                String saleRef;
+                try {
+                  final salesCtrl = Get.find<SalesController>();
+                  final sale = salesCtrl.sales.firstWhereOrNull(
+                    (s) => s.id == returnRecord.saleId,
+                  );
+                  if (sale != null && sale.hasInvoiceNumber) {
+                    saleRef = sale.invoiceNumber;
+                  } else {
+                    final shortId = returnRecord.saleId.length > 8
+                        ? returnRecord.saleId.substring(returnRecord.saleId.length - 8)
+                        : returnRecord.saleId;
+                    saleRef = "Sale #$shortId";
+                  }
+                } catch (_) {
+                  final shortId = returnRecord.saleId.length > 8
+                      ? returnRecord.saleId.substring(returnRecord.saleId.length - 8)
+                      : returnRecord.saleId;
+                  saleRef = "Sale #$shortId";
+                }
+                return Row(
+                  children: [
+                    Icon(Icons.link, size: 12, color: cs.onSurfaceVariant),
+                    const SizedBox(width: 4),
+                    Text(
+                      saleRef,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

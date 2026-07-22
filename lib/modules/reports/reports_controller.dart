@@ -58,8 +58,10 @@ class ReportsController extends GetxController {
 
   // =================== Sales Summary ===================
 
-  double get totalRevenue =>
-      filteredSales.fold(0, (sum, s) => sum + s.total);
+  double get totalRevenue {
+    final gross = filteredSales.fold(0.0, (sum, s) => sum + s.total);
+    return gross - totalRefunds;
+  }
 
   double get totalGrossProfit =>
       filteredSales.fold(0, (sum, s) => sum + s.profit);
@@ -70,19 +72,36 @@ class ReportsController extends GetxController {
   double get totalTax =>
       filteredSales.fold(0, (sum, s) => sum + s.taxAmount);
 
-  double get totalCOGS =>
-      filteredSales.fold(0, (sum, s) {
-        return sum + s.items.fold(0, (itemSum, item) {
-          return itemSum + (item.product.purchasePrice * item.quantity);
-        });
+  double get totalCOGS {
+    final cogs = filteredSales.fold(0.0, (sum, s) {
+      return sum + s.items.fold(0.0, (itemSum, item) {
+        return itemSum + (item.product.purchasePrice * item.quantity);
       });
+    });
+    // Subtract returned item costs
+    final dateReturns = _returnsController.returns.where((r) =>
+        r.date.isAfter(startDate.value) &&
+        r.date.isBefore(endDate.value.add(const Duration(days: 1))));
+    final returnedCOGS = dateReturns.fold(0.0, (sum, r) =>
+        sum + r.items.fold(0.0, (itemSum, item) =>
+            itemSum + (item.purchasePrice * item.returnQty)));
+    return cogs - returnedCOGS;
+  }
 
   int get totalTransactions => filteredSales.length;
 
-  int get totalItemsSold =>
-      filteredSales.fold(0, (sum, s) {
-        return sum + s.items.fold(0, (itemSum, item) => itemSum + item.quantity);
-      });
+  int get totalItemsSold {
+    final sold = filteredSales.fold(0, (sum, s) {
+      return sum + s.items.fold(0, (itemSum, item) => itemSum + item.quantity);
+    });
+    // Subtract returned items in the date range
+    final returnedQty = _returnsController.returns
+        .where((r) =>
+            r.date.isAfter(startDate.value) &&
+            r.date.isBefore(endDate.value.add(const Duration(days: 1))))
+        .fold<int>(0, (sum, r) => sum + r.items.fold<int>(0, (itemSum, item) => itemSum + item.returnQty));
+    return sold - returnedQty;
+  }
 
   double get averageTransaction =>
       totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
@@ -148,6 +167,32 @@ class ReportsController extends GetxController {
         }
       }
     }
+    // Subtract returned items from product data
+    final dateReturns = _returnsController.returns.where((r) =>
+        r.date.isAfter(startDate.value) &&
+        r.date.isBefore(endDate.value.add(const Duration(days: 1))));
+    for (final ret in dateReturns) {
+      for (final retItem in ret.items) {
+        // Find matching product in map by name
+        String? matchKey;
+        for (final k in map.keys) {
+          if (k.startsWith('${retItem.name}|')) {
+            matchKey = k;
+            break;
+          }
+        }
+        if (matchKey != null) {
+          final data = map[matchKey]!;
+          data.quantity -= retItem.returnQty;
+          data.revenue -= retItem.totalRefund;
+          data.profit -= retItem.profitReversed;
+          // Remove if fully returned
+          if (data.quantity <= 0) {
+            map.remove(matchKey);
+          }
+        }
+      }
+    }
     return map;
   }
 
@@ -181,6 +226,33 @@ class ReportsController extends GetxController {
             revenue: item.total,
             profit: item.profit,
           );
+        }
+      }
+    }
+    // Subtract returned items from category data
+    final dateReturns = _returnsController.returns.where((r) =>
+        r.date.isAfter(startDate.value) &&
+        r.date.isBefore(endDate.value.add(const Duration(days: 1))));
+    for (final ret in dateReturns) {
+      for (final retItem in ret.items) {
+        // Find original sale to get category
+        final origSale = filteredSales.firstWhereOrNull((s) => s.id == ret.saleId);
+        String cat = 'Other';
+        if (origSale != null) {
+          final origItem = origSale.items
+              .firstWhereOrNull((i) => i.product.id == retItem.productId);
+          if (origItem != null) {
+            cat = origItem.product.category.isEmpty ? 'Other' : origItem.product.category;
+          }
+        }
+        if (map.containsKey(cat)) {
+          final data = map[cat]!;
+          data.quantity -= retItem.returnQty;
+          data.revenue -= retItem.totalRefund;
+          data.profit -= retItem.profitReversed;
+          if (data.quantity <= 0) {
+            map.remove(cat);
+          }
         }
       }
     }
@@ -235,6 +307,15 @@ class ReportsController extends GetxController {
       final key =
           '${sale.date.year}-${sale.date.month.toString().padLeft(2, '0')}-${sale.date.day.toString().padLeft(2, '0')}';
       map[key] = (map[key] ?? 0) + sale.total;
+    }
+    // Subtract refunds from their respective days
+    final dateReturns = _returnsController.returns.where((r) =>
+        r.date.isAfter(startDate.value) &&
+        r.date.isBefore(endDate.value.add(const Duration(days: 1))));
+    for (final ret in dateReturns) {
+      final key =
+          '${ret.date.year}-${ret.date.month.toString().padLeft(2, '0')}-${ret.date.day.toString().padLeft(2, '0')}';
+      map[key] = (map[key] ?? 0) - ret.refundAmount;
     }
     return map;
   }
