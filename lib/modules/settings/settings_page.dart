@@ -2509,193 +2509,87 @@ class _PinLockSectionState extends State<_PinLockSection> {
           ),
         ],
         const SizedBox(height: AppSpacing.md),
-        // License & Plan info
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Plan badge
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: LicenseService.isPremium
-                          ? AppColors.seed.withValues(alpha: 0.15)
-                          : AppColors.warning.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    ),
-                    child: Text(
-                      LicenseService.planDisplayWithEmoji,
-                      style: TextStyle(
-                        color: LicenseService.isPremium
-                            ? AppColors.seed
-                            : AppColors.warning,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+        // License & Plan info — tappable card
+        InkWell(
+          onTap: () => Get.toNamed('/license'),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(
+                color: LicenseService.isPremium
+                    ? AppColors.seed.withValues(alpha: 0.3)
+                    : AppColors.warning.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Plan icon
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: LicenseService.isPremium
+                        ? AppColors.seed.withValues(alpha: 0.12)
+                        : AppColors.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
-                  const Spacer(),
-                  if (LicenseService.isTrialActive)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                      child: Text(
-                        '${LicenseService.trialDaysRemaining} days left',
-                        style: const TextStyle(
-                          color: AppColors.warning,
-                          fontSize: 11,
+                  child: Icon(
+                    LicenseService.isPremium
+                        ? Icons.workspace_premium_outlined
+                        : Icons.lock_outline,
+                    size: 20,
+                    color: LicenseService.isPremium
+                        ? AppColors.seed
+                        : AppColors.warning,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                // Plan info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        LicenseService.planDisplayWithEmoji,
+                        style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // License key (only if activated)
-              if (LicenseService.isActivated) ...[
-                Row(
-                  children: [
-                    Icon(
-                      Icons.vpn_key_outlined,
-                      size: 16,
-                      color: cs.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      "Key: ${LicenseService.licenseKey}",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'monospace',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-              ],
-
-              // Shop name
-              if (LicenseService.shopName.isNotEmpty)
-                Row(
-                  children: [
-                    Icon(
-                      Icons.store_outlined,
-                      size: 16,
-                      color: cs.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      "Shop: ${LicenseService.shopName}",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-
-              // Expiry (for paid plans)
-              if (LicenseService.isActivated && LicenseService.expiresAt != null) ...[
-                const SizedBox(height: 4),
-                Builder(
-                  builder: (_) {
-                    final exp = LicenseService.expiresAt!;
-                    final days = LicenseService.daysUntilExpiry ?? 0;
-                    final isWarning = days <= 30;
-                    final isCritical = days <= 7;
-                    final color = isCritical
-                        ? AppColors.danger
-                        : isWarning
-                        ? AppColors.warning
-                        : AppColors.success;
-                    return Row(
-                      children: [
-                        Icon(Icons.event_outlined, size: 16, color: color),
-                        const SizedBox(width: AppSpacing.sm),
+                      if (LicenseService.isTrialActive)
                         Text(
-                          "Expires: ${formatDate(exp)} ($days days left)",
+                          '${LicenseService.trialDaysRemaining} days remaining',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: color,
+                            color: AppColors.warning,
                             fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-
-              // Device ID
-              const SizedBox(height: 4),
-              FutureBuilder<String>(
-                future: LicenseService.deviceId,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const SizedBox.shrink();
-                  final deviceId = snapshot.data!;
-                  return Row(
-                    children: [
-                      Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          'Device: $deviceId',
+                        )
+                      else if (LicenseService.isActivated && LicenseService.shopName.isNotEmpty)
+                        Text(
+                          LicenseService.shopName,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,
-                            fontFamily: 'monospace',
-                            fontSize: 11,
+                          ),
+                        )
+                      else if (LicenseService.isFreeTier)
+                        Text(
+                          '${LicenseService.freeMaxProducts} products max',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
-                      ),
                     ],
-                  );
-                },
-              ),
-
-              // Upgrade button (for free/trial users)
-              if (!LicenseService.isPaidPlan)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.md),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 36,
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        // Show upgrade sheet
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(20),
-                            ),
-                          ),
-                          builder: (_) => _LicenseUpgradeSheet(),
-                        );
-                      },
-                      icon: const Icon(Icons.workspace_premium_outlined, size: 16),
-                      label: const Text('Upgrade to Premium', style: TextStyle(fontSize: 12)),
-                      style: FilledButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
                   ),
                 ),
-            ],
+                // Arrow
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
       ],
