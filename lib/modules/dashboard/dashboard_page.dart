@@ -93,6 +93,7 @@ class DashboardPage extends GetView<DashboardController> {
                               ),
                               // Enter Key button
                               SizedBox(
+                                width: 96,
                                 height: 32,
                                 child: FilledButton.tonal(
                                   onPressed: () {
@@ -164,6 +165,7 @@ class DashboardPage extends GetView<DashboardController> {
                           ),
                           // Enter Key button
                           SizedBox(
+                            width: 96,
                             height: 32,
                             child: FilledButton.tonal(
                               onPressed: () {
@@ -239,6 +241,7 @@ class DashboardPage extends GetView<DashboardController> {
                               ),
                               // Enter Key button
                               SizedBox(
+                                width: 96,
                                 height: 32,
                                 child: FilledButton.tonal(
                                   onPressed: () {
