@@ -397,25 +397,21 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
 
           const SizedBox(height: AppSpacing.lg),
 
-          // License key entry toggle
-          if (!_showKeyEntry)
-            Center(
-              child: TextButton.icon(
-                onPressed: () => setState(() => _showKeyEntry = true),
-                icon: const Icon(Icons.vpn_key_outlined, size: 18),
-                label: const Text('Already have a license key?'),
+          // License key entry — always visible
+          const Divider(),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Icon(Icons.vpn_key_outlined, size: 18, color: cs.primary),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                'Enter License Key',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-
-          if (_showKeyEntry) ...[
-            const Divider(),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Enter License Key',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            ],
+          ),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _keyController,
@@ -450,7 +446,6 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
                     : const Text('Activate'),
               ),
             ),
-          ],
 
           const SizedBox(height: AppSpacing.lg),
 

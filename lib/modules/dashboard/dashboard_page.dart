@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
@@ -90,10 +91,28 @@ class DashboardPage extends GetView<DashboardController> {
                                   ],
                                 ),
                               ),
-                              Icon(
-                                Icons.chevron_right,
-                                size: 18,
-                                color: cs.onSurfaceVariant,
+                              // Enter Key button
+                              SizedBox(
+                                height: 32,
+                                child: FilledButton.tonal(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(20),
+                                        ),
+                                      ),
+                                      builder: (_) => _TrialUpgradeSheet(),
+                                    );
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                  ),
+                                  child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                                ),
                               ),
                             ],
                           ),
@@ -143,10 +162,28 @@ class DashboardPage extends GetView<DashboardController> {
                               ],
                             ),
                           ),
-                          Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: cs.onSurfaceVariant,
+                          // Enter Key button
+                          SizedBox(
+                            height: 32,
+                            child: FilledButton.tonal(
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(20),
+                                    ),
+                                  ),
+                                  builder: (_) => _TrialUpgradeSheet(),
+                                );
+                              },
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                              ),
+                              child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                            ),
                           ),
                         ],
                       ),
@@ -200,10 +237,28 @@ class DashboardPage extends GetView<DashboardController> {
                                   ],
                                 ),
                               ),
-                              Icon(
-                                Icons.chevron_right,
-                                size: 18,
-                                color: cs.onSurfaceVariant,
+                              // Enter Key button
+                              SizedBox(
+                                height: 32,
+                                child: FilledButton.tonal(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(20),
+                                        ),
+                                      ),
+                                      builder: (_) => _TrialUpgradeSheet(),
+                                    );
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                  ),
+                                  child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                                ),
                               ),
                             ],
                           ),
@@ -1050,6 +1105,137 @@ class _TodayStatSmall extends StatelessWidget {
           style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
       ],
+    );
+  }
+}
+
+/// Quick license key entry sheet for trial users.
+class _TrialUpgradeSheet extends StatefulWidget {
+  @override
+  State<_TrialUpgradeSheet> createState() => _TrialUpgradeSheetState();
+}
+
+class _TrialUpgradeSheetState extends State<_TrialUpgradeSheet> {
+  final _keyController = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _keyController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _activate() async {
+    final key = _keyController.text.trim();
+    if (key.isEmpty) return;
+
+    setState(() => _loading = true);
+    final result = await LicenseService.validateLicense(key);
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (result.success) {
+      Navigator.of(context).pop();
+      Get.snackbar(
+        'Activated! 🎉',
+        'Your ${result.plan ?? 'premium'} plan is now active.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } else {
+      Get.snackbar(
+        'Activation Failed',
+        result.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          Icon(Icons.vpn_key_outlined, size: 40, color: cs.primary),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Activate Your License',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Enter the license key you received from Codynest',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          TextField(
+            controller: _keyController,
+            textCapitalization: TextCapitalization.characters,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: 'CNPO-XXXX-XXXX-XXXX',
+              prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20),
+              filled: true,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+            onSubmitted: (_) => _activate(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton(
+              onPressed: _loading ? null : _activate,
+              child: _loading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Activate License', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Need a key? Contact: 0315-3507075',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
