@@ -5,6 +5,8 @@ import 'package:ad_shop_pos/modules/returns/return_dialog.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:get/get.dart';
 
 import 'sales_controller.dart';
@@ -579,7 +581,13 @@ class SalesHistoryPage extends GetView<SalesController> {
                                   //   ),
                                   // ),
                                   child: IconButton.filledTonal(
-                                    onPressed: () => showReturnDialog(sale),
+                                    onPressed: () {
+                                      if (!LicenseService.isPremium) {
+                                        _showUpgradeDialog(context);
+                                        return;
+                                      }
+                                      showReturnDialog(sale);
+                                    },
                                     icon: const Icon(
                                       Icons.assignment_return_outlined,
                                       size: 20,
@@ -675,6 +683,73 @@ class _BannerStat extends StatelessWidget {
       ],
     );
   }
+}
+
+void _showUpgradeDialog(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) {
+      final theme = Theme.of(context);
+      final cs = theme.colorScheme;
+      return Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          top: AppSpacing.xl,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Icon(Icons.lock_outline, size: 40, color: AppColors.warning),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Returns & Refunds',
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'This feature is available on Premium plans.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.workspace_premium_outlined, size: 20),
+                label: const Text('Upgrade to Premium'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Contact: 0315-3507075',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 class _EmptySales extends StatelessWidget {

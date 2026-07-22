@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 /// Page showing backups stored in the user's Google Drive, with
@@ -222,7 +223,9 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
           ),
         ],
       ),
-      body: _loading
+      body: PremiumGate(
+        feature: 'Google Drive Backup',
+        child: _loading
           ? const Center(child: CircularProgressIndicator())
           : _backups.isEmpty
               ? _EmptyState(onRefresh: _loadBackups)
@@ -242,6 +245,7 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
                     },
                   ),
                 ),
+      ),
     );
   }
 }

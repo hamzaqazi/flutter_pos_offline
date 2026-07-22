@@ -4,6 +4,7 @@ import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/modules/reports/charts_tab.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 import 'reports_controller.dart';
@@ -18,7 +19,9 @@ class ReportsPage extends GetView<ReportsController> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Reports")),
-      body: Column(
+      body: PremiumGate(
+        feature: 'Reports & Analytics',
+        child: Column(
         children: [
           // ---------- Date range filter ----------
           Container(
@@ -95,6 +98,7 @@ class ReportsPage extends GetView<ReportsController> {
     return Padding(
       padding: const EdgeInsets.only(right: AppSpacing.sm),
       child: ActionChip(label: Text(label), onPressed: onTap),
+      ),
     );
   }
 }

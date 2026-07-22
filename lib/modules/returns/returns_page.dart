@@ -4,6 +4,7 @@ import 'package:ad_shop_pos/data/models/return_model.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 class ReturnsPage extends GetView<ReturnsController> {
@@ -16,7 +17,9 @@ class ReturnsPage extends GetView<ReturnsController> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Returns History")),
-      body: Obx(() {
+      body: PremiumGate(
+        feature: 'Returns & Refunds',
+        child: Obx(() {
         if (controller.returns.isEmpty) {
           return _EmptyReturns();
         }
@@ -294,6 +297,7 @@ class _ReturnCard extends StatelessWidget {
             child: const Text("Delete"),
           ),
         ],
+      ),
       ),
     );
   }

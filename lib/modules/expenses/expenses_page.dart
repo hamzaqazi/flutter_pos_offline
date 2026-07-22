@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/expense_model.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 import 'expenses_controller.dart';
@@ -20,7 +21,9 @@ class ExpensesPage extends GetView<ExpensesController> {
         icon: const Icon(Icons.add),
         label: const Text("Add expense"),
       ),
-      body: Obx(() {
+      body: PremiumGate(
+        feature: 'Expense Tracking',
+        child: Obx(() {
         if (controller.expenses.isEmpty) {
           return _EmptyExpenses();
         }
@@ -236,6 +239,7 @@ class ExpensesPage extends GetView<ExpensesController> {
             },
           ),
         ),
+      ),
       ),
     );
   }
