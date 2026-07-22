@@ -20,68 +20,71 @@ class ReturnsPage extends GetView<ReturnsController> {
       body: PremiumGate(
         feature: 'Returns & Refunds',
         child: Obx(() {
-        if (controller.returns.isEmpty) {
-          return _EmptyReturns();
-        }
+          if (controller.returns.isEmpty) {
+            return _EmptyReturns();
+          }
 
-        final returnsList = controller.returns.reversed.toList();
-        final totalRefund =
-            returnsList.fold<double>(0, (sum, r) => sum + r.refundAmount);
+          final returnsList = controller.returns.reversed.toList();
+          final totalRefund = returnsList.fold<double>(
+            0,
+            (sum, r) => sum + r.refundAmount,
+          );
 
-        return Column(
-          children: [
-            // ---------- Summary banner ----------
-            Container(
-              margin: const EdgeInsets.all(AppSpacing.lg),
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.warning,
-                    AppColors.warning.withValues(alpha: 0.75),
+          return Column(
+            children: [
+              // ---------- Summary banner ----------
+              Container(
+                margin: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.warning,
+                      AppColors.warning.withValues(alpha: 0.75),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _BannerStat(
+                        label: "Total Refunds",
+                        value: Formatters.currency(totalRefund),
+                      ),
+                    ),
+                    Container(width: 1, height: 36, color: Colors.white24),
+                    Expanded(
+                      child: _BannerStat(
+                        label: "Returns",
+                        value: returnsList.length.toString(),
+                      ),
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _BannerStat(
-                      label: "Total Refunds",
-                      value: Formatters.currency(totalRefund),
-                    ),
-                  ),
-                  Container(width: 1, height: 36, color: Colors.white24),
-                  Expanded(
-                    child: _BannerStat(
-                      label: "Returns",
-                      value: returnsList.length.toString(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  0,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  itemCount: returnsList.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (_, index) {
+                    final ret = returnsList[index];
+                    return _ReturnCard(returnRecord: ret);
+                  },
                 ),
-                itemCount: returnsList.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.md),
-                itemBuilder: (_, index) {
-                  final ret = returnsList[index];
-                  return _ReturnCard(returnRecord: ret);
-                },
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
@@ -203,8 +206,9 @@ class _ReturnCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.warning.withValues(alpha: 0.12),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       child: Text(
                         "×${item.returnQty}",
@@ -241,13 +245,17 @@ class _ReturnCard extends StatelessWidget {
                     saleRef = sale.invoiceNumber;
                   } else {
                     final shortId = returnRecord.saleId.length > 8
-                        ? returnRecord.saleId.substring(returnRecord.saleId.length - 8)
+                        ? returnRecord.saleId.substring(
+                            returnRecord.saleId.length - 8,
+                          )
                         : returnRecord.saleId;
                     saleRef = "Sale #$shortId";
                   }
                 } catch (_) {
                   final shortId = returnRecord.saleId.length > 8
-                      ? returnRecord.saleId.substring(returnRecord.saleId.length - 8)
+                      ? returnRecord.saleId.substring(
+                          returnRecord.saleId.length - 8,
+                        )
                       : returnRecord.saleId;
                   saleRef = "Sale #$shortId";
                 }
@@ -298,7 +306,6 @@ class _ReturnCard extends StatelessWidget {
           ),
         ],
       ),
-      ),
     );
   }
 }
@@ -324,7 +331,10 @@ class _BannerStat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
       ],
     );
   }

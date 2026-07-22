@@ -22,74 +22,75 @@ class ReportsPage extends GetView<ReportsController> {
       body: PremiumGate(
         feature: 'Reports & Analytics',
         child: Column(
-        children: [
-          // ---------- Date range filter ----------
-          Container(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.md,
-              AppSpacing.lg,
-              AppSpacing.sm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Date range", style: theme.textTheme.titleSmall),
-                const SizedBox(height: AppSpacing.sm),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _dateChip("Today", controller.setToday),
-                      _dateChip("This week", controller.setThisWeek),
-                      _dateChip("This month", controller.setThisMonth),
-                      _dateChip("Last month", controller.setLastMonth),
-                      _dateChip("All time", controller.setAllTime),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          // ---------- Report tabs ----------
-          Expanded(
-            child: DefaultTabController(
-              length: 6,
+          children: [
+            // ---------- Date range filter ----------
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.sm,
+              ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TabBar(
-                    isScrollable: true,
-                    labelColor: cs.primary,
-                    unselectedLabelColor: cs.onSurfaceVariant,
-                    indicatorColor: cs.primary,
-                    tabs: const [
-                      Tab(text: "Summary"),
-                      Tab(text: "Charts"),
-                      Tab(text: "Top Products"),
-                      Tab(text: "Categories"),
-                      Tab(text: "Expenses"),
-                      Tab(text: "Inventory"),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(
+                  Text("Date range", style: theme.textTheme.titleSmall),
+                  const SizedBox(height: AppSpacing.sm),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
                       children: [
-                        _SummaryTab(),
-                        ChartsTab(),
-                        _TopProductsTab(),
-                        _CategoriesTab(),
-                        _ExpensesTab(),
-                        _InventoryTab(),
+                        _dateChip("Today", controller.setToday),
+                        _dateChip("This week", controller.setThisWeek),
+                        _dateChip("This month", controller.setThisMonth),
+                        _dateChip("Last month", controller.setLastMonth),
+                        _dateChip("All time", controller.setAllTime),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            const Divider(height: 1),
+
+            // ---------- Report tabs ----------
+            Expanded(
+              child: DefaultTabController(
+                length: 6,
+                child: Column(
+                  children: [
+                    TabBar(
+                      isScrollable: true,
+                      labelColor: cs.primary,
+                      unselectedLabelColor: cs.onSurfaceVariant,
+                      indicatorColor: cs.primary,
+                      tabs: const [
+                        Tab(text: "Summary"),
+                        Tab(text: "Charts"),
+                        Tab(text: "Top Products"),
+                        Tab(text: "Categories"),
+                        Tab(text: "Expenses"),
+                        Tab(text: "Inventory"),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _SummaryTab(),
+                          ChartsTab(),
+                          _TopProductsTab(),
+                          _CategoriesTab(),
+                          _ExpensesTab(),
+                          _InventoryTab(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -98,7 +99,6 @@ class ReportsPage extends GetView<ReportsController> {
     return Padding(
       padding: const EdgeInsets.only(right: AppSpacing.sm),
       child: ActionChip(label: Text(label), onPressed: onTap),
-      ),
     );
   }
 }
