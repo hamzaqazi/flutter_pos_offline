@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// A widget that gates premium features behind the license check.
 ///
@@ -453,17 +454,64 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
 
           const SizedBox(height: AppSpacing.lg),
 
-          // Contact support
+          // Contact support — Call + WhatsApp
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
-              const SizedBox(width: 4),
-              Text(
-                '0315-3507075',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
+              // Call button
+              InkWell(
+                onTap: () async {
+                  final telUri = Uri.parse('tel:+923153507075');
+                  if (await canLaunchUrl(telUri)) {
+                    await launchUrl(telUri);
+                  }
+                },
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(
+                        '0315-3507075',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              // WhatsApp button
+              InkWell(
+                onTap: () => _openWhatsApp('General Inquiry'),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.chat, size: 14, color: Colors.green[700]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'WhatsApp',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -473,19 +521,43 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
     );
   }
 
-  void _openWhatsApp(String plan) {
-    // TODO: Replace with actual WhatsApp number
+  void _openWhatsApp(String plan) async {
+    // WhatsApp number: 923153507075 (Pakistan format with country code)
     final message = Uri.encodeComponent(
-      'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
+      'Hi, I want to purchase Codynest POS license.\n'
+      'Plan: $plan\n'
+      'App: Codynest POS',
     );
-    // Open WhatsApp URL
-    // Can use url_launcher or share_plus
-    Get.snackbar(
-      'Contact to Purchase',
-      'Call/WhatsApp 0315-3507075 for $plan plan',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-    Navigator.of(context).pop();
+    final whatsappUrl = 'https://wa.me/923153507075?text=$message';
+
+    try {
+      final uri = Uri.parse(whatsappUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // WhatsApp not installed — fallback to SMS/phone
+        final smsUri = Uri.parse('sms:+923153507075?body=$message');
+        if (await canLaunchUrl(smsUri)) {
+          await launchUrl(smsUri);
+        } else {
+          if (context.mounted) {
+            Get.snackbar(
+              'Contact Us',
+              'WhatsApp/Call: 0315-3507075',
+              snackPosition: SnackPosition.BOTTOM,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Get.snackbar(
+          'Contact Us',
+          'WhatsApp/Call: 0315-3507075',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    }
   }
 }
 

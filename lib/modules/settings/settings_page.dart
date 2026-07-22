@@ -10,6 +10,7 @@ import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -3265,9 +3266,6 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
 class _LicenseUpgradeSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // This just wraps the premium gate's upgrade sheet
-    // We import it from premium_gate.dart
-    // For simplicity, we'll use a simple version here
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final _keyController = TextEditingController();
@@ -3282,6 +3280,7 @@ class _LicenseUpgradeSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Handle
           Center(
             child: Container(
               width: 40,
@@ -3300,9 +3299,9 @@ class _LicenseUpgradeSheet extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           Text(
-            'Contact us to purchase a license key',
+            'Choose a plan and contact us on WhatsApp',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: cs.onSurfaceVariant,
             ),
@@ -3310,34 +3309,105 @@ class _LicenseUpgradeSheet extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xl),
 
-          // Contact info
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.seed.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(
-                color: AppColors.seed.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.call, color: AppColors.seed, size: 20),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  '0315-3507075',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppColors.seed,
-                    fontWeight: FontWeight.w800,
-                  ),
+          // Plan options
+          Row(
+            children: [
+              Expanded(
+                child: _SettingPlanCard(
+                  title: 'Monthly',
+                  price: 'Rs 500',
+                  period: '/month',
+                  onTap: () => _openWhatsApp(context, 'Monthly'),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _SettingPlanCard(
+                  title: 'Yearly',
+                  price: 'Rs 4,000',
+                  period: '/year',
+                  badge: '33% off',
+                  onTap: () => _openWhatsApp(context, 'Yearly'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _SettingPlanCard(
+            title: 'Lifetime',
+            price: 'Rs 10,000',
+            period: ' one-time',
+            badge: 'Best value',
+            highlighted: true,
+            onTap: () => _openWhatsApp(context, 'Lifetime'),
           ),
           const SizedBox(height: AppSpacing.xl),
 
+          // Contact row — Call + WhatsApp
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: () async {
+                  final telUri = Uri.parse('tel:+923153507075');
+                  if (await canLaunchUrl(telUri)) {
+                    await launchUrl(telUri);
+                  }
+                },
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(
+                        '0315-3507075',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              InkWell(
+                onTap: () => _openWhatsApp(context, 'General Inquiry'),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.chat, size: 14, color: Colors.green[700]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'WhatsApp',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
           // License key entry
+          const Divider(),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'Already have a key?',
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -3386,6 +3456,133 @@ class _LicenseUpgradeSheet extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openWhatsApp(BuildContext context, String plan) async {
+    final message = Uri.encodeComponent(
+      'Hi, I want to purchase Codynest POS license.\n'
+      'Plan: $plan\n'
+      'App: Codynest POS',
+    );
+    final whatsappUrl = 'https://wa.me/923153507075?text=$message';
+
+    try {
+      final uri = Uri.parse(whatsappUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        final smsUri = Uri.parse('sms:+923153507075?body=$message');
+        if (await canLaunchUrl(smsUri)) {
+          await launchUrl(smsUri);
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Get.snackbar(
+          'Contact Us',
+          'WhatsApp/Call: 0315-3507075',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    }
+  }
+}
+
+/// Plan card for the settings upgrade sheet.
+class _SettingPlanCard extends StatelessWidget {
+  const _SettingPlanCard({
+    required this.title,
+    required this.price,
+    required this.period,
+    required this.onTap,
+    this.badge,
+    this.highlighted = false,
+  });
+
+  final String title;
+  final String price;
+  final String period;
+  final VoidCallback onTap;
+  final String? badge;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: highlighted
+              ? cs.primary.withValues(alpha: 0.08)
+              : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: highlighted
+                ? cs.primary.withValues(alpha: 0.5)
+                : cs.outlineVariant,
+            width: highlighted ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            if (badge != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.seed.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Text(
+                  badge!,
+                  style: TextStyle(
+                    color: AppColors.seed,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+            ],
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  price,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: highlighted ? cs.primary : null,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    period,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
