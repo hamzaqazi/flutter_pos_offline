@@ -133,6 +133,29 @@ tr:hover { background: #fafafa; }
     </div>
     <div id="emptyState" class="empty" style="display:none;">No licenses found</div>
   </div>
+
+  <!-- Trial Devices -->
+  <div class="card">
+    <h2>📱 Trial Devices</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">
+      Devices that have used a 14-day free trial. Deleting a record allows that device to start a new trial (use for legitimate factory resets).
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Device ID</th>
+            <th>Model</th>
+            <th>Trial Started</th>
+            <th>Duration</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="trialTable"></tbody>
+      </table>
+    </div>
+    <div id="trialEmptyState" class="empty" style="display:none;">No trial devices recorded</div>
+  </div>
 </div>
 
 <!-- Detail Modal -->
@@ -458,8 +481,64 @@ window.showToast = function(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 };
 
+
+let allTrialDevices = [];
+
+// ── Load Trial Devices ──
+async function loadTrialDevices() {
+  try {
+    const snapshot = await getDocs(collection(db, "trial_devices"));
+    allTrialDevices = [];
+    snapshot.forEach(d => {
+      allTrialDevices.push({ deviceId: d.id, ...d.data() });
+    });
+    renderTrialDevices();
+  } catch (e) {
+    showToast(`❌ Error loading trial devices: ${e.message}`);
+  }
+}
+
+// ── Render Trial Devices Table ──
+function renderTrialDevices() {
+  const tbody = document.getElementById('trialTable');
+  if (allTrialDevices.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('trialEmptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('trialEmptyState').style.display = 'none';
+
+  tbody.innerHTML = allTrialDevices.map(t => {
+    const startedAt = t.trialStartedAt ? formatDate(t.trialStartedAt) : 'Unknown';
+    return `<tr>
+      <td><span class="device-tag">${t.deviceId}</span></td>
+      <td>${t.deviceModel || '-'}</td>
+      <td>${startedAt}</td>
+      <td>${t.trialDurationDays || 14} days</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteTrialDevice('${t.deviceId}')">🗑️ Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Delete Trial Device (allows new trial on that device) ──
+window.deleteTrialDevice = async function(deviceId) {
+  if (!confirm(`Delete trial record for device ${deviceId}?
+This will allow the device to start a new 14-day trial.`)) return;
+  try {
+    await deleteDoc(doc(db, "trial_devices", deviceId));
+    allTrialDevices = allTrialDevices.filter(t => t.deviceId !== deviceId);
+    renderTrialDevices();
+    showToast(`✅ Trial record deleted — device can now start a new trial`);
+  } catch (e) {
+    showToast(`❌ Error: ${e.message}`);
+  }
+};
+
 // ── Init ──
 loadLicenses();
+loadTrialDevices();
 
 // Close modal on overlay click
 document.getElementById('detailModal').addEventListener('click', function(e) {

@@ -10,6 +10,7 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 /// Service for importing data from a JSON backup file.
@@ -168,6 +169,31 @@ class ImportService {
       if (data['lastInvoiceNumber'] != null) {
         final settingsBox = Hive.box('settings');
         settingsBox.put('lastInvoiceNumber', data['lastInvoiceNumber']);
+      }
+
+      // ── Prevent trial reset exploit ──
+      // If the backup has an earlier (expired) trial_startDate, it means the
+      // user exported from an expired trial, cleared data, started a fresh trial,
+      // and is now importing the backup. We override the fresh trial with the
+      // older expired one so the exploit fails.
+      final settingsBox = Hive.box('settings');
+      final currentTrialStart = settingsBox.get('trial_startDate') as String?;
+      final backupTrialStart = data['trial_startDate'] as String?;
+      if (currentTrialStart != null && backupTrialStart != null) {
+        final currentDate = DateTime.tryParse(currentTrialStart);
+        final backupDate = DateTime.tryParse(backupTrialStart);
+        if (currentDate != null && backupDate != null
+            && backupDate.isBefore(currentDate)) {
+          // Backup trial is older (expired) — use it instead of fresh one
+          await settingsBox.put('trial_startDate', backupTrialStart);
+          final backupExpired = data['trial_expired'] as bool?;
+          await settingsBox.put('trial_expired', backupExpired ?? true);
+          debugPrint('🔒 Trial reset exploit blocked — older trial date restored from backup');
+        }
+      } else if (backupTrialStart != null) {
+        // Backup has trial data but current doesn't — restore from backup
+        await settingsBox.put('trial_startDate', backupTrialStart);
+        await settingsBox.put('trial_expired', data['trial_expired'] ?? false);
       }
 
       // Reload all controllers

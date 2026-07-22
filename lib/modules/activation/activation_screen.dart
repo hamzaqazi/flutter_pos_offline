@@ -14,6 +14,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
   final _keyController = TextEditingController();
   bool _loading = false;
   String? _error;
+  bool _trialEligible = true; // Show trial card by default
+  bool _checkingTrialEligibility = true;
 
   Future<void> _activate() async {
     final key = _keyController.text.trim();
@@ -39,6 +41,33 @@ class _ActivationScreenState extends State<ActivationScreen> {
     } else {
       setState(() => _error = result.message);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTrialEligibility();
+  }
+
+  /// Check Firestore if this device can start a new trial.
+  /// If local data shows trial was already used, hide the card immediately.
+  /// If local data is fresh (possible data clearing), verify with Firestore.
+  Future<void> _checkTrialEligibility() async {
+    if (LicenseService.hasUsedTrial || LicenseService.isActivated) {
+      // Local data already shows trial was used — no need to check Firestore
+      setState(() {
+        _trialEligible = false;
+        _checkingTrialEligibility = false;
+      });
+      return;
+    }
+
+    // Local data shows no trial — check Firestore to catch data-clearing exploit
+    final eligible = await LicenseService.checkDeviceTrialEligibility();
+    setState(() {
+      _trialEligible = eligible != false; // true or null (offline)
+      _checkingTrialEligibility = false;
+    });
   }
 
   @override
@@ -437,8 +466,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
 
                     const SizedBox(height: AppSpacing.lg),
 
-                    // ---------- Try Free Trial ----------'
-                    if (!LicenseService.isTrialActive && !LicenseService.isActivated)
+                    // ---------- Try Free Trial ----------
+                    if (_trialEligible && !LicenseService.isActivated)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -485,6 +514,21 @@ class _ActivationScreenState extends State<ActivationScreen> {
                               height: 48,
                               child: OutlinedButton.icon(
                                 onPressed: () async {
+                                  // Re-check Firestore: if local data was cleared
+                                  // but device already used a trial, block it
+                                  final eligible = await LicenseService.checkDeviceTrialEligibility();
+                                  if (eligible == false) {
+                                    await LicenseService.markTrialAlreadyUsed();
+                                    setState(() {
+                                      _trialEligible = false;
+                                    });
+                                    Get.snackbar(
+                                      'Trial Already Used',
+                                      'This device has already used a free trial. Activate a license or continue with the free plan.',
+                                      snackPosition: SnackPosition.BOTTOM,
+                                    );
+                                    return;
+                                  }
                                   await LicenseService.startTrial();
                                   LicenseService.clearDeactivationReason();
                                   Get.offAllNamed('/pin-setup');

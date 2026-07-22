@@ -178,9 +178,13 @@ class LicenseService {
   }
 
   /// Start the 14-day free trial.
+  /// Also registers the device in Firestore to prevent repeat trials
+  /// after clearing app data.
   static Future<void> startTrial() async {
     await _box.put('trial_startDate', DateTime.now().toIso8601String());
     await _box.put('trial_expired', false);
+    // Register device in Firestore to block repeat trials on this device
+    await registerTrialDevice();
   }
 
   /// Mark the trial as expired (called when trial days run out).
@@ -197,6 +201,99 @@ class LicenseService {
     final daysElapsed = DateTime.now().difference(start).inDays;
     final isNowExpired = daysElapsed >= trialDurationDays;
     return wasNotExpired && isNowExpired;
+  }
+
+
+  // =================== Trial Device Tracking (Firestore) ===================
+
+  /// Check if this device has ever had a trial (even if expired).
+  /// Used to determine whether to show the "Start Free Trial" card.
+  static bool get hasUsedTrial {
+    return _box.containsKey('trial_startDate');
+  }
+
+  /// Check if this device can start a NEW trial (never used one, not activated).
+  static bool get canStartNewTrial {
+    return !hasUsedTrial && !isActivated;
+  }
+
+  /// Check Firestore if this device has already used a free trial.
+  /// Returns:
+  ///   - `true`  → device is eligible (no record found)
+  ///   - `false` → device already used a trial (blocked)
+  ///   - `null`  → offline / Firestore unreachable (provisional allow)
+  static Future<bool?> checkDeviceTrialEligibility() async {
+    try {
+      final currentDeviceId = await deviceId;
+      final doc = await FirebaseFirestore.instance
+          .collection('trial_devices')
+          .doc(currentDeviceId)
+          .get();
+
+      if (doc.exists) {
+        debugPrint('⚠️ Device already used trial — repeat blocked');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      debugPrint('⚠️ Trial eligibility check failed (offline?): $e');
+      return null; // Can't verify — allow provisional trial
+    }
+  }
+
+  /// Register this device in Firestore as having used a trial.
+  /// Prevents repeat trials on the same device after clearing app data.
+  static Future<void> registerTrialDevice() async {
+    try {
+      final currentDeviceId = await deviceId;
+      final deviceInfo = DeviceInfoPlugin();
+      String deviceModel = 'unknown';
+      if (Platform.isAndroid) {
+        final android = await deviceInfo.androidInfo;
+        deviceModel = '${android.brand} ${android.model}';
+      } else if (Platform.isIOS) {
+        final ios = await deviceInfo.iosInfo;
+        deviceModel = ios.utsname.machine;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('trial_devices')
+          .doc(currentDeviceId)
+          .set({
+        'trialStartedAt': FieldValue.serverTimestamp(),
+        'deviceModel': deviceModel,
+        'trialDurationDays': trialDurationDays,
+      });
+      debugPrint('✅ Trial device registered in Firestore: $currentDeviceId');
+
+      // Clear pending flag if it was set
+      await _box.delete('trial_registrationPending');
+    } catch (e) {
+      debugPrint('⚠️ Failed to register trial device in Firestore: $e');
+      // Mark for retry on next online connection
+      await _box.put('trial_registrationPending', true);
+    }
+  }
+
+  /// Check if trial registration is pending (failed due to offline).
+  static bool get trialRegistrationPending {
+    return _box.get('trial_registrationPending', defaultValue: false) as bool;
+  }
+
+  /// Retry pending trial device registration (called when app goes online).
+  static Future<void> retryTrialRegistration() async {
+    if (!trialRegistrationPending) return;
+    await registerTrialDevice();
+  }
+
+  /// Mark that this device has already used a trial (from Firestore record).
+  /// Called when Firestore shows device already had trial but local data
+  /// was cleared. Sets an old expired trial locally so:
+  ///   - `isFirstInstall` returns false (no new auto-trial)
+  ///   - `hasUsedTrial` returns true (hides trial card on activation screen)
+  static Future<void> markTrialAlreadyUsed() async {
+    await _box.put('trial_startDate', DateTime(2020, 1, 1).toIso8601String());
+    await _box.put('trial_expired', true);
   }
 
   // =================== PIN Lock ===================
@@ -351,11 +448,26 @@ class LicenseService {
   static Future<bool> verifyActiveLicense() async {
     // Check trial status first
     if (isTrialActive && !isActivated) {
-      // Trial user — no Firestore check needed
-      // But check if trial just expired
+      // Check if trial just expired
       if (trialJustExpired) {
         expireTrial();
+        return false;
       }
+
+      // Verify provisional trial: if Firestore registration is pending
+      // (started while offline), check eligibility now.
+      if (trialRegistrationPending) {
+        final eligible = await checkDeviceTrialEligibility();
+        if (eligible == false) {
+          // Device already used a trial — revoke this provisional one
+          await markTrialAlreadyUsed();
+          debugPrint('⚠️ Provisional trial revoked — device already used trial');
+          return false;
+        }
+        // Eligible or still offline — try to complete registration
+        await retryTrialRegistration();
+      }
+
       return isTrialActive;
     }
 

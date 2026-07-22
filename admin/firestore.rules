@@ -6,5 +6,13 @@ service cloud.firestore {
     match /licenses/{licenseId} {
       allow read, write: if true; // TODO: Add auth check before going public
     }
+
+    // Trial devices collection — prevents repeat 14-day trials on the same device
+    // Mobile app can create/read; admin panel can delete (for legitimate resets)
+    match /trial_devices/{deviceId} {
+      allow read: if true;        // App checks if device already used trial
+      allow create: if true;      // App registers device when trial starts
+      allow update, delete: if true; // Admin panel manages resets (TODO: auth)
+    }
   }
 }
