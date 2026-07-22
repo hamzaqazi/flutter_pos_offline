@@ -394,6 +394,20 @@ class LicenseService {
         }
       }
 
+      // Check if this device is still registered
+      final registeredDevices = List<String>.from(
+        doc.data()?['registeredDevices'] ?? [],
+      );
+      final currentDeviceId = await deviceId;
+      if (!registeredDevices.contains(currentDeviceId)) {
+        // Device was removed from Firestore — deactivate
+        await deactivate(
+          reason:
+              'This device is no longer registered. The license may have been moved to another device. Contact support if this is unexpected.',
+        );
+        return false;
+      }
+
       // Update plan from Firestore (in case it was changed server-side)
       final serverPlan = doc.data()?['plan'] as String? ?? storedPlan;
       if (serverPlan != storedPlan) {
