@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:ad_shop_pos/data/services/category_service.dart';
+import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
@@ -203,6 +204,15 @@ class AutoBackupService {
       await _pruneOldBackups(backupDir);
 
       debugPrint('✅ Auto-backup saved: ${file.path}');
+
+      // Also upload to Google Drive if the user opted in and is signed in.
+      if (GoogleDriveService.isEnabled && GoogleDriveService.isSignedIn) {
+        final uploaded = await GoogleDriveService.uploadBackup(jsonStr);
+        debugPrint(uploaded
+            ? '☁️ Auto-backup uploaded to Drive'
+            : '⚠️ Auto-backup Drive upload failed');
+      }
+
       return true;
     } catch (e) {
       debugPrint('🔥 Auto-backup failed: $e');
@@ -419,6 +429,19 @@ class AutoBackupService {
   /// Perform a manual backup now.
   static Future<bool> backupNow() async {
     return await performAutoBackup();
+  }
+
+  /// Upload a fresh backup of the current data straight to Google Drive.
+  /// Requires the user to be signed in. Returns true on success.
+  static Future<bool> uploadToDriveNow() async {
+    try {
+      final backupData = await _collectBackupData();
+      final jsonStr = const JsonEncoder.withIndent('  ').convert(backupData);
+      return await GoogleDriveService.uploadBackup(jsonStr);
+    } catch (e) {
+      debugPrint('🔥 Drive backup-now failed: $e');
+      return false;
+    }
   }
 }
 
