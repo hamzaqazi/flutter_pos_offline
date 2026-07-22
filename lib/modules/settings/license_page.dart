@@ -2,7 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 
 class LicensePage extends StatelessWidget {
   const LicensePage({super.key});
@@ -603,12 +603,7 @@ class _UpgradeSection extends StatelessWidget {
         SizedBox(
           height: 44,
           child: OutlinedButton.icon(
-            onPressed: () async {
-              final telUri = Uri.parse('tel:+923153507075');
-              if (await canLaunchUrl(telUri)) {
-                await launchUrl(telUri);
-              }
-            },
+            onPressed: () => Launcher.makeCall('923153507075'),
             icon: const Icon(Icons.call, size: 18),
             label: const Text('Call: 0315-3507075'),
           ),
@@ -679,12 +674,7 @@ class _SupportCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             // Call
             InkWell(
-              onTap: () async {
-                final telUri = Uri.parse('tel:+923153507075');
-                if (await canLaunchUrl(telUri)) {
-                  await launchUrl(telUri);
-                }
-              },
+              onTap: () => Launcher.makeCall('923153507075'),
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -740,30 +730,15 @@ String _formatDate(DateTime date) {
 }
 
 void _openWhatsApp(BuildContext context, String plan) async {
-  final message = Uri.encodeComponent(
-    'Hi, I want to purchase Codynest POS license.\n'
-    'Plan: $plan\n'
-    'App: Codynest POS',
+  final success = await Launcher.openWhatsApp(
+    '923153507075',
+    'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
   );
-  final whatsappUrl = 'https://wa.me/923153507075?text=$message';
-
-  try {
-    final uri = Uri.parse(whatsappUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      final smsUri = Uri.parse('sms:+923153507075?body=$message');
-      if (await canLaunchUrl(smsUri)) {
-        await launchUrl(smsUri);
-      }
-    }
-  } catch (e) {
-    if (context.mounted) {
-      Get.snackbar(
-        'Contact Us',
-        'WhatsApp/Call: 0315-3507075',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
+  if (!success && context.mounted) {
+    Get.snackbar(
+      'Contact Us',
+      'WhatsApp/Call: 0315-3507075',
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 }

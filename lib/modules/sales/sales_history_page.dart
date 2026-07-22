@@ -7,7 +7,7 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:get/get.dart';
 
 import 'sales_controller.dart';
@@ -734,19 +734,10 @@ void _showUpgradeDialog(BuildContext context) {
               width: double.infinity,
               height: 48,
               child: FilledButton.icon(
-                onPressed: () async {
-                  final message = Uri.encodeComponent(
-                    'Hi, I want to purchase Codynest POS license.\n'
-                    'Plan: Any\n'
-                    'Feature: Returns & Refunds',
-                  );
-                  final uri = Uri.parse('https://wa.me/923153507075?text=$message');
-                  try {
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    }
-                  } catch (_) {}
-                },
+                onPressed: () => Launcher.openWhatsApp(
+                  '923153507075',
+                  'Hi, I want to purchase Codynest POS license.\nPlan: Any\nFeature: Returns & Refunds',
+                ),
                 icon: const Icon(Icons.chat, size: 20),
                 label: const Text('Purchase via WhatsApp'),
               ),
@@ -757,12 +748,7 @@ void _showUpgradeDialog(BuildContext context) {
               width: double.infinity,
               height: 44,
               child: OutlinedButton.icon(
-                onPressed: () async {
-                  final telUri = Uri.parse('tel:+923153507075');
-                  if (await canLaunchUrl(telUri)) {
-                    await launchUrl(telUri);
-                  }
-                },
+                onPressed: () => Launcher.makeCall('923153507075'),
                 icon: const Icon(Icons.call, size: 18),
                 label: const Text('Call: 0315-3507075'),
               ),

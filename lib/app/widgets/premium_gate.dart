@@ -2,7 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 
 /// A widget that gates premium features behind the license check.
 ///
@@ -460,12 +460,7 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
             children: [
               // Call button
               InkWell(
-                onTap: () async {
-                  final telUri = Uri.parse('tel:+923153507075');
-                  if (await canLaunchUrl(telUri)) {
-                    await launchUrl(telUri);
-                  }
-                },
+                onTap: () => Launcher.makeCall('923153507075'),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -522,41 +517,16 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
   }
 
   void _openWhatsApp(String plan) async {
-    // WhatsApp number: 923153507075 (Pakistan format with country code)
-    final message = Uri.encodeComponent(
-      'Hi, I want to purchase Codynest POS license.\n'
-      'Plan: $plan\n'
-      'App: Codynest POS',
+    final success = await Launcher.openWhatsApp(
+      '923153507075',
+      'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
     );
-    final whatsappUrl = 'https://wa.me/923153507075?text=$message';
-
-    try {
-      final uri = Uri.parse(whatsappUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        // WhatsApp not installed — fallback to SMS/phone
-        final smsUri = Uri.parse('sms:+923153507075?body=$message');
-        if (await canLaunchUrl(smsUri)) {
-          await launchUrl(smsUri);
-        } else {
-          if (context.mounted) {
-            Get.snackbar(
-              'Contact Us',
-              'WhatsApp/Call: 0315-3507075',
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          }
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Get.snackbar(
-          'Contact Us',
-          'WhatsApp/Call: 0315-3507075',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
+    if (!success && context.mounted) {
+      Get.snackbar(
+        'Contact Us',
+        'WhatsApp/Call: 0315-3507075',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 }
