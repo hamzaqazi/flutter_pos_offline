@@ -6,19 +6,16 @@ import 'dart:io';
 
 /// Service for license key validation via Firebase Firestore.
 ///
-/// Firestore collection: `licenses`
-/// Document IDs:
-///   - License keys: "CNPO-K7ZM-2XN4-PQ9R"
-///   - Trial device records: "trial:{deviceId}" (e.g. "trial:android_abc123")
-/// Fields (license): shopName, active, plan, maxDevices, expiresAt, registeredDevices[],
+/// Firestore collections:
+///   - `licenses` — license key docs (ID = license key, e.g. "CNPO-K7ZM-2XN4-PQ9R")
+///   - `trial_devices` — trial device records (ID = device ID, prevents repeat trials)
+///
+/// License fields: shopName, active, plan, maxDevices, expiresAt, registeredDevices[],
 ///         customerPhone, activatedAt
-/// Fields (trial): _type='trial_device', trialStartedAt, deviceModel, trialDurationDays
+/// Trial device fields: trialStartedAt, deviceModel, trialDurationDays
 ///
 /// Plans: "free", "monthly", "yearly", "lifetime"
 /// Trial: 14-day free trial on first install, all premium features unlocked.
-/// Trial device tracking is stored in the same `licenses` collection (with _type
-/// field) so it works with existing Firestore security rules without a separate
-/// deployment.
 class LicenseService {
   static final _box = Hive.box('settings');
 
@@ -232,8 +229,8 @@ class LicenseService {
     try {
       final currentDeviceId = await deviceId;
       final doc = await FirebaseFirestore.instance
-          .collection('licenses')
-          .doc('trial:$currentDeviceId')
+          .collection('trial_devices')
+          .doc(currentDeviceId)
           .get();
 
       if (doc.exists) {
@@ -263,10 +260,9 @@ class LicenseService {
       }
 
       await FirebaseFirestore.instance
-          .collection('licenses')
-          .doc('trial:$currentDeviceId')
+          .collection('trial_devices')
+          .doc(currentDeviceId)
           .set({
-        '_type': 'trial_device', // Marker to distinguish from license keys
         'trialStartedAt': FieldValue.serverTimestamp(),
         'deviceModel': deviceModel,
         'trialDurationDays': trialDurationDays,
