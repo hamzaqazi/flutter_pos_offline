@@ -4,6 +4,7 @@ import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
@@ -19,7 +20,13 @@ class ProductsPage extends GetView<ProductsController> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Products"),
+        title: Builder(
+          builder: (_) {
+            if (LicenseService.isPremium) return const Text("Products");
+            final count = controller.products.length;
+            return Text("Products ($count/${LicenseService.freeMaxProducts})");
+          },
+        ),
         actions: [
           // Barcode scanner button
           IconButton(

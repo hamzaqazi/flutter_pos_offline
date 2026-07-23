@@ -9,6 +9,8 @@ import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -2507,107 +2509,87 @@ class _PinLockSectionState extends State<_PinLockSection> {
           ),
         ],
         const SizedBox(height: AppSpacing.md),
-        // License info
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.vpn_key_outlined,
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    "License: ${LicenseService.licenseKey}",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+        // License & Plan info — tappable card
+        InkWell(
+          onTap: () => Get.toNamed('/license'),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(
+                color: LicenseService.isPremium
+                    ? AppColors.seed.withValues(alpha: 0.3)
+                    : AppColors.warning.withValues(alpha: 0.3),
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.store_outlined,
-                    size: 16,
-                    color: cs.onSurfaceVariant,
+            ),
+            child: Row(
+              children: [
+                // Plan icon
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: LicenseService.isPremium
+                        ? AppColors.seed.withValues(alpha: 0.12)
+                        : AppColors.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    "Shop: ${LicenseService.shopName}",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+                  child: Icon(
+                    LicenseService.isPremium
+                        ? Icons.workspace_premium_outlined
+                        : Icons.lock_outline,
+                    size: 20,
+                    color: LicenseService.isPremium
+                        ? AppColors.seed
+                        : AppColors.warning,
                   ),
-                ],
-              ),
-              if (LicenseService.expiresAt != null) ...[
-                const SizedBox(height: 4),
-                Builder(
-                  builder: (_) {
-                    final exp = LicenseService.expiresAt!;
-                    final days = LicenseService.daysUntilExpiry ?? 0;
-                    final isWarning = days <= 30;
-                    final isCritical = days <= 7;
-                    final color = isCritical
-                        ? AppColors.danger
-                        : isWarning
-                        ? AppColors.warning
-                        : AppColors.success;
-                    return Row(
-                      children: [
-                        Icon(Icons.event_outlined, size: 16, color: color),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          "Expires: ${formatDate(exp)} ($days days left)",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
                 ),
-              ],
-              // Device ID
-              const SizedBox(height: 4),
-              // ---------- Device ID + Support Info ----------
-              FutureBuilder<String>(
-                future: LicenseService.deviceId,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const SizedBox.shrink();
-                  final deviceId = snapshot.data!;
-                  return Row(
+                const SizedBox(width: AppSpacing.md),
+                // Plan info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          // 'Device: ${deviceId.length > 20 ? deviceId.substring(0, 20) : deviceId}...',
-                          'Device ID: $deviceId',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            fontFamily: 'monospace',
-                            fontSize: 11,
-                          ),
+                      Text(
+                        LicenseService.planDisplayWithEmoji,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
+                      if (LicenseService.isTrialActive)
+                        Text(
+                          '${LicenseService.trialDaysRemaining} days remaining',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.warning,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      else if (LicenseService.isActivated && LicenseService.shopName.isNotEmpty)
+                        Text(
+                          LicenseService.shopName,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        )
+                      else if (LicenseService.isFreeTier)
+                        Text(
+                          '${LicenseService.freeMaxProducts} products max',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
                     ],
-                  );
-                },
-              ),
-            ],
+                  ),
+                ),
+                // Arrow
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -3169,6 +3151,313 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Simple upgrade sheet used from Settings license section.
+/// Reuses the same upgrade sheet from PremiumGate.
+class _LicenseUpgradeSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final _keyController = TextEditingController();
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Upgrade to Premium',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Choose a plan and contact us on WhatsApp',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Plan options
+          Row(
+            children: [
+              Expanded(
+                child: _SettingPlanCard(
+                  title: 'Monthly',
+                  price: 'Rs 500',
+                  period: '/month',
+                  onTap: () => _openWhatsApp(context, 'Monthly'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _SettingPlanCard(
+                  title: 'Yearly',
+                  price: 'Rs 4,000',
+                  period: '/year',
+                  badge: '33% off',
+                  onTap: () => _openWhatsApp(context, 'Yearly'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _SettingPlanCard(
+            title: 'Lifetime',
+            price: 'Rs 10,000',
+            period: ' one-time',
+            badge: 'Best value',
+            highlighted: true,
+            onTap: () => _openWhatsApp(context, 'Lifetime'),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Contact row — Call + WhatsApp
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: () => Launcher.makeCall('923153507075'),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(
+                        '0315-3507075',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              InkWell(
+                onTap: () => _openWhatsApp(context, 'General Inquiry'),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.chat, size: 14, color: Colors.green[700]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'WhatsApp',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // License key entry
+          const Divider(),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Already have a key?',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _keyController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              hintText: 'XXXX-XXXX-XXXX-XXXX',
+              prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20),
+              filled: true,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: FilledButton(
+              onPressed: () async {
+                final key = _keyController.text.trim();
+                if (key.isEmpty) return;
+                final result = await LicenseService.validateLicense(key);
+                if (result.success) {
+                  Navigator.of(context).pop();
+                  Get.snackbar(
+                    'Activated! 🎉',
+                    'Your ${result.plan ?? 'premium'} plan is now active.',
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                } else {
+                  Get.snackbar(
+                    'Activation Failed',
+                    result.message,
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                }
+              },
+              child: const Text('Activate License'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openWhatsApp(BuildContext context, String plan) async {
+    final success = await Launcher.openWhatsApp(
+      '923153507075',
+      'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
+    );
+    if (!success && context.mounted) {
+      Get.snackbar(
+        'Contact Us',
+        'WhatsApp/Call: 0315-3507075',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+}
+
+/// Plan card for the settings upgrade sheet.
+class _SettingPlanCard extends StatelessWidget {
+  const _SettingPlanCard({
+    required this.title,
+    required this.price,
+    required this.period,
+    required this.onTap,
+    this.badge,
+    this.highlighted = false,
+  });
+
+  final String title;
+  final String price;
+  final String period;
+  final VoidCallback onTap;
+  final String? badge;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: highlighted
+              ? cs.primary.withValues(alpha: 0.08)
+              : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: highlighted
+                ? cs.primary.withValues(alpha: 0.5)
+                : cs.outlineVariant,
+            width: highlighted ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            if (badge != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.seed.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Text(
+                  badge!,
+                  style: TextStyle(
+                    color: AppColors.seed,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+            ],
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  price,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: highlighted ? cs.primary : null,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    period,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

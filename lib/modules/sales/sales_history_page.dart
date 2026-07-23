@@ -5,6 +5,9 @@ import 'package:ad_shop_pos/modules/returns/return_dialog.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:get/get.dart';
 
 import 'sales_controller.dart';
@@ -579,7 +582,13 @@ class SalesHistoryPage extends GetView<SalesController> {
                                   //   ),
                                   // ),
                                   child: IconButton.filledTonal(
-                                    onPressed: () => showReturnDialog(sale),
+                                    onPressed: () {
+                                      if (!LicenseService.isPremium) {
+                                        _showUpgradeDialog(context);
+                                        return;
+                                      }
+                                      showReturnDialog(sale);
+                                    },
                                     icon: const Icon(
                                       Icons.assignment_return_outlined,
                                       size: 20,
@@ -675,6 +684,80 @@ class _BannerStat extends StatelessWidget {
       ],
     );
   }
+}
+
+void _showUpgradeDialog(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) {
+      final theme = Theme.of(context);
+      final cs = theme.colorScheme;
+      return Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          top: AppSpacing.xl,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Icon(Icons.lock_outline, size: 40, color: AppColors.warning),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Returns & Refunds',
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'This feature is available on Premium plans.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            // WhatsApp purchase button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () => Launcher.openWhatsApp(
+                  '923153507075',
+                  'Hi, I want to purchase Codynest POS license.\nPlan: Any\nFeature: Returns & Refunds',
+                ),
+                icon: const Icon(Icons.chat, size: 20),
+                label: const Text('Purchase via WhatsApp'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            // Call option
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed: () => Launcher.makeCall('923153507075'),
+                icon: const Icon(Icons.call, size: 18),
+                label: const Text('Call: 0315-3507075'),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 class _EmptySales extends StatelessWidget {

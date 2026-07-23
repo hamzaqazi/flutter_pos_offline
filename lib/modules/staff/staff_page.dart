@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/models/staff_model.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 class StaffPage extends GetView<StaffController> {

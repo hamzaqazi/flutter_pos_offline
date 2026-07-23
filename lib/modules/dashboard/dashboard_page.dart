@@ -6,7 +6,9 @@ import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
@@ -39,13 +41,277 @@ class DashboardPage extends GetView<DashboardController> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // ---------- Today's Summary ----------
+                  // ---------- Trial Banner ----------
+                  if (LicenseService.isTrialActive)
+                    Builder(
+                      builder: (context) {
+                        final days = LicenseService.trialDaysRemaining;
+                        final isUrgent = days <= 3;
+                        final color = isUrgent ? AppColors.warning : AppColors.seed;
+                        return Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
+                            border: Border.all(
+                              color: color.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isUrgent
+                                    ? Icons.timer_outlined
+                                    : Icons.celebration_outlined,
+                                color: color,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isUrgent
+                                          ? 'Trial expires in $days day${days == 1 ? '' : 's'}!'
+                                          : 'Free Trial — $days days remaining',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: color,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Upgrade to keep all Premium features',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Enter Key button
+                              SizedBox(
+                                width: 96,
+                                height: 32,
+                                child: FilledButton.tonal(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(20),
+                                        ),
+                                      ),
+                                      builder: (_) => _TrialUpgradeSheet(),
+                                    );
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                  ),
+                                  child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                                ),
+                              ),
+                              // WhatsApp upgrade button (for urgent trials ≤5 days)
+                              if (isUrgent || days <= 5)
+                                SizedBox(
+                                  width: 96,
+                                  height: 32,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      final phone = LicenseService.trialCustomerPhone.isNotEmpty
+                                          ? LicenseService.trialCustomerPhone
+                                          : '923153507075';
+                                      Launcher.openWhatsApp(
+                                        phone,
+                                        'Hi! I want to upgrade my Codynest POS from trial to a Premium plan. My trial has $days days left.',
+                                      );
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                      foregroundColor: const Color(0xFF25D366),
+                                      side: const BorderSide(color: Color(0xFF25D366)),
+                                    ),
+                                    child: const Text('WhatsApp', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                  // ---------- Free Tier Banner ----------
+                  if (LicenseService.isFreeTier)
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
+                        border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.workspace_premium_outlined,
+                            color: AppColors.warning,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Free Plan — Limited Features',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.warning,
+                                  ),
+                                ),
+                                Text(
+                                  'Upgrade to unlock Returns, Reports, and more',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Enter Key button
+                          SizedBox(
+                            width: 96,
+                            height: 32,
+                            child: FilledButton.tonal(
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(20),
+                                    ),
+                                  ),
+                                  builder: (_) => _TrialUpgradeSheet(),
+                                );
+                              },
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                              ),
+                              child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                          // WhatsApp upgrade button
+                          SizedBox(
+                            width: 96,
+                            height: 32,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Launcher.openWhatsApp(
+                                  '923153507075',
+                                  'Hi! I want to upgrade my Codynest POS from the Free plan to Premium. I currently have the Free plan (${LicenseService.freeMaxProducts} products max).',
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                foregroundColor: const Color(0xFF25D366),
+                                side: const BorderSide(color: Color(0xFF25D366)),
+                              ),
+                              child: const Text('WhatsApp', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // ---------- License Info Banner ----------
                   Builder(
                     builder: (context) {
                       if (!LicenseService.isActivated)
                         return const SizedBox.shrink();
+                      // Lifetime plans have no expiry — show plan info instead
                       final days = LicenseService.daysUntilExpiry;
                       final expiresAt = LicenseService.expiresAt;
+                      if (days == null && LicenseService.storedPlan == 'lifetime') {
+                        return Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.seed.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
+                            border: Border.all(
+                              color: AppColors.seed.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.workspace_premium,
+                                color: AppColors.seed,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Lifetime License — Active',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.seed,
+                                      ),
+                                    ),
+                                    Text(
+                                      LicenseService.shopName,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Enter Key button
+                              SizedBox(
+                                width: 96,
+                                height: 32,
+                                child: FilledButton.tonal(
+                                  onPressed: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(20),
+                                        ),
+                                      ),
+                                      builder: (_) => _TrialUpgradeSheet(),
+                                    );
+                                  },
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                  ),
+                                  child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                       if (days == null || expiresAt == null)
                         return const SizedBox.shrink();
 
@@ -887,6 +1153,137 @@ class _TodayStatSmall extends StatelessWidget {
           style: const TextStyle(color: Colors.white70, fontSize: 10),
         ),
       ],
+    );
+  }
+}
+
+/// Quick license key entry sheet for trial users.
+class _TrialUpgradeSheet extends StatefulWidget {
+  @override
+  State<_TrialUpgradeSheet> createState() => _TrialUpgradeSheetState();
+}
+
+class _TrialUpgradeSheetState extends State<_TrialUpgradeSheet> {
+  final _keyController = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _keyController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _activate() async {
+    final key = _keyController.text.trim();
+    if (key.isEmpty) return;
+
+    setState(() => _loading = true);
+    final result = await LicenseService.validateLicense(key);
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (result.success) {
+      Navigator.of(context).pop();
+      Get.snackbar(
+        'Activated! 🎉',
+        'Your ${result.plan ?? 'premium'} plan is now active.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } else {
+      Get.snackbar(
+        'Activation Failed',
+        result.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          Icon(Icons.vpn_key_outlined, size: 40, color: cs.primary),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Activate Your License',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Enter the license key you received from Codynest',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          TextField(
+            controller: _keyController,
+            textCapitalization: TextCapitalization.characters,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: 'CNPO-XXXX-XXXX-XXXX',
+              prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20),
+              filled: true,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+            onSubmitted: (_) => _activate(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton(
+              onPressed: _loading ? null : _activate,
+              child: _loading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Activate License', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Need a key? Contact: 0315-3507075',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

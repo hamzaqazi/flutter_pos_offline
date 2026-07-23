@@ -4,6 +4,7 @@ import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 class CustomersPage extends GetView<CustomersController> {

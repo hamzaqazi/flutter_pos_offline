@@ -1,7 +1,4 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -20,6 +17,13 @@
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
+        },
+        {
+            "name": "flutter_pos_offline (Flutter Hamza’s 🍎  (wireless))",
+            "program": "lib/main.dart",
+            "deviceId": "00008101-000D24860C44001E",
+            "request": "launch",
+            "type": "dart"
         }
     ]
 }

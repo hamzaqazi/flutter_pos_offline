@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/expense_model.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 import 'expenses_controller.dart';
@@ -20,98 +21,99 @@ class ExpensesPage extends GetView<ExpensesController> {
         icon: const Icon(Icons.add),
         label: const Text("Add expense"),
       ),
-      body: Obx(() {
-        if (controller.expenses.isEmpty) {
-          return _EmptyExpenses();
-        }
+      body: PremiumGate(
+        feature: 'Expense Tracking',
+        child: Obx(() {
+          if (controller.expenses.isEmpty) {
+            return _EmptyExpenses();
+          }
 
-        final sorted = controller.expenses.toList()
-          ..sort((a, b) => b.date.compareTo(a.date));
+          final sorted = controller.expenses.toList()
+            ..sort((a, b) => b.date.compareTo(a.date));
 
-        return Column(
-          children: [
-            // Total banner
-            Container(
-              margin: const EdgeInsets.all(AppSpacing.lg),
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.danger,
-                    AppColors.danger.withValues(alpha: 0.75),
+          return Column(
+            children: [
+              // Total banner
+              Container(
+                margin: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.danger,
+                      AppColors.danger.withValues(alpha: 0.75),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Total Expenses",
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
+                    Text(
+                      Formatters.currency(controller.totalExpenses),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "Total Expenses",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    Formatters.currency(controller.totalExpenses),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  0,
-                  AppSpacing.lg,
-                  AppSpacing.xxl,
-                ),
-                itemCount: sorted.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (_, index) {
-                  final expense = sorted[index];
-                  return _ExpenseTile(
-                    expense: expense,
-                    onDelete: () {
-                      Get.dialog(
-                        AlertDialog(
-                          title: const Text("Delete Expense"),
-                          content: Text(
-                            "Delete \"${expense.description}\" for ${Formatters.currency(expense.amount)}?",
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.xxl,
+                  ),
+                  itemCount: sorted.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (_, index) {
+                    final expense = sorted[index];
+                    return _ExpenseTile(
+                      expense: expense,
+                      onDelete: () {
+                        Get.dialog(
+                          AlertDialog(
+                            title: const Text("Delete Expense"),
+                            content: Text(
+                              "Delete \"${expense.description}\" for ${Formatters.currency(expense.amount)}?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: Get.back,
+                                child: const Text("Cancel"),
+                              ),
+                              FilledButton(
+                                onPressed: () {
+                                  controller.deleteExpense(expense.id);
+                                  Get.back();
+                                },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.danger,
+                                ),
+                                child: const Text("Delete"),
+                              ),
+                            ],
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: Get.back,
-                              child: const Text("Cancel"),
-                            ),
-                            FilledButton(
-                              onPressed: () {
-                                controller.deleteExpense(expense.id);
-                                Get.back();
-                              },
-                              style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.danger),
-                              child: const Text("Delete"),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 
@@ -140,8 +142,9 @@ class ExpensesPage extends GetView<ExpensesController> {
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
                             color: AppColors.danger.withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
                           child: const Icon(
                             Icons.account_balance_wallet_outlined,
@@ -149,8 +152,7 @@ class ExpensesPage extends GetView<ExpensesController> {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
-                        Text("Add Expense",
-                            style: theme.textTheme.titleLarge),
+                        Text("Add Expense", style: theme.textTheme.titleLarge),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -172,10 +174,9 @@ class ExpensesPage extends GetView<ExpensesController> {
                         prefixIcon: Icon(Icons.category_outlined),
                       ),
                       items: ExpenseModel.categories
-                          .map((c) => DropdownMenuItem(
-                                value: c,
-                                child: Text(c),
-                              ))
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
                           .toList(),
                       onChanged: (value) =>
                           setState(() => selectedCategory = value!),
@@ -214,15 +215,18 @@ class ExpensesPage extends GetView<ExpensesController> {
                                 );
                                 return;
                               }
-                              controller.addExpense(ExpenseModel(
-                                id: UniqueKey().toString(),
-                                amount: double.parse(amountController.text),
-                                category: selectedCategory,
-                                description: descController.text.trim().isEmpty
-                                    ? selectedCategory
-                                    : descController.text.trim(),
-                                date: DateTime.now(),
-                              ));
+                              controller.addExpense(
+                                ExpenseModel(
+                                  id: UniqueKey().toString(),
+                                  amount: double.parse(amountController.text),
+                                  category: selectedCategory,
+                                  description:
+                                      descController.text.trim().isEmpty
+                                      ? selectedCategory
+                                      : descController.text.trim(),
+                                  date: DateTime.now(),
+                                ),
+                              );
                               Get.back();
                             },
                             child: const Text("Save"),
@@ -307,8 +311,11 @@ class _ExpenseTile extends StatelessWidget {
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
-              child: Icon(_iconForCategory(expense.category),
-                  color: color, size: 22),
+              child: Icon(
+                _iconForCategory(expense.category),
+                color: color,
+                size: 22,
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -328,11 +335,14 @@ class _ExpenseTile extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs, vertical: 1),
+                          horizontal: AppSpacing.xs,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.12),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                         child: Text(
                           expense.category,
@@ -370,8 +380,11 @@ class _ExpenseTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.xs),
-                child: Icon(Icons.delete_outline,
-                    size: 18, color: cs.onSurfaceVariant),
+                child: Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: cs.onSurfaceVariant,
+                ),
               ),
             ),
           ],
