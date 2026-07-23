@@ -1,18 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Licenses collection — admin access from web
+    // Licenses collection — stores license keys AND trial device records.
+    // License key docs: "CNPO-K7ZM-2XN4-PQ9R"
+    // Trial device docs: "trial:{deviceId}" with _type='trial_device'
     // IMPORTANT: In production, add authentication!
-    match /licenses/{licenseId} {
+    match /licenses/{docId} {
       allow read, write: if true; // TODO: Add auth check before going public
-    }
-
-    // Trial devices collection — prevents repeat 14-day trials on the same device
-    // Mobile app can create/read; admin panel can delete (for legitimate resets)
-    match /trial_devices/{deviceId} {
-      allow read: if true;        // App checks if device already used trial
-      allow create: if true;      // App registers device when trial starts
-      allow update, delete: if true; // Admin panel manages resets (TODO: auth)
     }
   }
 }

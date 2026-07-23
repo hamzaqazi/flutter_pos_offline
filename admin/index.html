@@ -282,7 +282,13 @@ async function loadLicenses() {
     const snapshot = await getDocs(licensesRef);
     allLicenses = [];
     snapshot.forEach(d => {
-      allLicenses.push({ key: d.id, ...d.data() });
+      const data = d.data();
+      // Trial device records have _type='trial_device' — store separately
+      if (data._type === 'trial_device') {
+        allTrialDevices.push({ deviceId: d.id.replace('trial:', ''), ...data });
+      } else {
+        allLicenses.push({ key: d.id, ...data });
+      }
     });
     renderStats();
     renderLicenses();
@@ -485,17 +491,13 @@ window.showToast = function(msg) {
 let allTrialDevices = [];
 
 // ── Load Trial Devices ──
+// Trial device records are stored in the 'licenses' collection with
+// document IDs like 'trial:{deviceId}' and _type='trial_device'.
+// They're already extracted during loadLicenses(), so this just renders them.
 async function loadTrialDevices() {
-  try {
-    const snapshot = await getDocs(collection(db, "trial_devices"));
-    allTrialDevices = [];
-    snapshot.forEach(d => {
-      allTrialDevices.push({ deviceId: d.id, ...d.data() });
-    });
-    renderTrialDevices();
-  } catch (e) {
-    showToast(`❌ Error loading trial devices: ${e.message}`);
-  }
+  // Trial devices are loaded alongside licenses in loadLicenses()
+  // No separate query needed — just render what we already have
+  renderTrialDevices();
 }
 
 // ── Render Trial Devices Table ──
@@ -527,7 +529,8 @@ window.deleteTrialDevice = async function(deviceId) {
   if (!confirm(`Delete trial record for device ${deviceId}?
 This will allow the device to start a new 14-day trial.`)) return;
   try {
-    await deleteDoc(doc(db, "trial_devices", deviceId));
+    // Trial records are stored as 'trial:{deviceId}' in the licenses collection
+    await deleteDoc(doc(db, "licenses", `trial:${deviceId}`));
     allTrialDevices = allTrialDevices.filter(t => t.deviceId !== deviceId);
     renderTrialDevices();
     showToast(`✅ Trial record deleted — device can now start a new trial`);
