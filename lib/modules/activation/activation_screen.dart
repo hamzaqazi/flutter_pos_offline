@@ -65,7 +65,10 @@ class _ActivationScreenState extends State<ActivationScreen> {
       setState(() => _error = 'Please enter a license key');
       return;
     }
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
     final result = await LicenseService.validateLicense(key);
     if (!mounted) return;
@@ -105,11 +108,17 @@ class _ActivationScreenState extends State<ActivationScreen> {
       return;
     }
     if (!_isValidPakistaniPhone(phone)) {
-      setState(() => _phoneError = 'Enter a valid Pakistani number (e.g. 0315-3507075)');
+      setState(
+        () =>
+            _phoneError = 'Enter a valid Pakistani number (e.g. 0315-3507075)',
+      );
       return;
     }
 
-    setState(() { _phoneLoading = true; _phoneError = null; });
+    setState(() {
+      _phoneLoading = true;
+      _phoneError = null;
+    });
 
     // Re-check Firestore eligibility before starting
     final eligible = await LicenseService.checkDeviceTrialEligibility();
@@ -179,7 +188,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       ),
                       child: const Center(
                         child: Image(
-                          image: AssetImage('lib/assets/images/cn_pos_logo_rm.png'),
+                          image: AssetImage(
+                            'lib/assets/images/cn_pos_logo_rm.png',
+                          ),
                           width: 80,
                           height: 80,
                         ),
@@ -205,30 +216,50 @@ class _ActivationScreenState extends State<ActivationScreen> {
                     const SizedBox(height: AppSpacing.xxl),
 
                     // ── Trial Expired Banner ──
-                    if (LicenseService.trialStartDate != null && !LicenseService.isTrialActive && !LicenseService.isActivated)
+                    if (LicenseService.trialStartDate != null &&
+                        !LicenseService.isTrialActive &&
+                        !LicenseService.isActivated)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(AppSpacing.lg),
                         margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
+                          border: Border.all(
+                            color: AppColors.warning.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Column(
                           children: [
-                            Row(children: [
-                              Icon(Icons.timer_off_outlined, color: AppColors.warning, size: 24),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(child: Text('Free Trial Expired',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w800, color: AppColors.warning))),
-                            ]),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.timer_off_outlined,
+                                  color: AppColors.warning,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    'Free Trial Expired',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.warning,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: AppSpacing.sm),
                             Text(
                               'Your 14-day free trial has ended. Activate a license to continue using all features, or continue with the free plan (${LicenseService.freeMaxProducts} products max).',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.warning.withValues(alpha: 0.9), height: 1.5),
+                                color: AppColors.warning.withValues(alpha: 0.9),
+                                height: 1.5,
+                              ),
                             ),
                           ],
                         ),
@@ -242,30 +273,60 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                         decoration: BoxDecoration(
                           color: AppColors.danger.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
+                          border: Border.all(
+                            color: AppColors.danger.withValues(alpha: 0.4),
+                          ),
                         ),
                         child: Column(
                           children: [
-                            Row(children: [
-                              Icon(Icons.warning_amber_rounded, color: AppColors.danger, size: 24),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(child: Text('License Deactivated',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w800, color: AppColors.danger))),
-                            ]),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: AppColors.danger,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    'License Deactivated',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.danger,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: AppSpacing.sm),
-                            Text(LicenseService.deactivationReason,
+                            Text(
+                              LicenseService.deactivationReason,
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.danger, height: 1.5)),
+                                color: AppColors.danger,
+                                height: 1.5,
+                              ),
+                            ),
                             const SizedBox(height: AppSpacing.md),
-                            Row(children: [
-                              Icon(Icons.call, size: 14, color: AppColors.danger),
-                              const SizedBox(width: 4),
-                              Text('Contact: 0315-3507075',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: AppColors.danger, fontWeight: FontWeight.w700)),
-                            ]),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.call,
+                                  size: 14,
+                                  color: AppColors.danger,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Contact: 0315-3507075',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.danger,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -276,33 +337,52 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       if (_trialEligible && !LicenseService.isActivated)
                         Card(
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusLg,
+                            ),
                           ),
                           child: InkWell(
                             onTap: () => setState(() => _step = 'phone'),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusLg,
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(AppSpacing.xl),
                               child: Column(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.seed.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
                                     ),
-                                    child: Icon(Icons.celebration_outlined,
-                                      color: AppColors.seed, size: 40),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.seed.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.celebration_outlined,
+                                      color: AppColors.seed,
+                                      size: 40,
+                                    ),
                                   ),
                                   const SizedBox(height: AppSpacing.md),
-                                  Text('Try Free for 14 Days',
+                                  Text(
+                                    'Try Free for 14 Days',
                                     style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.w800, color: AppColors.seed)),
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.seed,
+                                    ),
+                                  ),
                                   const SizedBox(height: AppSpacing.xs),
                                   Text(
                                     'Full access to all Premium features.\nNo credit card required — just verify your phone number.',
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: cs.onSurfaceVariant, height: 1.5),
+                                      color: cs.onSurfaceVariant,
+                                      height: 1.5,
+                                    ),
                                     textAlign: TextAlign.center,
                                   ),
                                   const SizedBox(height: AppSpacing.md),
@@ -310,20 +390,31 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                     width: double.infinity,
                                     height: 48,
                                     child: FilledButton.tonal(
-                                      onPressed: () => setState(() => _step = 'phone'),
+                                      onPressed: () =>
+                                          setState(() => _step = 'phone'),
                                       style: FilledButton.styleFrom(
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
                                         ),
                                       ),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
-                                          const Icon(Icons.rocket_launch_outlined, size: 18),
+                                          const Icon(
+                                            Icons.rocket_launch_outlined,
+                                            size: 18,
+                                          ),
                                           const SizedBox(width: AppSpacing.sm),
-                                          Text('Start Free Trial',
-                                            style: theme.textTheme.titleSmall?.copyWith(
-                                              fontWeight: FontWeight.w700)),
+                                          Text(
+                                            'Start Free Trial',
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -339,38 +430,55 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       // ── License Key Card ──
                       Card(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
+                          ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(AppSpacing.xl),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(children: [
-                                Container(
-                                  padding: const EdgeInsets.all(AppSpacing.sm),
-                                  decoration: BoxDecoration(
-                                    color: cs.primary.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.sm,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: cs.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.vpn_key_outlined,
+                                      color: cs.primary,
+                                      size: 20,
+                                    ),
                                   ),
-                                  child: Icon(Icons.vpn_key_outlined, color: cs.primary, size: 20),
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Text('Activate Your License',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700)),
-                              ]),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Text(
+                                    'Activate Your License',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: AppSpacing.md),
                               Text(
                                 'Enter the license key provided to you to activate this application. Each key is linked to your shop and device.',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant, height: 1.5),
+                                  color: cs.onSurfaceVariant,
+                                  height: 1.5,
+                                ),
                               ),
                               const SizedBox(height: AppSpacing.xl),
 
                               TextField(
                                 controller: _keyController,
-                                textCapitalization: TextCapitalization.characters,
+                                textCapitalization:
+                                    TextCapitalization.characters,
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 3,
@@ -379,10 +487,14 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'License Key',
                                   hintText: 'CNPO-XXXX-XXXX-XXXX',
-                                  prefixIcon: const Icon(Icons.vpn_key_outlined),
+                                  prefixIcon: const Icon(
+                                    Icons.vpn_key_outlined,
+                                  ),
                                   filled: true,
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd,
+                                    ),
                                   ),
                                 ),
                                 onSubmitted: (_) => _activate(),
@@ -394,18 +506,38 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(AppSpacing.md),
                                   decoration: BoxDecoration(
-                                    color: AppColors.danger.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
+                                    color: AppColors.danger.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm,
+                                    ),
+                                    border: Border.all(
+                                      color: AppColors.danger.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                    ),
                                   ),
                                   child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: AppColors.danger,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: AppSpacing.sm),
-                                      Expanded(child: Text(_error!,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: AppColors.danger, fontWeight: FontWeight.w600))),
+                                      Expanded(
+                                        child: Text(
+                                          _error!,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: AppColors.danger,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -420,19 +552,41 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                   onPressed: _loading ? null : _activate,
                                   style: FilledButton.styleFrom(
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
                                     ),
                                   ),
                                   child: _loading
-                                    ? const SizedBox(width: 24, height: 24,
-                                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                                    : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                        const Icon(Icons.verified_user_outlined, size: 20),
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Text('Activate License',
-                                          style: theme.textTheme.titleSmall?.copyWith(
-                                            color: cs.onPrimary, fontWeight: FontWeight.w700)),
-                                      ]),
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.verified_user_outlined,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(
+                                              width: AppSpacing.sm,
+                                            ),
+                                            Text(
+                                              'Activate License',
+                                              style: theme.textTheme.titleSmall
+                                                  ?.copyWith(
+                                                    color: cs.onPrimary,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
                                 ),
                               ),
 
@@ -446,15 +600,29 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                     '923153507075',
                                     'Hi! I want to buy a Codynest POS license key. My device ID: ${LicenseService.deviceId}',
                                   ),
-                                  icon: const Icon(Icons.chat_outlined, size: 18),
-                                  label: Text('Buy via WhatsApp',
+                                  // asset image with WhatsApp logo can also be used instead of icon
+                                  icon: Image.asset(
+                                    'lib/assets/images/whatsapp-logo1.png',
+                                    width: 28,
+                                    height: 28,
+
+                                    // color: const Color(0xFF25D366),
+                                  ),
+                                  label: Text(
+                                    'Buy via WhatsApp',
                                     style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w600)),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: const Color(0xFF25D366),
-                                    side: const BorderSide(color: Color(0xFF25D366)),
+                                    side: const BorderSide(
+                                      color: Color(0xFF25D366),
+                                    ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -469,7 +637,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                     if (_step == 'phone') ...[
                       Card(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
+                          ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -479,7 +649,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: TextButton.icon(
-                                  onPressed: () => setState(() => _step = 'choose'),
+                                  onPressed: () =>
+                                      setState(() => _step = 'choose'),
                                   icon: const Icon(Icons.arrow_back, size: 18),
                                   label: const Text('Back'),
                                   style: TextButton.styleFrom(
@@ -489,17 +660,25 @@ class _ActivationScreenState extends State<ActivationScreen> {
                               ),
                               const SizedBox(height: AppSpacing.md),
 
-                              Icon(Icons.phone_android_rounded,
-                                color: AppColors.seed, size: 48),
+                              Icon(
+                                Icons.phone_android_rounded,
+                                color: AppColors.seed,
+                                size: 48,
+                              ),
                               const SizedBox(height: AppSpacing.md),
-                              Text('Verify Your Phone Number',
+                              Text(
+                                'Verify Your Phone Number',
                                 style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w800)),
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
                               const SizedBox(height: AppSpacing.xs),
                               Text(
                                 'We need your phone number to set up your 14-day free trial. We may contact you via WhatsApp about your subscription.',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: cs.onSurfaceVariant, height: 1.5),
+                                  color: cs.onSurfaceVariant,
+                                  height: 1.5,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: AppSpacing.xl),
@@ -518,7 +697,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                   prefixText: '+92 ',
                                   filled: true,
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd,
+                                    ),
                                   ),
                                 ),
                                 onSubmitted: (_) => _startTrialWithPhone(),
@@ -530,18 +711,38 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(AppSpacing.md),
                                   decoration: BoxDecoration(
-                                    color: AppColors.danger.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.25)),
+                                    color: AppColors.danger.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm,
+                                    ),
+                                    border: Border.all(
+                                      color: AppColors.danger.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                    ),
                                   ),
                                   child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.error_outline, color: AppColors.danger, size: 18),
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: AppColors.danger,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: AppSpacing.sm),
-                                      Expanded(child: Text(_phoneError!,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: AppColors.danger, fontWeight: FontWeight.w600))),
+                                      Expanded(
+                                        child: Text(
+                                          _phoneError!,
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: AppColors.danger,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -553,23 +754,47 @@ class _ActivationScreenState extends State<ActivationScreen> {
                                 width: double.infinity,
                                 height: 52,
                                 child: FilledButton(
-                                  onPressed: _phoneLoading ? null : _startTrialWithPhone,
+                                  onPressed: _phoneLoading
+                                      ? null
+                                      : _startTrialWithPhone,
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.seed,
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
                                     ),
                                   ),
                                   child: _phoneLoading
-                                    ? const SizedBox(width: 24, height: 24,
-                                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                                    : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                        const Icon(Icons.rocket_launch_outlined, size: 20),
-                                        const SizedBox(width: AppSpacing.sm),
-                                        Text('Start 14-Day Free Trial',
-                                          style: theme.textTheme.titleSmall?.copyWith(
-                                            color: Colors.white, fontWeight: FontWeight.w700)),
-                                      ]),
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.rocket_launch_outlined,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(
+                                              width: AppSpacing.sm,
+                                            ),
+                                            Text(
+                                              'Start 14-Day Free Trial',
+                                              style: theme.textTheme.titleSmall
+                                                  ?.copyWith(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
                                 ),
                               ),
 
@@ -577,7 +802,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
                               Text(
                                 'Your trial starts immediately after verification.\nFull access to all Premium features for 14 days.',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant, height: 1.5),
+                                  color: cs.onSurfaceVariant,
+                                  height: 1.5,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -587,14 +814,20 @@ class _ActivationScreenState extends State<ActivationScreen> {
                     ],
 
                     // ── Continue with Free Plan ──
-                    if (LicenseService.trialStartDate != null && !LicenseService.isTrialActive && !LicenseService.isActivated)
+                    if (LicenseService.trialStartDate != null &&
+                        !LicenseService.isTrialActive &&
+                        !LicenseService.isActivated)
                       Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.sm),
                         child: TextButton(
                           onPressed: () => Get.offAllNamed('/dashboard'),
                           child: Text(
                             'Continue with Free Plan (${LicenseService.freeMaxProducts} products max)',
-                            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ),
@@ -610,17 +843,33 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         return Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
-                            color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            color: cs.surfaceContainerHighest.withValues(
+                              alpha: 0.4,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
-                          child: Row(children: [
-                            Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(child: Text(
-                              'Device: ${deviceId.length > 20 ? deviceId.substring(0, 20) : deviceId}...',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant, fontFamily: 'monospace', fontSize: 11))),
-                          ]),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.devices,
+                                size: 16,
+                                color: cs.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  'Device: ${deviceId.length > 20 ? deviceId.substring(0, 20) : deviceId}...',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    fontFamily: 'monospace',
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         );
                       },
                     ),
@@ -628,22 +877,43 @@ class _ActivationScreenState extends State<ActivationScreen> {
                     const SizedBox(height: AppSpacing.xl),
 
                     // ── Footer ──
-                    Column(children: [
-                      Text('Need help? Contact support',
-                        style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-                      const SizedBox(height: 4),
-                      Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
-                        const SizedBox(width: 4),
-                        Text('0315-3507075',
+                    Column(
+                      children: [
+                        Text(
+                          'Need help? Contact support',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant, fontWeight: FontWeight.w600)),
-                      ]),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text('Powered by Codynest.com',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.6), letterSpacing: 1)),
-                    ]),
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.call,
+                              size: 14,
+                              color: cs.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '0315-3507075',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          'Powered by Codynest.com',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

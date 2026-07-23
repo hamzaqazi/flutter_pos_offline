@@ -95,11 +95,7 @@ class PremiumGateIcon extends StatelessWidget {
                 color: AppColors.warning,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.lock,
-                size: 10,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.lock, size: 10, color: Colors.white),
             ),
           ),
         ],
@@ -131,11 +127,7 @@ class _LockedFeature extends StatelessWidget {
                 color: cs.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.lock_outline,
-                size: 48,
-                color: cs.primary,
-              ),
+              child: Icon(Icons.lock_outline, size: 48, color: cs.primary),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -198,12 +190,14 @@ class _TrialBanner extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: (isUrgent ? AppColors.warning : AppColors.seed)
-            .withValues(alpha: 0.1),
+        color: (isUrgent ? AppColors.warning : AppColors.seed).withValues(
+          alpha: 0.1,
+        ),
         border: Border(
           bottom: BorderSide(
-            color: (isUrgent ? AppColors.warning : AppColors.seed)
-                .withValues(alpha: 0.3),
+            color: (isUrgent ? AppColors.warning : AppColors.seed).withValues(
+              alpha: 0.3,
+            ),
           ),
         ),
       ),
@@ -412,40 +406,39 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
               ),
             ],
           ),
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: _keyController,
-              textCapitalization: TextCapitalization.characters,
-              decoration: InputDecoration(
-                hintText: 'XXXX-XXXX-XXXX-XXXX',
-                prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20),
-                filled: true,
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                errorText: _error,
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _keyController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              hintText: 'XXXX-XXXX-XXXX-XXXX',
+              prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20),
+              filled: true,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              onSubmitted: (_) => _activateKey(),
+              errorText: _error,
             ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              height: 44,
-              child: FilledButton(
-                onPressed: _loading ? null : _activateKey,
-                child: _loading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('Activate'),
-              ),
+            onSubmitted: (_) => _activateKey(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            height: 44,
+            child: FilledButton(
+              onPressed: _loading ? null : _activateKey,
+              child: _loading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Activate'),
             ),
+          ),
 
           const SizedBox(height: AppSpacing.lg),
 
@@ -491,7 +484,12 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.chat, size: 14, color: Colors.green[700]),
+                      // Icon(Icons.chat, size: 14, color: Colors.green[700]),
+                      Image.asset(
+                        'lib/assets/images/whatsapp-logo1.png',
+                        width: 14,
+                        height: 14,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'WhatsApp',
@@ -513,7 +511,7 @@ class _UpgradeSheetState extends State<_UpgradeSheet> {
 
   void _openWhatsApp(String plan) async {
     final success = await Launcher.openWhatsApp(
-      '923153507075',
+      '+923153507075',
       'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
     );
     if (!success && context.mounted) {

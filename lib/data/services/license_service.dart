@@ -122,8 +122,9 @@ class LicenseService {
       if (lastVerifiedStr != null) {
         final lastVerified = DateTime.tryParse(lastVerifiedStr);
         if (lastVerified != null) {
-          final daysSinceVerification =
-              DateTime.now().difference(lastVerified).inDays;
+          final daysSinceVerification = DateTime.now()
+              .difference(lastVerified)
+              .inDays;
           if (daysSinceVerification < offlineGraceDays) {
             return true;
           }
@@ -204,12 +205,12 @@ class LicenseService {
   static bool get trialJustExpired {
     final start = trialStartDate;
     if (start == null) return false;
-    final wasNotExpired = !(_box.get('trial_expired', defaultValue: false) as bool);
+    final wasNotExpired =
+        !(_box.get('trial_expired', defaultValue: false) as bool);
     final daysElapsed = DateTime.now().difference(start).inDays;
     final isNowExpired = daysElapsed >= trialDurationDays;
     return wasNotExpired && isNowExpired;
   }
-
 
   // =================== Trial Device Tracking (Firestore) ===================
 
@@ -480,7 +481,9 @@ class LicenseService {
         if (eligible == false) {
           // Device already used a trial — revoke this provisional one
           await markTrialAlreadyUsed();
-          debugPrint('⚠️ Provisional trial revoked — device already used trial');
+          debugPrint(
+            '⚠️ Provisional trial revoked — device already used trial',
+          );
           return false;
         }
         // Eligible or still offline — try to complete registration
@@ -546,8 +549,7 @@ class LicenseService {
       }
 
       // Save last verified timestamp for offline grace
-      await _box.put(
-          'license_lastVerified', DateTime.now().toIso8601String());
+      await _box.put('license_lastVerified', DateTime.now().toIso8601String());
 
       return true;
     } catch (e) {
@@ -569,8 +571,7 @@ class LicenseService {
     await _box.put('license_key', key);
     await _box.put('license_shopName', shopName);
     await _box.put('license_plan', plan);
-    await _box.put(
-        'license_lastVerified', DateTime.now().toIso8601String());
+    await _box.put('license_lastVerified', DateTime.now().toIso8601String());
     if (expiresAt != null) {
       await _box.put('license_expiresAt', expiresAt.toIso8601String());
     } else {
@@ -620,10 +621,9 @@ class LicenseService {
 
       if (registeredDevices.contains(currentDeviceId)) {
         registeredDevices.remove(currentDeviceId);
-        await FirebaseFirestore.instance
-            .collection('licenses')
-            .doc(key)
-            .update({'registeredDevices': registeredDevices});
+        await FirebaseFirestore.instance.collection('licenses').doc(key).update(
+          {'registeredDevices': registeredDevices},
+        );
       }
     } catch (e) {
       debugPrint('⚠️ Failed to unregister device: $e');
@@ -653,16 +653,16 @@ class LicenseService {
   static String get planDisplayWithEmoji {
     switch (plan) {
       case 'trial':
-        return '🎉 Free Trial';
+        return '🎁  Free Trial';
       case 'monthly':
-        return '⭐ Monthly';
+        return '📅  Monthly';
       case 'yearly':
-        return '⭐ Yearly';
+        return '🗓️  Yearly';
       case 'lifetime':
-        return '👑 Lifetime';
+        return '♾️  Lifetime';
       case 'free':
       default:
-        return '🆓 Free';
+        return '🎁  Free';
     }
   }
 
