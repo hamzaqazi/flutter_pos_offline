@@ -88,11 +88,13 @@ class LicenseService {
 
   /// Get the current plan type.
   /// Returns: "trial", "free", "monthly", "yearly", "lifetime"
+  /// Paid plan always supersedes trial — if user has an active license,
+  /// we show the paid plan regardless of whether trial is also running.
   static String get plan {
-    if (isTrialActive) return 'trial';
     if (isActivated) {
       return _box.get('license_plan', defaultValue: 'free') as String;
     }
+    if (isTrialActive) return 'trial';
     return 'free';
   }
 
@@ -102,12 +104,42 @@ class LicenseService {
   }
 
   /// Check if the user has premium access (paid plan OR active trial).
+  /// Paid plan always supersedes trial — if user has an active license,
+  /// we consider them premium via the paid plan, not the trial.
   static bool get isPremium {
-    // Trial gives full premium access
+    // Paid license overrides everything
+    if (isActivated) {
+      // Lifetime never expires
+      final p = storedPlan;
+      if (p == 'lifetime') return true;
+
+      // Monthly / yearly — check expiry
+      if (p == 'monthly' || p == 'yearly') {
+        if (isExpired) return false;
+
+        // Offline grace: trust premium for N days without verification
+        final lastVerifiedStr = _box.get('license_lastVerified') as String?;
+        if (lastVerifiedStr != null) {
+          final lastVerified = DateTime.tryParse(lastVerifiedStr);
+          if (lastVerified != null) {
+            final daysSinceVerification = DateTime.now()
+                .difference(lastVerified)
+                .inDays;
+            if (daysSinceVerification < offlineGraceDays) {
+              return true;
+            }
+          }
+        }
+        return p != 'free';
+      }
+      return false;
+    }
+
+    // No paid license — check trial
     if (isTrialActive) return true;
 
-    // No activation = no premium
-    if (!isActivated) return false;
+    // Neither paid nor trial
+    return false;
 
     // Lifetime never expires
     final p = storedPlan;
@@ -561,6 +593,9 @@ class LicenseService {
   // =================== Save / Deactivate ===================
 
   /// Save activation details locally.
+  /// Also expires the free trial (paid plan supersedes trial) and removes
+  /// the device from the trial_devices Firestore collection (they're now
+  /// a paying customer, tracked under the license's registeredDevices).
   static Future<void> _saveActivation({
     required String key,
     required String shopName,
@@ -577,6 +612,15 @@ class LicenseService {
     } else {
       await _box.delete('license_expiresAt');
     }
+
+    // ── Paid plan supersedes trial ──
+    // Expire the local trial so isTrialActive returns false
+    // (trial_startDate is kept so hasUsedTrial still works)
+    await _box.put('trial_expired', true);
+
+    // Remove this device from trial_devices Firestore
+    // (it's now tracked under the license's registeredDevices)
+    await _removeTrialDeviceRecord();
   }
 
   /// Deactivate this device (local wipe).
@@ -599,6 +643,22 @@ class LicenseService {
     await _box.delete('license_pin');
     await _box.delete('license_pinEnabled');
     // Keep trial_startDate so we know trial was used — don't delete it
+  }
+
+  /// Remove this device from Firestore trial_devices collection.
+  /// Called when a license is activated — the device is now tracked
+  /// under the license's registeredDevices, not under trial_devices.
+  static Future<void> _removeTrialDeviceRecord() async {
+    try {
+      final currentDeviceId = await deviceId;
+      await FirebaseFirestore.instance
+          .collection('trial_devices')
+          .doc(currentDeviceId)
+          .delete();
+      debugPrint('✅ Removed device from trial_devices (upgraded to paid license)');
+    } catch (e) {
+      debugPrint('⚠️ Failed to remove trial device record: $e');
+    }
   }
 
   /// Remove this device from Firestore registeredDevices list.
