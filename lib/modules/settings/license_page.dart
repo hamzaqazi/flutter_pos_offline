@@ -220,8 +220,8 @@ class _DetailsCard extends StatelessWidget {
               ),
             ],
 
-            // Trial start
-            if (LicenseService.trialStartDate != null) ...[
+            // Trial start — only show when actually on trial (not when paid plan is active)
+            if (LicenseService.isTrialActive && !LicenseService.isActivated) ...[
               const _DetailDivider(),
               _DetailRow(
                 icon: Icons.celebration_outlined,
