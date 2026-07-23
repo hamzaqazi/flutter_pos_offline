@@ -172,6 +172,10 @@ class ExportService {
       if (trialStart != null) {
         backup['trial_startDate'] = trialStart;
         backup['trial_expired'] = settingsBox.get('trial_expired', defaultValue: false);
+        final trialPhone = settingsBox.get('trial_customerPhone');
+        if (trialPhone != null) {
+          backup['trial_customerPhone'] = trialPhone;
+        }
       }
 
       // Active cashier

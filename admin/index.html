@@ -144,6 +144,7 @@ tr:hover { background: #fafafa; }
       <table>
         <thead>
           <tr>
+            <th>Phone Number</th>
             <th>Device ID</th>
             <th>Model</th>
             <th>Trial Started</th>
@@ -510,12 +511,22 @@ function renderTrialDevices() {
 
   tbody.innerHTML = allTrialDevices.map(t => {
     const startedAt = t.trialStartedAt ? formatDate(t.trialStartedAt) : 'Unknown';
+    const phone = t.customerPhone || '-';
+    const daysSinceStart = t.trialStartedAt ? Math.ceil((new Date() - (t.trialStartedAt.toDate ? t.trialStartedAt.toDate() : new Date(t.trialStartedAt))) / (1000*60*60*24)) : 0;
+    const remaining = (t.trialDurationDays || 14) - daysSinceStart;
+    const canWhatsApp = t.customerPhone && t.customerPhone !== '-';
+    const waLink = canWhatsApp ? `https://wa.me/${t.customerPhone}?text=${encodeURIComponent('Hi! 👋 This is a reminder from Codynest POS. Your 14-day free trial has ' + (remaining > 0 ? remaining + ' days remaining' : 'expired') + '. Would you like to upgrade to a Premium plan? Contact us at 0315-3507075 or reply to this message.')}` : '';
+
     return `<tr>
+      <td>${canWhatsApp
+        ? `<a href="${waLink}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;">${phone} 💬</a>`
+        : phone}</td>
       <td><span class="device-tag">${t.deviceId}</span></td>
       <td>${t.deviceModel || '-'}</td>
       <td>${startedAt}</td>
-      <td>${t.trialDurationDays || 14} days</td>
+      <td>${t.trialDurationDays || 14} days${remaining > 0 ? ` (${remaining} left)` : ' (expired)'}</td>
       <td>
+        ${canWhatsApp ? `<button class="btn btn-success btn-sm" onclick="window.open('${waLink}', '_blank')">💬 WhatsApp</button>` : ''}
         <button class="btn btn-danger btn-sm" onclick="deleteTrialDevice('${t.deviceId}')">🗑️ Delete</button>
       </td>
     </tr>`;

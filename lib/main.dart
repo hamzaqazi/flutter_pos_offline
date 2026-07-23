@@ -70,28 +70,23 @@ class _PosAppState extends State<PosApp> {
   }
 
   Future<void> _determineStartRoute() async {
-    // ── First install: check Firestore before starting trial ──
-    // Prevents repeat trials after clearing app data: the device ID is
-    // tracked in Firestore's `trial_devices` collection.
+    // ── First install: go to activation screen ──
+    // User must choose: Free Trial (with phone verification) or License Key.
+    // No auto-start trial — user must explicitly choose and verify phone.
     if (LicenseService.isFirstInstall) {
+      // Check Firestore to see if trial card should be shown
       final eligible = await LicenseService.checkDeviceTrialEligibility();
-
       if (eligible == false) {
         // Device already used a trial (data was cleared) — block repeat trial
         await LicenseService.markTrialAlreadyUsed();
         debugPrint('⚠️ Device already used trial — repeat trial blocked');
-        setState(() {
-          _initialRoute = Routes.activation;
-          _checking = false;
-        });
-        return;
       }
-
-      // Eligible (true) or offline (null) — start trial.
-      // If offline, trial is provisional and verified when online.
-      await LicenseService.startTrial();
-      debugPrint('🎉 First install — 14-day trial started'
-          '${eligible == null ? ' (provisional — offline)' : ''}');
+      // Always go to activation screen — user makes the choice
+      setState(() {
+        _initialRoute = Routes.activation;
+        _checking = false;
+      });
+      return;
     }
 
     // ── Check if trial just expired ──

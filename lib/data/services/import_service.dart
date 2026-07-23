@@ -194,6 +194,9 @@ class ImportService {
         // Backup has trial data but current doesn't — restore from backup
         await settingsBox.put('trial_startDate', backupTrialStart);
         await settingsBox.put('trial_expired', data['trial_expired'] ?? false);
+        if (data['trial_customerPhone'] != null) {
+          await settingsBox.put('trial_customerPhone', data['trial_customerPhone']);
+        }
       }
 
       // Reload all controllers
@@ -229,6 +232,8 @@ class ImportService {
       'license_deactivationReason',
       'trial_startDate',
       'trial_expired',
+      'trial_customerPhone',
+      'trial_registrationPending',
       'autoBackup_enabled',
       'autoBackup_frequency',
       'autoBackup_lastBackup',

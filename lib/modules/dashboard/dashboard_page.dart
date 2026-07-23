@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
@@ -115,6 +116,30 @@ class DashboardPage extends GetView<DashboardController> {
                                   child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                                 ),
                               ),
+                              // WhatsApp upgrade button (for urgent trials ≤5 days)
+                              if (isUrgent || days <= 5)
+                                SizedBox(
+                                  width: 96,
+                                  height: 32,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      final phone = LicenseService.trialCustomerPhone.isNotEmpty
+                                          ? LicenseService.trialCustomerPhone
+                                          : '923153507075';
+                                      Launcher.openWhatsApp(
+                                        phone,
+                                        'Hi! I want to upgrade my Codynest POS from trial to a Premium plan. My trial has $days days left.',
+                                      );
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                      foregroundColor: const Color(0xFF25D366),
+                                      side: const BorderSide(color: Color(0xFF25D366)),
+                                    ),
+                                    child: const Text('WhatsApp', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                                  ),
+                                ),
                             ],
                           ),
                         );
@@ -185,6 +210,26 @@ class DashboardPage extends GetView<DashboardController> {
                                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                               ),
                               child: const Text('Enter Key', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                          // WhatsApp upgrade button
+                          SizedBox(
+                            width: 96,
+                            height: 32,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Launcher.openWhatsApp(
+                                  '923153507075',
+                                  'Hi! I want to upgrade my Codynest POS from the Free plan to Premium. I currently have the Free plan (${LicenseService.freeMaxProducts} products max).',
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                foregroundColor: const Color(0xFF25D366),
+                                side: const BorderSide(color: Color(0xFF25D366)),
+                              ),
+                              child: const Text('WhatsApp', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                             ),
                           ),
                         ],

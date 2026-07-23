@@ -182,12 +182,16 @@ class LicenseService {
 
   /// Start the 14-day free trial.
   /// Also registers the device in Firestore to prevent repeat trials
-  /// after clearing app data.
-  static Future<void> startTrial() async {
+  /// after clearing app data. [customerPhone] is required for trial
+  /// verification — stored in Firestore for WhatsApp follow-up reminders.
+  static Future<void> startTrial({String customerPhone = ''}) async {
     await _box.put('trial_startDate', DateTime.now().toIso8601String());
     await _box.put('trial_expired', false);
+    if (customerPhone.isNotEmpty) {
+      await _box.put('trial_customerPhone', customerPhone);
+    }
     // Register device in Firestore to block repeat trials on this device
-    await registerTrialDevice();
+    await registerTrialDevice(customerPhone: customerPhone);
   }
 
   /// Mark the trial as expired (called when trial days run out).
@@ -246,7 +250,8 @@ class LicenseService {
 
   /// Register this device in Firestore as having used a trial.
   /// Prevents repeat trials on the same device after clearing app data.
-  static Future<void> registerTrialDevice() async {
+  /// [customerPhone] is stored for WhatsApp follow-up reminders.
+  static Future<void> registerTrialDevice({String customerPhone = ''}) async {
     try {
       final currentDeviceId = await deviceId;
       final deviceInfo = DeviceInfoPlugin();
@@ -259,14 +264,19 @@ class LicenseService {
         deviceModel = ios.utsname.machine;
       }
 
-      await FirebaseFirestore.instance
-          .collection('trial_devices')
-          .doc(currentDeviceId)
-          .set({
+      final docData = <String, dynamic>{
         'trialStartedAt': FieldValue.serverTimestamp(),
         'deviceModel': deviceModel,
         'trialDurationDays': trialDurationDays,
-      });
+      };
+      if (customerPhone.isNotEmpty) {
+        docData['customerPhone'] = customerPhone;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('trial_devices')
+          .doc(currentDeviceId)
+          .set(docData);
       debugPrint('✅ Trial device registered in Firestore: $currentDeviceId');
 
       // Clear pending flag if it was set
@@ -286,7 +296,13 @@ class LicenseService {
   /// Retry pending trial device registration (called when app goes online).
   static Future<void> retryTrialRegistration() async {
     if (!trialRegistrationPending) return;
-    await registerTrialDevice();
+    final phone = _box.get('trial_customerPhone', defaultValue: '') as String;
+    await registerTrialDevice(customerPhone: phone);
+  }
+
+  /// Get the phone number stored during trial registration.
+  static String get trialCustomerPhone {
+    return _box.get('trial_customerPhone', defaultValue: '') as String;
   }
 
   /// Mark that this device has already used a trial (from Firestore record).
