@@ -56,7 +56,7 @@ class SalesHistoryPage extends GetView<SalesController> {
         return Column(
           children: [
             // ---------- Summary banner ----------
-            Container(
+            AppAnimations.slideUp(child: Container(
               margin: const EdgeInsets.all(AppSpacing.lg),
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
@@ -164,6 +164,7 @@ class SalesHistoryPage extends GetView<SalesController> {
               ),
             ),
 
+            ),
             // ---------- Search bar ----------
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -326,7 +327,10 @@ class SalesHistoryPage extends GetView<SalesController> {
                   );
                   final saleNetProfit = sale.profit - saleProfitReversed;
 
-                  return Card(
+                  return AppAnimations.staggerItem(
+                    index: index,
+                    child: TapScale(
+                      child: Card(
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () {
@@ -645,6 +649,8 @@ class SalesHistoryPage extends GetView<SalesController> {
                           ],
                         ),
                       ),
+                    ),
+                    ),
                     ),
                   );
                 },

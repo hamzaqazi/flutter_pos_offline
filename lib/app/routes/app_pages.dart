@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/shell/app_shell.dart';
+import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/modules/activation/activation_screen.dart';
 import 'package:ad_shop_pos/modules/activation/pin_lock_screen.dart';
 import 'package:ad_shop_pos/modules/activation/pin_setup_screen.dart';
@@ -21,19 +22,84 @@ class AppPages {
   static final pages = [
     // Main shell — contains all 5 tab pages (Dashboard, Products, POS, Sales, Settings)
     GetPage(name: Routes.dashboard, page: () => const AppShell()),
-    // Non-tab pages (pushed on top of the shell)
-    GetPage(name: Routes.reports, page: () => const ReportsPage()),
-    GetPage(name: Routes.expenses, page: () => const ExpensesPage()),
-    GetPage(name: Routes.returns, page: () => const ReturnsPage()),
-    GetPage(name: Routes.customers, page: () => const CustomersPage()),
-    GetPage(name: Routes.staff, page: () => const StaffPage()),
-    GetPage(name: Routes.scanner, page: () => const BarcodeScannerPage()),
-    GetPage(name: Routes.lowStock, page: () => const LowStockPage()),
-    GetPage(name: Routes.activation, page: () => const ActivationScreen()),
-    GetPage(name: Routes.pinSetup, page: () => const PinSetupScreen()),
-    GetPage(name: Routes.pinLock, page: () => const PinLockScreen()),
-    GetPage(name: Routes.backupHistory, page: () => const BackupHistoryPage()),
-    GetPage(name: Routes.driveBackup, page: () => const DriveBackupPage()),
-    GetPage(name: Routes.license, page: () => const LicensePage()),
+    // Non-tab pages (pushed on top of the shell) — fadeIn transition for smooth navigation
+    GetPage(
+      name: Routes.reports,
+      page: () => const ReportsPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.expenses,
+      page: () => const ExpensesPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.returns,
+      page: () => const ReturnsPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.customers,
+      page: () => const CustomersPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.staff,
+      page: () => const StaffPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.scanner,
+      page: () => const BarcodeScannerPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.lowStock,
+      page: () => const LowStockPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.activation,
+      page: () => const ActivationScreen(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.pinSetup,
+      page: () => const PinSetupScreen(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.pinLock,
+      page: () => const PinLockScreen(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.backupHistory,
+      page: () => const BackupHistoryPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.driveBackup,
+      page: () => const DriveBackupPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.license,
+      page: () => const LicensePage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
   ];
 }

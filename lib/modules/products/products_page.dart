@@ -159,7 +159,7 @@ class ProductsPage extends GetView<ProductsController> {
                     crossAxisSpacing: AppSpacing.md,
                     mainAxisSpacing: AppSpacing.md,
                   ),
-                  itemBuilder: (_, index) => ProductCard(product: items[index]),
+                  itemBuilder: (_, index) => AppAnimations.staggerItem(index: index, child: ProductCard(product: items[index])),
                 );
               }),
             ),

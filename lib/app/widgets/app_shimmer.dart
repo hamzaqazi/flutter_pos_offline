@@ -139,3 +139,158 @@ class ShimmerStatCard extends StatelessWidget {
     );
   }
 }
+
+
+/// A list-tile-shaped shimmer placeholder.
+class ShimmerListTile extends StatelessWidget {
+  const ShimmerListTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppShimmer(
+      child: Card(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              ShimmerCircle(size: 44),
+              SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShimmerBlock(width: 140, height: 14),
+                    SizedBox(height: 6),
+                    ShimmerBlock(width: 100, height: 10),
+                  ],
+                ),
+              ),
+              ShimmerBlock(width: 60, height: 14),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A product-card-shaped shimmer placeholder for grids.
+class ShimmerProductCard extends StatelessWidget {
+  const ShimmerProductCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppShimmer(
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ShimmerBlock(
+                height: double.infinity,
+                borderRadius: 0,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.sm),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ShimmerBlock(width: 80, height: 12),
+                  SizedBox(height: 4),
+                  ShimmerBlock(width: 60, height: 16),
+                  SizedBox(height: 4),
+                  ShimmerBlock(width: 40, height: 10),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A banner-shaped shimmer placeholder for summary banners.
+class ShimmerBanner extends StatelessWidget {
+  const ShimmerBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppShimmer(
+      child: Card(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  ShimmerBlock(width: 60, height: 18),
+                  SizedBox(height: 4),
+                  ShimmerBlock(width: 40, height: 10),
+                ],
+              ),
+              Column(
+                children: [
+                  ShimmerBlock(width: 60, height: 18),
+                  SizedBox(height: 4),
+                  ShimmerBlock(width: 40, height: 10),
+                ],
+              ),
+              Column(
+                children: [
+                  ShimmerBlock(width: 60, height: 18),
+                  SizedBox(height: 4),
+                  ShimmerBlock(width: 40, height: 10),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A page-level shimmer loading skeleton — shows a list of shimmer tiles.
+class ShimmerListPage extends StatelessWidget {
+  const ShimmerListPage({super.key, this.tileCount = 6});
+
+  final int tileCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      itemCount: tileCount,
+      itemBuilder: (_, __) => const Padding(
+        padding: EdgeInsets.only(bottom: AppSpacing.sm),
+        child: ShimmerListTile(),
+      ),
+    );
+  }
+}
+
+/// A grid-level shimmer loading skeleton for product grids.
+class ShimmerGridPage extends StatelessWidget {
+  const ShimmerGridPage({super.key, this.tileCount = 6});
+
+  final int tileCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      itemCount: tileCount,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.65,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.md,
+      ),
+      itemBuilder: (_, __) => const ShimmerProductCard(),
+    );
+  }
+}

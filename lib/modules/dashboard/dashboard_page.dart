@@ -536,7 +536,8 @@ class _QuickActionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    return TapScale(
+      child: Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -567,6 +568,7 @@ class _QuickActionChip extends StatelessWidget {
             Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textTertiary),
           ]),
         ),
+      ),
       ),
     );
   }

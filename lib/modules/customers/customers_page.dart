@@ -94,7 +94,7 @@ class CustomersPage extends GetView<CustomersController> {
                     const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (_, index) {
                   final customer = items[index];
-                  return _CustomerTile(customer: customer);
+                  return AppAnimations.staggerItem(index: index, child: _CustomerTile(customer: customer));
                 },
               );
             }),
