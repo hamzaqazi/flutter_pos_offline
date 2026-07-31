@@ -212,14 +212,7 @@ class DashboardPage extends GetView<DashboardController> {
   // ── All-Time Overview ──
 
   Widget _buildAllTimeGrid(ThemeData theme, ColorScheme cs) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.md,
-      crossAxisSpacing: AppSpacing.md,
-      childAspectRatio: 1.35,
-      children: [
+    final cards = [
         AppStatCard(
           label: 'Products',
           value: controller.totalProducts.value.toString(),
@@ -275,21 +268,22 @@ class DashboardPage extends GetView<DashboardController> {
           color: const Color(0xFF8B5CF6),
           onTap: () => Get.toNamed('/returns'),
         ),
-      ],
+    ];
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: AppSpacing.md,
+      crossAxisSpacing: AppSpacing.md,
+      childAspectRatio: 1.35,
+      children: AppAnimations.staggerList(children: cards),
     );
   }
 
   // ── Quick Actions ──
 
   Widget _buildQuickActions(ThemeData theme, ColorScheme cs) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.sm,
-      crossAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 2.8,
-      children: [
+    final actions = [
         _QuickActionChip(
           icon: Icons.point_of_sale_rounded,
           label: 'POS',
@@ -340,7 +334,18 @@ class DashboardPage extends GetView<DashboardController> {
           color: AppColors.seed,
           onTap: () => Get.toNamed('/customers'),
         ),
-      ],
+    ];
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 2.8,
+      children: AppAnimations.staggerList(
+        children: actions,
+        staggerDuration: const Duration(milliseconds: 40),
+      ),
     );
   }
 
@@ -486,18 +491,23 @@ class _Header extends StatelessWidget {
           ]),
           const SizedBox(height: AppSpacing.lg),
           // ── Greeting ──
-          Text(
-            "Welcome back 👋",
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+          AppAnimations.slideUp(
+            child: Text(
+              "Welcome back 👋",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            "Here's your store at a glance",
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
+          AppAnimations.slideUp(
+            delay: const Duration(milliseconds: 80),
+            child: Text(
+              "Here's your store at a glance",
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
             ),
           ),
         ],
