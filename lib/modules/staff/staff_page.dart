@@ -19,7 +19,7 @@ class StaffPage extends GetView<StaffController> {
     return Scaffold(
       appBar: AppBar(title: const Text("Staff")),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddEditDialog(),
+        onPressed: () => _showAddEditDialog(controller),
         icon: const Icon(Icons.person_add_outlined),
         label: const Text("Add Staff"),
       ),
@@ -161,8 +161,10 @@ class StaffPage extends GetView<StaffController> {
     );
   }
 
-  void _showAddEditDialog([StaffModel? existing]) {
-    final isEdit = existing != null;
+}
+
+void _showAddEditDialog(StaffController controller, [StaffModel? existing]) {
+  final isEdit = existing != null;
     final nameController = TextEditingController(text: existing?.name ?? '');
     final phoneController = TextEditingController(text: existing?.phone ?? '');
     String selectedRole = existing?.role ?? 'Cashier';
@@ -217,7 +219,7 @@ class StaffPage extends GetView<StaffController> {
                     labelText: "Role",
                     prefixIcon: Icon(Icons.badge_outlined),
                   ),
-                  items: _roles
+                  items: StaffPage._roles
                       .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                       .toList(),
                   onChanged: (v) => selectedRole = v ?? 'Cashier',
@@ -284,7 +286,6 @@ class StaffPage extends GetView<StaffController> {
       ),
     );
   }
-}
 
 class _StaffTile extends StatelessWidget {
   final StaffModel member;
@@ -404,7 +405,7 @@ class _StaffTile extends StatelessWidget {
             PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'edit') {
-                  Get.find<StaffPage>()._showAddEditDialog(member);
+                  _showAddEditDialog(controller, member);
                 } else if (value == 'delete') {
                   Get.dialog(
                     AlertDialog(

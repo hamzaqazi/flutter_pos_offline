@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
@@ -23,7 +24,7 @@ class SalesHistoryPage extends GetView<SalesController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Sales History")),
+      appBar: AppShellAppBar(title: const Text("Sales History")),
       body: Obx(() {
         if (controller.sales.isEmpty) {
           return _EmptySales();
@@ -302,7 +303,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                   AppSpacing.lg,
                   0,
                   AppSpacing.lg,
-                  AppSpacing.lg,
+                  AppSpacing.navClearance,
                 ),
                 itemCount: sales.length,
                 separatorBuilder: (_, __) =>

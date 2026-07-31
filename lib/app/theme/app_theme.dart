@@ -32,28 +32,42 @@ class AppSpacing {
   static const double radiusLg = 16;
   static const double radiusXl = 20;
   static const double radiusFull = 9999;
+
+  /// Space reserved above the true screen bottom for the floating pill nav
+  /// bar (AppShell) — since it floats over content instead of docking and
+  /// reserving its own layout space, every tab page's scrollable content
+  /// and any docked bottom bars/FABs need this much clearance so they don't
+  /// end up hidden underneath it.
+  static const double navClearance = 110;
 }
 
 /// ── Colors ──
 /// Semantic color tokens. Primary is deep indigo for trust/professionalism.
 /// Accent is teal for secondary actions. All colors are WCAG AA compliant.
 class AppColors {
-  // ── Brand ──
-  static const Color seed = Color(0xFF4F46E5); // Indigo 600 — primary
-  static const Color seedLight = Color(0xFF818CF8); // Indigo 400
-  static const Color seedDark = Color(0xFF3730A3); // Indigo 800
-  static const Color accent = Color(0xFF0D9488); // Teal 600 — secondary
-  static const Color accentLight = Color(0xFF5EEAD4); // Teal 300
+  // ── Brand ── (Emerald + Gold — single accent family, per brand palette)
+  static const Color seed = Color(0xFF10B981); // Emerald 500 — primary
+  static const Color seedLight = Color(0xFFA7F3D0); // Emerald 200
+  static const Color seedDark = Color(0xFF064E3B); // Emerald 900
+  static const Color accent = Color(0xFF064E3B); // Emerald 900 — secondary tone
+  static const Color accentLight = Color(0xFFA7F3D0); // Emerald 200
 
   // ── Semantic ──
-  static const Color success = Color(0xFF16A34A); // Green 600
-  static const Color successLight = Color(0xFFDCFCE7); // Green 100
-  static const Color warning = Color(0xFFD97706); // Amber 600
+  static const Color success = Color(0xFF10B981); // Emerald 500
+  static const Color successLight = Color(0xFFECFDF5); // Emerald 50
+  static const Color warning = Color(0xFFFBBF24); // Gold/Amber 400
   static const Color warningLight = Color(0xFFFEF3C7); // Amber 100
   static const Color danger = Color(0xFFDC2626); // Red 600
   static const Color dangerLight = Color(0xFFFEE2E2); // Red 100
   static const Color info = Color(0xFF2563EB); // Blue 600
   static const Color infoLight = Color(0xFFDBEAFE); // Blue 100
+
+  // ── Extended (data-viz only) ──
+  // For KPI grids/charts that need more than one hue to stay scannable —
+  // never used for chrome (buttons, nav, primary actions). Keep this list
+  // short; the brand identity is still emerald + gold everywhere else.
+  static const Color violet = Color(0xFF8B5CF6);
+  static const Color rose = Color(0xFFEC4899);
 
   // ── Surfaces ──
   static const Color surfaceLight = Color(0xFFF8FAFC); // Slate 50

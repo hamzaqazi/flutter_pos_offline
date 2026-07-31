@@ -22,8 +22,8 @@ class AppStatCard extends StatelessWidget {
   final Color color;
   final String? tooltip;
   final VoidCallback? onTap;
-  final String? trend;       // e.g. "+12%"
-  final bool? trendUp;       // true = green, false = red, null = neutral
+  final String? trend; // e.g. "+12%"
+  final bool? trendUp; // true = green, false = red, null = neutral
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,10 @@ class AppStatCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.md,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -58,13 +61,16 @@ class AppStatCard extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: (trendUp == true
-                                ? AppColors.success
-                                : trendUp == false
+                        color:
+                            (trendUp == true
+                                    ? AppColors.success
+                                    : trendUp == false
                                     ? AppColors.danger
                                     : AppColors.textSecondary)
-                            .withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+                                .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXs,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -73,14 +79,14 @@ class AppStatCard extends StatelessWidget {
                             trendUp == true
                                 ? Icons.trending_up_rounded
                                 : trendUp == false
-                                    ? Icons.trending_down_rounded
-                                    : Icons.trending_flat_rounded,
+                                ? Icons.trending_down_rounded
+                                : Icons.trending_flat_rounded,
                             size: 12,
                             color: trendUp == true
                                 ? AppColors.success
                                 : trendUp == false
-                                    ? AppColors.danger
-                                    : AppColors.textSecondary,
+                                ? AppColors.danger
+                                : AppColors.textSecondary,
                           ),
                           const SizedBox(width: 2),
                           Text(
@@ -89,8 +95,8 @@ class AppStatCard extends StatelessWidget {
                               color: trendUp == true
                                   ? AppColors.success
                                   : trendUp == false
-                                      ? AppColors.danger
-                                      : AppColors.textSecondary,
+                                  ? AppColors.danger
+                                  : AppColors.textSecondary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -99,7 +105,7 @@ class AppStatCard extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
 
               // ── Value ──
               FittedBox(

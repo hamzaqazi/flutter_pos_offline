@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
@@ -21,7 +22,7 @@ class ProductsPage extends GetView<ProductsController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppShellAppBar(
         title: Builder(
           builder: (_) {
             if (LicenseService.isPremium) return const Text("Products");
@@ -83,10 +84,13 @@ class ProductsPage extends GetView<ProductsController> {
         ],
       ),
 
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddProductDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text("Add product"),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddProductDialog(context),
+          icon: const Icon(Icons.add),
+          label: const Text("Add product"),
+        ),
       ),
       body: Column(
           children: [
@@ -150,7 +154,8 @@ class ProductsPage extends GetView<ProductsController> {
                     AppSpacing.lg,
                     AppSpacing.lg,
                     AppSpacing.lg,
-                    AppSpacing.lg + 80, // Extra space for FAB above bottom nav
+                    // Floating nav clearance + room for the FAB above it
+                    AppSpacing.navClearance + AppSpacing.huge,
                   ),
                   itemCount: items.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

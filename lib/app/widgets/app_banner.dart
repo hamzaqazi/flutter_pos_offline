@@ -182,20 +182,10 @@ class AppBanner extends StatelessWidget {
     }
   }
 
-  Color get _typeBgColor {
-    switch (type) {
-      case AppBannerType.success:
-        return AppColors.successLight;
-      case AppBannerType.warning:
-        return AppColors.warningLight;
-      case AppBannerType.danger:
-        return AppColors.dangerLight;
-      case AppBannerType.info:
-        return AppColors.infoLight;
-      case AppBannerType.trial:
-        return AppColors.seed.withValues(alpha: 0.06);
-    }
-  }
+  // Tinted from the type color itself (not a fixed pastel swatch) so it
+  // adapts to dark mode automatically — a fixed light-mode pastel like
+  // warningLight sits as a glaring bright patch on a dark surface.
+  Color get _typeBgColor => _typeColor.withValues(alpha: 0.1);
 }
 
 enum AppBannerType { success, warning, danger, info, trial }

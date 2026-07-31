@@ -44,7 +44,7 @@ class ChartsTab extends GetView<ReportsController> {
             _ChartCard(
               title: "Staff Performance",
               icon: Icons.people_outline,
-              color: const Color(0xFF8B5CF6),
+              color: AppColors.violet,
               child: _StaffPerformance(controller: controller),
             ),
           ],

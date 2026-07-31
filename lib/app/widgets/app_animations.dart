@@ -133,61 +133,57 @@ class AppAnimations {
   }
 }
 
+// ── Page Transitions ──
 
-  // ── Page Transitions ──
+/// Fade-through page transition for non-tab routes.
+/// Usage: GetPage(customTransition: AppPageTransition(), transition: Transition.fadeIn)
+Widget fadeThroughTransition(Widget child, Animation<double> animation) {
+  return FadeTransition(
+    opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+    child: child,
+  );
+}
 
-  /// Fade-through page transition for non-tab routes.
-  /// Usage: GetPage(customTransition: AppPageTransition(), transition: Transition.fadeIn)
-  static Widget fadeThroughTransition(Widget child, Animation<double> animation) {
-    return FadeTransition(
-      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-      child: child,
-    );
-  }
+/// Slide-up page transition for non-tab routes.
+Widget slideUpTransition(Widget child, Animation<double> animation) {
+  final offsetAnimation = Tween<Offset>(
+    begin: const Offset(0, 0.08),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
 
-  /// Slide-up page transition for non-tab routes.
-  static Widget slideUpTransition(Widget child, Animation<double> animation) {
-    final offsetAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+  final fadeAnimation = CurvedAnimation(
+    parent: animation,
+    curve: Curves.easeOut,
+  );
 
-    final fadeAnimation = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOut,
-    );
+  return SlideTransition(
+    position: offsetAnimation,
+    child: FadeTransition(opacity: fadeAnimation, child: child),
+  );
+}
 
-    return SlideTransition(
-      position: offsetAnimation,
-      child: FadeTransition(opacity: fadeAnimation, child: child),
-    );
-  }
+/// Shared axis (horizontal) transition — like Material shared axis.
+Widget sharedAxisTransition(Widget child, Animation<double> animation) {
+  final offsetAnimation = Tween<Offset>(
+    begin: const Offset(0.05, 0),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
 
-  /// Shared axis (horizontal) transition — like Material shared axis.
-  static Widget sharedAxisTransition(Widget child, Animation<double> animation) {
-    final offsetAnimation = Tween<Offset>(
-      begin: const Offset(0.05, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+  final fadeAnimation = CurvedAnimation(
+    parent: animation,
+    curve: Curves.easeOut,
+  );
 
-    final fadeAnimation = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOut,
-    );
-
-    return SlideTransition(
-      position: offsetAnimation,
-      child: FadeTransition(opacity: fadeAnimation, child: child),
-    );
-  }
+  return SlideTransition(
+    position: offsetAnimation,
+    child: FadeTransition(opacity: fadeAnimation, child: child),
+  );
+}
 
 // ── Delay wrapper ──
 
 class _DelayAnimation extends StatefulWidget {
-  const _DelayAnimation({
-    required this.delay,
-    required this.child,
-  });
+  const _DelayAnimation({required this.delay, required this.child});
 
   final Duration delay;
   final Widget child;
@@ -217,7 +213,6 @@ class _DelayAnimationState extends State<_DelayAnimation> {
     return widget.child;
   }
 }
-
 
 // ═══════════════════════════════════════════════════════════════
 //  MICRO-INTERACTIONS — Tap scale, press feedback, etc.
@@ -252,11 +247,14 @@ class _TapScaleState extends State<TapScale>
     _controller = AnimationController(
       vsync: this,
       duration: widget.duration,
-      reverseDuration: Duration(milliseconds: (widget.duration.inMilliseconds * 0.6).round()),
+      reverseDuration: Duration(
+        milliseconds: (widget.duration.inMilliseconds * 0.6).round(),
+      ),
     );
-    _animation = Tween<double>(begin: 1.0, end: widget.scale).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 1.0,
+      end: widget.scale,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -275,10 +273,7 @@ class _TapScaleState extends State<TapScale>
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      child: ScaleTransition(
-        scale: _animation,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _animation, child: widget.child),
     );
   }
 }
@@ -308,16 +303,22 @@ class _AnimatedEntryState extends ImplicitlyAnimatedWidgetState<AnimatedEntry> {
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
-    _opacityTween = visitor(
-      _opacityTween,
-      widget.animate ? 1.0 : 1.0,
-      (dynamic value) => DoubleTween(begin: value as double? ?? 0.0),
-    ) as DoubleTween?;
-    _offsetTween = visitor(
-      _offsetTween,
-      widget.animate ? Offset.zero : Offset.zero,
-      (dynamic value) => Tween<Offset>(begin: value as Offset? ?? const Offset(0, 0.03)),
-    ) as Tween<Offset>?;
+    _opacityTween =
+        visitor(
+              _opacityTween,
+              widget.animate ? 1.0 : 1.0,
+              (dynamic value) => DoubleTween(begin: value as double? ?? 0.0),
+            )
+            as DoubleTween?;
+    _offsetTween =
+        visitor(
+              _offsetTween,
+              widget.animate ? Offset.zero : Offset.zero,
+              (dynamic value) => Tween<Offset>(
+                begin: value as Offset? ?? const Offset(0, 0.03),
+              ),
+            )
+            as Tween<Offset>?;
   }
 
   @override

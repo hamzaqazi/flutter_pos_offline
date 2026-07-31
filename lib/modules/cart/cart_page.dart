@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
@@ -26,7 +27,7 @@ class CartPage extends GetView<CartController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppShellAppBar(
         title: const Text("Cart"),
         actions: [
           Obx(() {
@@ -110,13 +111,18 @@ class CartPage extends GetView<CartController> {
                       },
                     ),
                   ),
-                  _SummaryBar(
-                    total: controller.totalAmount,
-                    subtotal: controller.subtotalAmount,
-                    tax: controller.taxAmount,
-                    savings: controller.totalSavings,
-                    itemCount: controller.totalItems,
-                    onCheckout: () => _checkout(context),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: AppSpacing.navClearance,
+                    ),
+                    child: _SummaryBar(
+                      total: controller.totalAmount,
+                      subtotal: controller.subtotalAmount,
+                      tax: controller.taxAmount,
+                      savings: controller.totalSavings,
+                      itemCount: controller.totalItems,
+                      onCheckout: () => _checkout(context),
+                    ),
                   ),
                 ],
               );
