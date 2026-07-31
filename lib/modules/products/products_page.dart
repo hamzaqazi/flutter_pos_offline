@@ -80,8 +80,8 @@ class ProductsPage extends GetView<ProductsController> {
             },
           ),
         ],
-        ),
       ),
+
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddProductDialog(context),
         icon: const Icon(Icons.add),
@@ -91,70 +91,76 @@ class ProductsPage extends GetView<ProductsController> {
         currentRoute: '/products',
         child: Column(
           children: [
-          // ---------- Search with SKU scan icon ----------
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              AppSpacing.sm,
-            ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search by name, brand, SKU or barcode...",
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: Obx(() {
-                  final query = controller.searchQuery.value;
-                  if (query.isEmpty) return const SizedBox.shrink();
-                  return IconButton(
-                    icon: const Icon(Icons.clear, size: 20),
-                    onPressed: () => controller.searchQuery.value = '',
-                  );
-                }),
+            // ---------- Search with SKU scan icon ----------
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.sm,
               ),
-              onChanged: (value) => controller.searchQuery.value = value,
-            ),
-          ),
-
-          // ---------- Category filter ----------
-          SizedBox(
-            height: 44,
-            child: Obx(() {
-              final cats = ['All', ...Get.find<CategoryController>().categoryNames];
-              return ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                itemCount: cats.length,
-                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-                itemBuilder: (_, i) => _categoryChip(cats[i], cs),
-              );
-            }),
-          ),
-
-          // ---------- Grid ----------
-          Expanded(
-            child: Obx(() {
-              final items = controller.filteredProducts;
-              if (items.isEmpty) {
-                return _EmptyState(
-                  hasProducts: controller.products.isNotEmpty,
-                );
-              }
-              return GridView.builder(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: items.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.65,
-                  crossAxisSpacing: AppSpacing.md,
-                  mainAxisSpacing: AppSpacing.md,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: "Search by name, brand, SKU or barcode...",
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: Obx(() {
+                    final query = controller.searchQuery.value;
+                    if (query.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () => controller.searchQuery.value = '',
+                    );
+                  }),
                 ),
-                itemBuilder: (_, index) =>
-                    ProductCard(product: items[index]),
-              );
-            }),
-          ),
-        ],
+                onChanged: (value) => controller.searchQuery.value = value,
+              ),
+            ),
+
+            // ---------- Category filter ----------
+            SizedBox(
+              height: 44,
+              child: Obx(() {
+                final cats = [
+                  'All',
+                  ...Get.find<CategoryController>().categoryNames,
+                ];
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
+                  itemCount: cats.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: AppSpacing.sm),
+                  itemBuilder: (_, i) => _categoryChip(cats[i], cs),
+                );
+              }),
+            ),
+
+            // ---------- Grid ----------
+            Expanded(
+              child: Obx(() {
+                final items = controller.filteredProducts;
+                if (items.isEmpty) {
+                  return _EmptyState(
+                    hasProducts: controller.products.isNotEmpty,
+                  );
+                }
+                return GridView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  itemCount: items.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.65,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                  ),
+                  itemBuilder: (_, index) => ProductCard(product: items[index]),
+                );
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -185,7 +191,8 @@ class ProductsPage extends GetView<ProductsController> {
     final purchasePriceController = TextEditingController();
     final discountController = TextEditingController();
     final stockController = TextEditingController();
-    String selectedCategory = Get.find<CategoryController>().categoryNames.firstOrNull ?? "General";
+    String selectedCategory =
+        Get.find<CategoryController>().categoryNames.firstOrNull ?? "General";
 
     // Auto-generate SKU when category changes
     void updateAutoSku(String category) {
@@ -213,10 +220,12 @@ class ProductsPage extends GetView<ProductsController> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusSm),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
                           child: Icon(
                             Icons.add_box_outlined,
@@ -224,8 +233,7 @@ class ProductsPage extends GetView<ProductsController> {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
-                        Text("Add Product",
-                            style: theme.textTheme.titleLarge),
+                        Text("Add Product", style: theme.textTheme.titleLarge),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -292,7 +300,8 @@ class ProductsPage extends GetView<ProductsController> {
                         const SizedBox(width: AppSpacing.sm),
                         IconButton.outlined(
                           onPressed: () async {
-                            final result = await BarcodeScannerHelper.scanAndLookupRaw();
+                            final result =
+                                await BarcodeScannerHelper.scanAndLookupRaw();
                             if (result != null && result.isNotEmpty) {
                               setState(() => barcodeController.text = result);
                             }
@@ -363,12 +372,13 @@ class ProductsPage extends GetView<ProductsController> {
                         labelText: "Category",
                         prefixIcon: Icon(Icons.category_outlined),
                       ),
-                      items: Get.find<CategoryController>()
-                          .categoryNames
-                          .map((name) => DropdownMenuItem(
-                                value: name,
-                                child: Text(name),
-                              ))
+                      items: Get.find<CategoryController>().categoryNames
+                          .map(
+                            (name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(name),
+                            ),
+                          )
                           .toList(),
                       onChanged: (value) {
                         setState(() => selectedCategory = value!);
@@ -400,8 +410,7 @@ class ProductsPage extends GetView<ProductsController> {
                               }
 
                               final discountVal =
-                                  double.tryParse(discountController.text) ??
-                                      0;
+                                  double.tryParse(discountController.text) ?? 0;
                               if (discountVal < 0 || discountVal > 100) {
                                 Get.snackbar(
                                   "Invalid discount",
@@ -419,9 +428,11 @@ class ProductsPage extends GetView<ProductsController> {
                                   category: selectedCategory,
                                   price:
                                       double.tryParse(priceController.text) ??
-                                          0,
-                                  purchasePrice: double.tryParse(
-                                          purchasePriceController.text) ??
+                                      0,
+                                  purchasePrice:
+                                      double.tryParse(
+                                        purchasePriceController.text,
+                                      ) ??
                                       0,
                                   discount: discountVal,
                                   stock:
