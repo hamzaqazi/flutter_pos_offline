@@ -820,7 +820,7 @@ class _ActivationScreenState extends State<ActivationScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.sm),
                         child: TextButton(
-                          onPressed: () => Get.offAllNamed('/dashboard'),
+                          onPressed: () => Get.offAllNamed('/'),
                           child: Text(
                             'Continue with Free Plan (${LicenseService.freeMaxProducts} products max)',
                             style: TextStyle(

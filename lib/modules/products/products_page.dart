@@ -3,8 +3,8 @@ import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
-import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:get/get.dart';
 
@@ -45,7 +45,7 @@ class ProductsPage extends GetView<ProductsController> {
                   clipBehavior: Clip.none,
                   children: [
                     IconButton.filledTonal(
-                      onPressed: () => Get.toNamed('/cart'),
+                      onPressed: () => ShellController.to.goCart(),
                       icon: const Icon(Icons.shopping_cart_outlined),
                     ),
                     if (cart.cartItems.isNotEmpty)
@@ -87,9 +87,7 @@ class ProductsPage extends GetView<ProductsController> {
         icon: const Icon(Icons.add),
         label: const Text("Add product"),
       ),
-      body: AppShell(
-        currentRoute: '/products',
-        child: Column(
+      body: Column(
           children: [
             // ---------- Search with SKU scan icon ----------
             Padding(
@@ -147,7 +145,12 @@ class ProductsPage extends GetView<ProductsController> {
                   );
                 }
                 return GridView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg + 80, // Extra space for FAB above bottom nav
+                  ),
                   itemCount: items.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -161,7 +164,6 @@ class ProductsPage extends GetView<ProductsController> {
             ),
           ],
         ),
-      ),
     );
   }
 

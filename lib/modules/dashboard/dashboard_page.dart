@@ -6,8 +6,8 @@ import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
-import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
@@ -26,10 +26,9 @@ class DashboardPage extends GetView<DashboardController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      body: AppShell(
-        currentRoute: '/',
-        child: SafeArea(
-          child: CustomScrollView(
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
           slivers: [
             // ---------- Gradient header ----------
             SliverToBoxAdapter(child: _Header(cs: cs)),
@@ -517,14 +516,14 @@ class DashboardPage extends GetView<DashboardController> {
                           value: controller.totalProducts.value.toString(),
                           icon: Icons.inventory_2_outlined,
                           color: AppColors.seed,
-                          onTap: () => Get.toNamed('/products'),
+                          onTap: () => ShellController.to.goProducts(),
                         ),
                         _StatCard(
                           label: "Sales",
                           value: controller.totalSales.value.toString(),
                           icon: Icons.receipt_long_outlined,
                           color: AppColors.accent,
-                          onTap: () => Get.toNamed('/sales'),
+                          onTap: () => ShellController.to.goSales(),
                         ),
                         _StatCard(
                           label: "Revenue",
@@ -590,7 +589,7 @@ class DashboardPage extends GetView<DashboardController> {
                     title: "Browse products",
                     subtitle: "View catalog & add items to cart",
                     color: AppColors.seed,
-                    onTap: () => Get.toNamed('/products'),
+                    onTap: () => ShellController.to.goProducts(),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _ActionTile(
@@ -598,7 +597,7 @@ class DashboardPage extends GetView<DashboardController> {
                     title: "Open cart",
                     subtitle: "Review items & checkout",
                     color: AppColors.accent,
-                    onTap: () => Get.toNamed('/cart'),
+                    onTap: () => ShellController.to.goCart(),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _ActionTile(
@@ -617,7 +616,7 @@ class DashboardPage extends GetView<DashboardController> {
                     title: "Sales history",
                     subtitle: "Past receipts & profit reports",
                     color: AppColors.success,
-                    onTap: () => Get.toNamed('/sales'),
+                    onTap: () => ShellController.to.goSales(),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _ActionTile(
@@ -641,7 +640,7 @@ class DashboardPage extends GetView<DashboardController> {
                     title: "Settings",
                     subtitle: "Shop info, tax, receipt & currency settings",
                     color: cs.onSurfaceVariant,
-                    onTap: () => Get.toNamed('/settings'),
+                    onTap: () => ShellController.to.goSettings(),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _ActionTile(
@@ -736,7 +735,6 @@ class DashboardPage extends GetView<DashboardController> {
             ),
           ],
         ),
-      ),
       ),
     );
   }
@@ -849,7 +847,7 @@ class _Header extends StatelessWidget {
                     ),
                     // settings button
                     IconButton(
-                      onPressed: () => Get.toNamed('/settings'),
+                      onPressed: () => ShellController.to.goSettings(),
                       icon: const Icon(
                         Icons.settings_outlined,
                         color: Colors.white,

@@ -4,7 +4,6 @@ import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/returns/return_dialog.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
-import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
@@ -24,9 +23,7 @@ class SalesHistoryPage extends GetView<SalesController> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Sales History")),
-      body: AppShell(
-        currentRoute: '/sales',
-        child: Obx(() {
+      body: Obx(() {
         if (controller.sales.isEmpty) {
           return _EmptySales();
         }
@@ -655,7 +652,6 @@ class SalesHistoryPage extends GetView<SalesController> {
           ],
         );
       }),
-      ),
     );
   }
 }

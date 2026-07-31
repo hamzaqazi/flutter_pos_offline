@@ -10,7 +10,6 @@ import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
-import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -55,9 +54,7 @@ class CartPage extends GetView<CartController> {
           const SizedBox(width: AppSpacing.sm),
         ],
       ),
-      body: AppShell(
-        currentRoute: '/cart',
-        child: Column(
+      body: Column(
           children: [
             // Held carts banner (always visible when carts are held, even with empty cart)
             Obx(() {
@@ -166,7 +163,6 @@ class CartPage extends GetView<CartController> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -1108,7 +1104,7 @@ class _EmptyCart extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xl),
             FilledButton.icon(
-              onPressed: () => Get.toNamed('/products'),
+              onPressed: () => ShellController.to.goProducts(),
               icon: const Icon(Icons.storefront_outlined),
               label: const Text("Browse products"),
               style: FilledButton.styleFrom(minimumSize: const Size(220, 52)),
