@@ -1,9 +1,10 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:ad_shop_pos/app/utils/launcher.dart';
 
 class LicensePage extends StatelessWidget {
   const LicensePage({super.key});
@@ -20,39 +21,36 @@ class LicensePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Plan Card ──
+            // ── Plan Header Card ──
             _PlanHeader(),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxl),
 
             // ── License Details ──
-            Text(
-              'License Details',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+            AppSectionHeader(
+              title: 'License Details',
+              subtitle: 'Your current license information',
             ),
             const SizedBox(height: AppSpacing.md),
             _DetailsCard(),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxl),
 
-            // ── Plan Comparison ──
-            Text(
-              'Available Plans',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+            // ── Available Plans ──
+            AppSectionHeader(
+              title: 'Available Plans',
+              subtitle: 'Upgrade to unlock all features',
             ),
             const SizedBox(height: AppSpacing.md),
             _PlanComparisonCards(),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxl),
 
             // ── Actions ──
             if (LicenseService.isActivated) _DeactivateButton(),
             if (!LicenseService.isPaidPlan) _UpgradeSection(),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xxl),
 
             // ── Support ──
             _SupportCard(),
+            const SizedBox(height: AppSpacing.huge),
           ],
         ),
       ),
@@ -73,7 +71,7 @@ class _PlanHeader extends StatelessWidget {
     final isTrial = LicenseService.isTrialActive;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.all(AppSpacing.xxl),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -96,15 +94,14 @@ class _PlanHeader extends StatelessWidget {
             child: Icon(
               isPremium
                   ? (LicenseService.storedPlan == 'lifetime'
-                        ? Icons.workspace_premium
-                        : Icons.verified)
+                      ? Icons.workspace_premium
+                      : Icons.verified)
                   : Icons.lock_outline,
               size: 36,
               color: Colors.white,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-
           // Plan name
           Text(
             LicenseService.planDisplayWithEmoji,
@@ -114,7 +111,6 @@ class _PlanHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-
           // Subtitle
           if (isTrial)
             Text(
@@ -149,9 +145,6 @@ class _PlanHeader extends StatelessWidget {
 class _DetailsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -159,7 +152,7 @@ class _DetailsCard extends StatelessWidget {
           children: [
             // Shop Name
             if (LicenseService.shopName.isNotEmpty)
-              _DetailRow(
+              AppDetailRow(
                 icon: Icons.store_outlined,
                 label: 'Shop Name',
                 value: LicenseService.shopName,
@@ -167,18 +160,18 @@ class _DetailsCard extends StatelessWidget {
 
             // License Key
             if (LicenseService.isActivated) ...[
-              if (LicenseService.shopName.isNotEmpty) const _DetailDivider(),
-              _DetailRow(
+              if (LicenseService.shopName.isNotEmpty) const AppDetailDivider(),
+              AppDetailRow(
                 icon: Icons.vpn_key_outlined,
                 label: 'License Key',
                 value: LicenseService.licenseKey,
                 monospace: true,
               ),
-              const _DetailDivider(),
+              const AppDetailDivider(),
             ],
 
             // Plan
-            _DetailRow(
+            AppDetailRow(
               icon: Icons.card_membership_outlined,
               label: 'Plan',
               value: LicenseService.planDisplayName,
@@ -186,33 +179,31 @@ class _DetailsCard extends StatelessWidget {
 
             // Expiry
             if (LicenseService.expiresAt != null) ...[
-              const _DetailDivider(),
-              Builder(
-                builder: (_) {
-                  final exp = LicenseService.expiresAt!;
-                  final days = LicenseService.daysUntilExpiry ?? 0;
-                  final isWarning = days <= 30;
-                  final isCritical = days <= 7;
-                  final color = isCritical
-                      ? AppColors.danger
-                      : isWarning
-                      ? AppColors.warning
-                      : AppColors.success;
-                  return _DetailRow(
-                    icon: Icons.event_outlined,
-                    label: 'Expires',
-                    value: '${_formatDate(exp)} ($days days left)',
-                    valueColor: color,
-                  );
-                },
-              ),
+              const AppDetailDivider(),
+              Builder(builder: (_) {
+                final exp = LicenseService.expiresAt!;
+                final days = LicenseService.daysUntilExpiry ?? 0;
+                final isWarning = days <= 30;
+                final isCritical = days <= 7;
+                final color = isCritical
+                    ? AppColors.danger
+                    : isWarning
+                    ? AppColors.warning
+                    : AppColors.success;
+                return AppDetailRow(
+                  icon: Icons.event_outlined,
+                  label: 'Expires',
+                  value: '${_formatDate(exp)} ($days days left)',
+                  valueColor: color,
+                );
+              }),
             ],
 
             // Lifetime
             if (LicenseService.storedPlan == 'lifetime' &&
                 LicenseService.isActivated) ...[
-              const _DetailDivider(),
-              const _DetailRow(
+              const AppDetailDivider(),
+              const AppDetailRow(
                 icon: Icons.all_inclusive,
                 label: 'Expires',
                 value: 'Never — Lifetime License',
@@ -220,10 +211,10 @@ class _DetailsCard extends StatelessWidget {
               ),
             ],
 
-            // Trial start — only show when actually on trial (not when paid plan is active)
+            // Trial start
             if (LicenseService.isTrialActive && !LicenseService.isActivated) ...[
-              const _DetailDivider(),
-              _DetailRow(
+              const AppDetailDivider(),
+              AppDetailRow(
                 icon: Icons.celebration_outlined,
                 label: 'Trial Started',
                 value: _formatDate(LicenseService.trialStartDate!),
@@ -231,12 +222,12 @@ class _DetailsCard extends StatelessWidget {
             ],
 
             // Device ID
-            const _DetailDivider(),
+            const AppDetailDivider(),
             FutureBuilder<String>(
               future: LicenseService.deviceId,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const SizedBox.shrink();
-                return _DetailRow(
+                return AppDetailRow(
                   icon: Icons.devices,
                   label: 'Device ID',
                   value: snapshot.data!,
@@ -246,72 +237,6 @@ class _DetailsCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.monospace = false,
-    this.valueColor,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool monospace;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: theme.colorScheme.onSurfaceVariant),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 11,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                value,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: monospace ? 'monospace' : null,
-                  color: valueColor,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DetailDivider extends StatelessWidget {
-  const _DetailDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Divider(
-        height: 1,
-        color: Theme.of(context).colorScheme.outlineVariant,
       ),
     );
   }
@@ -338,7 +263,6 @@ class _PlanComparisonCards extends StatelessWidget {
           isCurrent: !isTrial && !LicenseService.isActivated,
         ),
         const SizedBox(height: AppSpacing.sm),
-
         // Monthly
         _PlanRow(
           icon: Icon(CupertinoIcons.calendar, size: 28, color: AppColors.seed),
@@ -349,14 +273,9 @@ class _PlanComparisonCards extends StatelessWidget {
           onTap: () => _openWhatsApp(context, 'Monthly'),
         ),
         const SizedBox(height: AppSpacing.sm),
-
         // Yearly
         _PlanRow(
-          icon: Icon(
-            CupertinoIcons.calendar_today,
-            size: 28,
-            color: AppColors.seed,
-          ),
+          icon: Icon(CupertinoIcons.calendar_today, size: 28, color: AppColors.seed),
           title: 'Yearly',
           price: 'Rs 4,000/yr',
           features: 'All features, 33% off monthly',
@@ -365,7 +284,6 @@ class _PlanComparisonCards extends StatelessWidget {
           onTap: () => _openWhatsApp(context, 'Yearly'),
         ),
         const SizedBox(height: AppSpacing.sm),
-
         // Lifetime
         _PlanRow(
           icon: Icon(CupertinoIcons.infinite, size: 28, color: AppColors.seed),
@@ -408,110 +326,49 @@ class _PlanRow extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    return InkWell(
-      onTap: isCurrent ? null : onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isCurrent
-              ? AppColors.seed.withValues(alpha: 0.06)
-              : isHighlighted
-              ? cs.primary.withValues(alpha: 0.04)
-              : null,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-            color: isCurrent
-                ? AppColors.seed.withValues(alpha: 0.4)
-                : isHighlighted
-                ? cs.primary.withValues(alpha: 0.3)
-                : cs.outlineVariant,
-            width: isCurrent || isHighlighted ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            // Icon
-            icon,
-            const SizedBox(width: AppSpacing.md),
-
-            // Title + features
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleSmall?.copyWith(
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: isCurrent ? null : onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(title, style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (badge != null) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs,
-                            vertical: 1,
+                        )),
+                        if (badge != null) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          AppBadge(
+                            label: badge!,
+                            type: isHighlighted ? AppBadgeType.info : AppBadgeType.neutral,
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColors.seed.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusSm,
-                            ),
-                          ),
-                          child: Text(
-                            badge!,
-                            style: const TextStyle(
-                              color: AppColors.seed,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
-                  Text(
-                    features,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
                     ),
-                  ),
-                ],
+                    Text(features, style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    )),
+                  ],
+                ),
               ),
-            ),
-
-            // Price or Current badge
-            if (isCurrent)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.seed.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: const Text(
-                  'Current',
-                  style: TextStyle(
-                    color: AppColors.seed,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              )
-            else
-              Text(
-                price,
-                style: theme.textTheme.titleSmall?.copyWith(
+              if (isCurrent)
+                AppBadge(label: 'Current', type: AppBadgeType.success)
+              else
+                Text(price, style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: isHighlighted ? cs.primary : null,
-                ),
-              ),
-          ],
+                )),
+            ],
+          ),
         ),
       ),
     );
@@ -532,15 +389,9 @@ class _DeactivateButton extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         OutlinedButton.icon(
           onPressed: () => _confirmDeactivate(context),
-          icon: Icon(
-            Icons.logout,
-            size: 18,
-            color: AppColors.danger.withValues(alpha: 0.7),
-          ),
-          label: Text(
-            'Deactivate License',
-            style: TextStyle(color: AppColors.danger.withValues(alpha: 0.7)),
-          ),
+          icon: Icon(Icons.logout, size: 18, color: AppColors.danger.withValues(alpha: 0.7)),
+          label: Text('Deactivate License',
+            style: TextStyle(color: AppColors.danger.withValues(alpha: 0.7))),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: AppColors.danger.withValues(alpha: 0.3)),
           ),
@@ -569,8 +420,8 @@ class _DeactivateButton extends StatelessWidget {
               await LicenseService.deactivate(
                 reason: 'License deactivated by user from settings.',
               );
-              Navigator.of(context).pop(); // Close dialog
-              Get.offAllNamed('/activation'); // Go to activation
+              Navigator.of(context).pop();
+              Get.offAllNamed('/activation');
             },
             child: const Text('Deactivate'),
           ),
@@ -587,9 +438,6 @@ class _DeactivateButton extends StatelessWidget {
 class _UpgradeSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -599,8 +447,7 @@ class _UpgradeSection extends StatelessWidget {
             onPressed: () => _openWhatsApp(context, 'Any Plan'),
             icon: Image.asset(
               'lib/assets/images/whatsapp-logo1.png',
-              width: 24,
-              height: 24,
+              width: 24, height: 24,
             ),
             label: const Text('Purchase via WhatsApp'),
           ),
@@ -639,20 +486,15 @@ class _SupportCard extends StatelessWidget {
               children: [
                 Icon(Icons.support_agent, size: 20, color: cs.primary),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Need Help?',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text('Need Help?', style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                )),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'For license activation, renewal, or any issues, contact us:',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.md),
             // WhatsApp
@@ -663,22 +505,11 @@ class _SupportCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 child: Row(
                   children: [
-                    // Icon(Icons.chat, size: 18, color: Colors.green[700]),
-                    Image.asset(
-                      'lib/assets/images/whatsapp-logo1.png',
-                      width: 18,
-                      height: 18,
-                      // color: Colors.green[700],
-                    ),
+                    Image.asset('lib/assets/images/whatsapp-logo1.png', width: 18, height: 18),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'WhatsApp: 0315-3507075',
-                      style: TextStyle(
-                        color: Colors.green[700],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text('WhatsApp: 0315-3507075', style: TextStyle(
+                      color: Colors.green[700], fontWeight: FontWeight.w600, fontSize: 14,
+                    )),
                   ],
                 ),
               ),
@@ -694,14 +525,9 @@ class _SupportCard extends StatelessWidget {
                   children: [
                     Icon(Icons.call, size: 18, color: cs.primary),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'Call: 0315-3507075',
-                      style: TextStyle(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text('Call: 0315-3507075', style: TextStyle(
+                      color: cs.primary, fontWeight: FontWeight.w600, fontSize: 14,
+                    )),
                   ],
                 ),
               ),
@@ -712,14 +538,9 @@ class _SupportCard extends StatelessWidget {
               children: [
                 Icon(Icons.language, size: 18, color: cs.onSurfaceVariant),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Codynest.com',
-                  style: TextStyle(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                ),
+                Text('Codynest.com', style: TextStyle(
+                  color: cs.onSurfaceVariant, fontWeight: FontWeight.w500, fontSize: 14,
+                )),
               ],
             ),
           ],
@@ -734,21 +555,8 @@ class _SupportCard extends StatelessWidget {
 // ────────────────────────────────────────────────────────────
 
 String _formatDate(DateTime date) {
-  const months = [
-    '',
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
+  const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return '${date.day} ${months[date.month]} ${date.year}';
 }
 
@@ -758,10 +566,7 @@ void _openWhatsApp(BuildContext context, String plan) async {
     'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
   );
   if (!success && context.mounted) {
-    Get.snackbar(
-      'Contact Us',
-      'WhatsApp/Call: 0315-3507075',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    Get.snackbar('Contact Us', 'WhatsApp/Call: 0315-3507075',
+      snackPosition: SnackPosition.BOTTOM);
   }
 }

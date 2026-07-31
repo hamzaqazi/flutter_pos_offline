@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:flutter/material.dart';
@@ -219,115 +220,24 @@ class _ActivationScreenState extends State<ActivationScreen> {
                     if (LicenseService.trialStartDate != null &&
                         !LicenseService.isTrialActive &&
                         !LicenseService.isActivated)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-                        decoration: BoxDecoration(
-                          color: AppColors.warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusMd,
-                          ),
-                          border: Border.all(
-                            color: AppColors.warning.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.timer_off_outlined,
-                                  color: AppColors.warning,
-                                  size: 24,
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Text(
-                                    'Free Trial Expired',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.warning,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              'Your 14-day free trial has ended. Activate a license to continue using all features, or continue with the free plan (${LicenseService.freeMaxProducts} products max).',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.warning.withValues(alpha: 0.9),
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        child: AppBanner.warning(
+                          title: 'Free Trial Expired',
+                          subtitle: 'Your 14-day free trial has ended. Activate a license or continue with the free plan (${LicenseService.freeMaxProducts} products max).',
+                          icon: Icons.timer_off_outlined,
                         ),
                       ),
 
                     // ── Deactivation Reason Banner ──
                     if (LicenseService.hasDeactivationReason)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusMd,
-                          ),
-                          border: Border.all(
-                            color: AppColors.danger.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.warning_amber_rounded,
-                                  color: AppColors.danger,
-                                  size: 24,
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Text(
-                                    'License Deactivated',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.danger,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              LicenseService.deactivationReason,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.danger,
-                                height: 1.5,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.call,
-                                  size: 14,
-                                  color: AppColors.danger,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Contact: 0315-3507075',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.danger,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                        child: AppBanner.danger(
+                          title: 'License Deactivated',
+                          subtitle: '${LicenseService.deactivationReason}
+Contact: 0315-3507075',
+                          icon: Icons.warning_amber_rounded,
                         ),
                       ),
 
