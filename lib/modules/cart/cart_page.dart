@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
@@ -56,66 +57,70 @@ class CartPage extends GetView<CartController> {
         ],
       ),
       body: Column(
-          children: [
-            // Held carts banner (always visible when carts are held, even with empty cart)
-            Obx(() {
-              if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
-                child: AppBanner(
-                  type: AppBannerType.warning,
-                  icon: Icons.pause_circle_filled,
-                  title: '${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}',
-                  subtitle: 'Tap to view and resume',
-                  actionLabel: 'View',
-                  onAction: () => _showHeldCartsSheet(controller),
-                  margin: EdgeInsets.zero,
-                ),
+        children: [
+          // Held carts banner (always visible when carts are held, even with empty cart)
+          Obx(() {
+            if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                0,
+              ),
+              child: AppBanner(
+                type: AppBannerType.warning,
+                icon: Icons.pause_circle_filled,
+                title:
+                    '${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}',
+                subtitle: 'Tap to view and resume',
+                actionLabel: 'View',
+                onAction: () => _showHeldCartsSheet(controller),
+                margin: EdgeInsets.zero,
+              ),
+            );
+          }),
+
+          Expanded(
+            child: Obx(() {
+              if (controller.cartItems.isEmpty) {
+                return _EmptyCart();
+              }
+
+              return Column(
+                children: [
+                  // SKU quick-add bar
+                  _SkuQuickAdd(),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      itemCount: controller.cartItems.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppSpacing.md),
+                      itemBuilder: (_, index) {
+                        final item = controller.cartItems[index];
+                        return _CartTile(
+                          item: item,
+                          onIncrease: () => controller.increaseQuantity(index),
+                          onDecrease: () => controller.decreaseQuantity(index),
+                        );
+                      },
+                    ),
+                  ),
+                  _SummaryBar(
+                    total: controller.totalAmount,
+                    subtotal: controller.subtotalAmount,
+                    tax: controller.taxAmount,
+                    savings: controller.totalSavings,
+                    itemCount: controller.totalItems,
+                    onCheckout: () => _checkout(context),
+                  ),
+                ],
               );
             }),
-
-            Expanded(
-              child: Obx(() {
-                if (controller.cartItems.isEmpty) {
-                  return _EmptyCart();
-                }
-
-                return Column(
-                  children: [
-                    // SKU quick-add bar
-                    _SkuQuickAdd(),
-                    Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        itemCount: controller.cartItems.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: AppSpacing.md),
-                        itemBuilder: (_, index) {
-                          final item = controller.cartItems[index];
-                          return _CartTile(
-                            item: item,
-                            onIncrease: () =>
-                                controller.increaseQuantity(index),
-                            onDecrease: () =>
-                                controller.decreaseQuantity(index),
-                          );
-                        },
-                      ),
-                    ),
-                    _SummaryBar(
-                      total: controller.totalAmount,
-                      subtotal: controller.subtotalAmount,
-                      tax: controller.taxAmount,
-                      savings: controller.totalSavings,
-                      itemCount: controller.totalItems,
-                      onCheckout: () => _checkout(context),
-                    ),
-                  ],
-                );
-              }),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 

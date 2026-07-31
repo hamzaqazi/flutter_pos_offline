@@ -224,7 +224,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                         child: AppBanner.warning(
                           title: 'Free Trial Expired',
-                          subtitle: 'Your 14-day free trial has ended. Activate a license or continue with the free plan (${LicenseService.freeMaxProducts} products max).',
+                          subtitle:
+                              'Your 14-day free trial has ended. Activate a license or continue with the free plan (${LicenseService.freeMaxProducts} products max).',
                           icon: Icons.timer_off_outlined,
                         ),
                       ),
@@ -235,8 +236,8 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                         child: AppBanner.danger(
                           title: 'License Deactivated',
-                          subtitle: '${LicenseService.deactivationReason}
-Contact: 0315-3507075',
+                          subtitle:
+                              '${LicenseService.deactivationReason} Contact: 0315-3507075',
                           icon: Icons.warning_amber_rounded,
                         ),
                       ),
