@@ -383,12 +383,17 @@ class _DriveBackupTile extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  const _EmptyState({this.onRefresh});
+  final VoidCallback? onRefresh;
+
   @override
   Widget build(BuildContext context) {
-    return const AppEmptyState(
+    return AppEmptyState(
       icon: Icons.cloud_off_outlined,
       title: 'No Drive backups yet',
       subtitle: 'Upload a backup to Google Drive to see it here',
+      actionLabel: onRefresh != null ? 'Refresh' : null,
+      onAction: onRefresh,
     );
   }
 }

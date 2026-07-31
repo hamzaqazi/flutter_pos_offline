@@ -564,12 +564,17 @@ class _BackupTile extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  const _EmptyState({this.onRefresh});
+  final VoidCallback? onRefresh;
+
   @override
   Widget build(BuildContext context) {
-    return const AppEmptyState(
+    return AppEmptyState(
       icon: Icons.history_outlined,
       title: 'No backups yet',
       subtitle: 'Enable auto-backup or create a manual backup',
+      actionLabel: onRefresh != null ? 'Refresh' : null,
+      onAction: onRefresh,
     );
   }
 }
