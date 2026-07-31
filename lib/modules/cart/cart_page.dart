@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/customer_model.dart';
@@ -59,64 +60,16 @@ class CartPage extends GetView<CartController> {
             // Held carts banner (always visible when carts are held, even with empty cart)
             Obx(() {
               if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
-              return Container(
-                margin: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                  0,
-                ),
-                child: Card(
-                  color: AppColors.warning.withValues(alpha: 0.08),
-                  child: InkWell(
-                    onTap: () => _showHeldCartsSheet(controller),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusSm,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.pause_circle_filled,
-                              color: AppColors.warning,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}",
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  "Tap to view and resume",
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+                child: AppBanner(
+                  type: AppBannerType.warning,
+                  icon: Icons.pause_circle_filled,
+                  title: '${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}',
+                  subtitle: 'Tap to view and resume',
+                  actionLabel: 'View',
+                  onAction: () => _showHeldCartsSheet(controller),
+                  margin: EdgeInsets.zero,
                 ),
               );
             }),
@@ -1074,44 +1027,12 @@ class _SummaryBar extends StatelessWidget {
 class _EmptyCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.shopping_cart_outlined,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text("Your cart is empty", style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              "Add products to start a sale",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              onPressed: () => ShellController.to.goProducts(),
-              icon: const Icon(Icons.storefront_outlined),
-              label: const Text("Browse products"),
-              style: FilledButton.styleFrom(minimumSize: const Size(220, 52)),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.shopping_cart_outlined,
+      title: 'Your cart is empty',
+      subtitle: 'Add products to start a sale',
+      actionLabel: 'Browse products',
+      onAction: () => ShellController.to.goProducts(),
     );
   }
 }
