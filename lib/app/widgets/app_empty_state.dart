@@ -24,13 +24,15 @@ class AppEmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.huge,
-        horizontal: AppSpacing.xxl,
-      ),
-      child: Column(
-        children: [
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.huge,
+          horizontal: AppSpacing.xxl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           Icon(icon, size: 56, color: AppColors.textTertiary),
           const SizedBox(height: AppSpacing.lg),
           Text(
@@ -58,7 +60,8 @@ class AppEmptyState extends StatelessWidget {
               child: Text(actionLabel!),
             ),
           ],
-        ],
+          ],
+        ),
       ),
     );
   }

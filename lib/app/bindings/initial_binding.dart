@@ -26,7 +26,7 @@ class InitialBinding extends Bindings {
     Get.put(StaffController(), permanent: true);
     Get.lazyPut(() => DashboardController(), fenix: true);
     Get.lazyPut(() => ProductsController(), fenix: true);
-    Get.lazyPut(() => CartController(), fenix: true);
+    Get.put(CartController(), permanent: true); // Shared across tabs (Products + Cart)
     Get.lazyPut(() => SalesController(), fenix: true);
     Get.lazyPut(() => ReportsController(), fenix: true);
   }
