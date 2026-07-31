@@ -12,6 +12,7 @@ import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
+import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:get/get.dart';
@@ -28,7 +29,9 @@ class SettingsPage extends GetView<SettingsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Settings")),
-      body: SingleChildScrollView(
+      body: AppShell(
+        currentRoute: '/settings',
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
@@ -244,7 +247,8 @@ class SettingsPage extends GetView<SettingsController> {
           ],
         ),
       ),
-    );
+    ),
+      );
   }
 
   void _showImportDialog(BuildContext context) async {

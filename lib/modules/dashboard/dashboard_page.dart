@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
+import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
@@ -25,8 +26,10 @@ class DashboardPage extends GetView<DashboardController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
+      body: AppShell(
+        currentRoute: '/',
+        child: SafeArea(
+          child: CustomScrollView(
           slivers: [
             // ---------- Gradient header ----------
             SliverToBoxAdapter(child: _Header(cs: cs)),
@@ -733,6 +736,7 @@ class DashboardPage extends GetView<DashboardController> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

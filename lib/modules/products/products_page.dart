@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
+import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:get/get.dart';
@@ -79,14 +80,17 @@ class ProductsPage extends GetView<ProductsController> {
             },
           ),
         ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddProductDialog(context),
         icon: const Icon(Icons.add),
         label: const Text("Add product"),
       ),
-      body: Column(
-        children: [
+      body: AppShell(
+        currentRoute: '/products',
+        child: Column(
+          children: [
           // ---------- Search with SKU scan icon ----------
           Padding(
             padding: const EdgeInsets.fromLTRB(

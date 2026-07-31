@@ -10,6 +10,7 @@ import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
+import 'package:ad_shop_pos/app/shell/app_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -50,8 +51,10 @@ class CartPage extends GetView<CartController> {
           const SizedBox(width: AppSpacing.sm),
         ],
       ),
-      body: Column(
-        children: [
+      body: AppShell(
+        currentRoute: '/cart',
+        child: Column(
+          children: [
           // Held carts banner (always visible when carts are held, even with empty cart)
           Obx(() {
             if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
@@ -972,6 +975,7 @@ class _SummaryBar extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
