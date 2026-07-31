@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/reports/reports_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
@@ -411,26 +412,10 @@ class _ChartCard extends StatelessWidget {
 class _EmptyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.bar_chart_outlined,
-              size: 48,
-              color: theme.colorScheme.primary.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              "No data to chart",
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      ),
+    return const AppEmptyState(
+      icon: Icons.bar_chart_outlined,
+      title: 'No chart data',
+      subtitle: 'Charts will appear as you make sales',
     );
   }
 }

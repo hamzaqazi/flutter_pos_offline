@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
@@ -711,43 +712,10 @@ class _EmptyCustomers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                hasCustomers ? Icons.search_off : Icons.people_outline,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              hasCustomers ? "No matching customers" : "No customers yet",
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              hasCustomers
-                  ? "Try a different search"
-                  : "Tap \"Add Customer\" to get started",
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: hasCustomers ? Icons.search_off : Icons.people_outline,
+      title: hasCustomers ? 'No matching customers' : 'No customers yet',
+      subtitle: hasCustomers ? 'Try a different search' : 'Add customers to track their purchases',
     );
   }
 }

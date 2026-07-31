@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/widgets/tooltip_label.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
@@ -964,28 +965,15 @@ class _StatBox extends StatelessWidget {
 }
 
 class _EmptyReport extends StatelessWidget {
-  final String message;
   const _EmptyReport({required this.message});
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.bar_chart_outlined,
-              size: 48,
-              color: theme.colorScheme.primary.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(message, style: theme.textTheme.bodyMedium),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.bar_chart_outlined,
+      title: message,
+      subtitle: 'Data will appear as you make sales',
     );
   }
 }

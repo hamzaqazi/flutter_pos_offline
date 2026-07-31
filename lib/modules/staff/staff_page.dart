@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/models/staff_model.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
@@ -456,38 +457,10 @@ class _StaffTile extends StatelessWidget {
 class _EmptyStaff extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.people_outline,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text("No staff yet", style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              "Add staff members and track who processes each sale",
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return const AppEmptyState(
+      icon: Icons.badge_outlined,
+      title: 'No staff members yet',
+      subtitle: 'Add cashiers to track their performance',
     );
   }
 }

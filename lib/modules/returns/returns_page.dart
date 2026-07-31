@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/return_model.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
@@ -343,37 +344,10 @@ class _BannerStat extends StatelessWidget {
 class _EmptyReturns extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.assignment_return_outlined,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text("No returns yet", style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              "Process refunds from Sales History",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return const AppEmptyState(
+      icon: Icons.assignment_return_outlined,
+      title: 'No returns yet',
+      subtitle: 'Processed returns will appear here',
     );
   }
 }

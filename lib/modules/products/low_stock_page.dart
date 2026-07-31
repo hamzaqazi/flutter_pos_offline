@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
@@ -411,37 +412,10 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check_circle_outline,
-                size: 48,
-                color: AppColors.success,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text("All stocked up!", style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              "No products are at or below $threshold units",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.check_circle_outline_rounded,
+      title: 'All products are well-stocked',
+      subtitle: 'No products below $threshold units',
     );
   }
 }

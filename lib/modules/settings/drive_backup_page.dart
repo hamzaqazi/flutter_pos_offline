@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:flutter/material.dart';
@@ -382,49 +383,12 @@ class _DriveBackupTile extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  final VoidCallback onRefresh;
-
-  const _EmptyState({required this.onRefresh});
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: AppColors.seed.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.cloud_off_outlined,
-                size: 48,
-                color: AppColors.seed.withValues(alpha: 0.5),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text('No cloud backups yet', style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Upload a backup to Google Drive from Settings\nto see it here.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            OutlinedButton.icon(
-              onPressed: onRefresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
-            ),
-          ],
-        ),
-      ),
+    return const AppEmptyState(
+      icon: Icons.cloud_off_outlined,
+      title: 'No Drive backups yet',
+      subtitle: 'Upload a backup to Google Drive to see it here',
     );
   }
 }
