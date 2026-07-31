@@ -23,7 +23,7 @@ class AppSpacing {
 
   // Keep old names as aliases for backward compat
   // (xxl was 32, now xxxl is 32 — old code still works)
-  static const double get _legacyXxl => 32;
+  static double get _legacyXxl => 32;
 
   /// Border radius scale
   static const double radiusXs = 6;
@@ -39,37 +39,37 @@ class AppSpacing {
 /// Accent is teal for secondary actions. All colors are WCAG AA compliant.
 class AppColors {
   // ── Brand ──
-  static const Color seed = Color(0xFF4F46E5);       // Indigo 600 — primary
-  static const Color seedLight = Color(0xFF818CF8);  // Indigo 400
-  static const Color seedDark = Color(0xFF3730A3);   // Indigo 800
-  static const Color accent = Color(0xFF0D9488);     // Teal 600 — secondary
+  static const Color seed = Color(0xFF4F46E5); // Indigo 600 — primary
+  static const Color seedLight = Color(0xFF818CF8); // Indigo 400
+  static const Color seedDark = Color(0xFF3730A3); // Indigo 800
+  static const Color accent = Color(0xFF0D9488); // Teal 600 — secondary
   static const Color accentLight = Color(0xFF5EEAD4); // Teal 300
 
   // ── Semantic ──
-  static const Color success = Color(0xFF16A34A);    // Green 600
+  static const Color success = Color(0xFF16A34A); // Green 600
   static const Color successLight = Color(0xFFDCFCE7); // Green 100
-  static const Color warning = Color(0xFFD97706);    // Amber 600
+  static const Color warning = Color(0xFFD97706); // Amber 600
   static const Color warningLight = Color(0xFFFEF3C7); // Amber 100
-  static const Color danger = Color(0xFFDC2626);     // Red 600
+  static const Color danger = Color(0xFFDC2626); // Red 600
   static const Color dangerLight = Color(0xFFFEE2E2); // Red 100
-  static const Color info = Color(0xFF2563EB);       // Blue 600
-  static const Color infoLight = Color(0xFFDBEAFE);  // Blue 100
+  static const Color info = Color(0xFF2563EB); // Blue 600
+  static const Color infoLight = Color(0xFFDBEAFE); // Blue 100
 
   // ── Surfaces ──
-  static const Color surfaceLight = Color(0xFFF8FAFC);  // Slate 50
-  static const Color surfaceDark = Color(0xFF0F172A);   // Slate 900
+  static const Color surfaceLight = Color(0xFFF8FAFC); // Slate 50
+  static const Color surfaceDark = Color(0xFF0F172A); // Slate 900
   static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color cardDark = Color(0xFF1E293B);      // Slate 800
+  static const Color cardDark = Color(0xFF1E293B); // Slate 800
 
   // ── Text ──
-  static const Color textPrimary = Color(0xFF1E293B);   // Slate 800
+  static const Color textPrimary = Color(0xFF1E293B); // Slate 800
   static const Color textSecondary = Color(0xFF64748B); // Slate 500
-  static const Color textTertiary = Color(0xFF94A3B8);  // Slate 400
+  static const Color textTertiary = Color(0xFF94A3B8); // Slate 400
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
   // ── Borders & Dividers ──
-  static const Color borderLight = Color(0xFFE2E8F0);  // Slate 200
-  static const Color borderDark = Color(0xFF334155);    // Slate 700
+  static const Color borderLight = Color(0xFFE2E8F0); // Slate 200
+  static const Color borderDark = Color(0xFF334155); // Slate 700
 
   // ── Category colors ──
   static const Map<String, Color> category = {
@@ -277,10 +277,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: colorScheme.primary,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -318,10 +315,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
