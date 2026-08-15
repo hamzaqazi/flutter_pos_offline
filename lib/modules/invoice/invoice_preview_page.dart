@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
@@ -409,7 +410,7 @@ class InvoicePreviewPage extends StatelessWidget {
                               label: Text(hasPrinter ? "Thermal Print" : "Pair Printer"),
                               onPressed: () async {
                                 if (!hasPrinter) {
-                                  Get.toNamed('/settings');
+                                  ShellController.to.goSettings();
                                   return;
                                 }
                                 await ThermalPrinterService.printReceipt(
@@ -461,7 +462,7 @@ class InvoicePreviewPage extends StatelessWidget {
                               label: Text(hasPrinter ? "Thermal" : "Pair"),
                               onPressed: () async {
                                 if (!hasPrinter) {
-                                  Get.toNamed('/settings');
+                                  ShellController.to.goSettings();
                                   return;
                                 }
                                 await ThermalPrinterService.printReceipt(

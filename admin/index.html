@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codynest POS — License Admin</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+.header { background: linear-gradient(135deg, #6750A4, #4f3d8e); color: white; padding: 20px; text-align: center; }
+.header h1 { font-size: 22px; margin-bottom: 4px; }
+.header p { font-size: 13px; opacity: 0.8; }
+.container { max-width: 900px; margin: 0 auto; padding: 16px; }
+.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.card h2 { font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: #6750A4; color: white; }
+.btn-primary:hover { background: #5a3d9e; }
+.btn-danger { background: #BA1A1A; color: white; }
+.btn-danger:hover { background: #9a1515; }
+.btn-success { background: #2E7D32; color: white; }
+.btn-success:hover { background: #1B5E20; }
+.btn-outline { background: transparent; border: 1px solid #6750A4; color: #6750A4; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+input, select, textarea { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; width: 100%; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #6750A4; box-shadow: 0 0 0 2px rgba(103,80,164,0.15); }
+label { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; display: block; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.form-group { margin-bottom: 12px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f0f0f0; padding: 10px 8px; text-align: left; font-size: 11px; text-transform: uppercase; color: #666; white-space: nowrap; }
+td { padding: 10px 8px; border-bottom: 1px solid #eee; }
+tr:hover { background: #fafafa; }
+.badge { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; }
+.badge-active { background: #E8F5E9; color: #2E7D32; }
+.badge-expired { background: #FFEBEE; color: #C62828; }
+.badge-inactive { background: #F5F5F5; color: #666; }
+.badge-trial { background: #FFF3E0; color: #E65100; }
+.badge-monthly { background: #E3F2FD; color: #1565C0; }
+.badge-yearly { background: #F3E5F5; color: #7B1FA2; }
+.badge-lifetime { background: #FFF8E1; color: #F57F17; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat { background: white; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.stat-num { font-size: 24px; font-weight: 800; color: #6750A4; }
+.stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+.device-tag { display: inline-block; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-family: monospace; margin: 2px; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; display: none; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: white; border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal h3 { margin-bottom: 16px; }
+.empty { text-align: center; padding: 40px; color: #999; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; z-index: 200; display: none; }
+.toast.show { display: block; }
+.loading { text-align: center; padding: 40px; color: #999; }
+.key-display { font-family: monospace; background: #f5f5f5; padding: 8px 12px; border-radius: 6px; word-break: break-all; cursor: pointer; position: relative; }
+.key-display:hover { background: #eee; }
+.copy-hint { font-size: 10px; color: #999; margin-top: 4px; }
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  th, td { padding: 6px 4px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔑 Codynest POS — License Admin</h1>
+  <p>Manage license keys, plans, and devices</p>
+</div>
+
+<div class="container">
+  <!-- Stats -->
+  <div class="stats" id="stats"></div>
+
+  <!-- Create License -->
+  <div class="card">
+    <h2>➕ Create New License</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Shop Name *</label>
+        <input type="text" id="shopName" placeholder="Ahmed Store">
+      </div>
+      <div class="form-group">
+        <label>Plan *</label>
+        <select id="plan">
+          <option value="monthly">Monthly — Rs 500/mo</option>
+          <option value="yearly">Yearly — Rs 4,000/yr</option>
+          <option value="lifetime">Lifetime — Rs 10,000</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Max Devices</label>
+        <input type="number" id="maxDevices" value="3" min="1">
+      </div>
+      <div class="form-group">
+        <label>Customer Phone (optional)</label>
+        <input type="text" id="customerPhone" placeholder="0315-3507075">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="createLicense()">Generate License Key</button>
+    <div id="newKeyDisplay" style="margin-top:12px; display:none;">
+      <label>New License Key (click to copy)</label>
+      <div class="key-display" id="newKeyText" onclick="copyKey()"></div>
+      <div class="copy-hint">Click to copy • Share this key with the customer</div>
+    </div>
+  </div>
+
+  <!-- License List -->
+  <div class="card">
+    <h2>📋 All Licenses</h2>
+    <div class="form-group" style="margin-bottom:12px;">
+      <input type="text" id="searchInput" placeholder="Search by shop name or key..." oninput="renderLicenses()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Shop</th>
+            <th>Plan</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>Devices</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="licenseTable"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" class="empty" style="display:none;">No licenses found</div>
+  </div>
+
+  <!-- Trial Devices -->
+  <div class="card">
+    <h2>📱 Trial Devices</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">
+      Devices that have used a 14-day free trial. Deleting a record allows that device to start a new trial (use for legitimate factory resets).
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Phone Number</th>
+            <th>Device ID</th>
+            <th>Model</th>
+            <th>Trial Started</th>
+            <th>Last Used</th>
+            <th>Duration</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="trialTable"></tbody>
+      </table>
+    </div>
+    <div id="trialEmptyState" class="empty" style="display:none;">No trial devices recorded</div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <h3 id="modalTitle">License Details</h3>
+    <div id="modalBody"></div>
+    <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn btn-success btn-sm" id="renewBtn" onclick="renewLicense()">🔄 Renew</button>
+      <button class="btn btn-primary btn-sm" id="toggleBtn" onclick="toggleActive()">Toggle Active</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteLicense()">🗑️ Delete</button>
+      <button class="btn btn-outline btn-sm" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.0/firebase-app.js";
+import { getFirestore, collection, doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.7.0/firebase-firestore.js";
+
+// ── Firebase Config ──
+// IMPORTANT: Replace with your actual Firebase config
+// You can find this in Firebase Console > Project Settings > General > Your apps > Web app
+const firebaseConfig = {
+  apiKey: "AIzaSyB0EHs3fiytPSPrxAvlcfQ2BsZ4TSpRdRo",
+  authDomain: "my-portfolio-78ae4.firebaseapp.com",
+  projectId: "my-portfolio-78ae4",
+  storageBucket: "my-portfolio-78ae4.firebasestorage.app",
+  messagingSenderId: "21334425002",
+  appId: "1:21334425002:web:b411cc558fc7713e3d7fd3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const licensesRef = collection(db, "licenses");
+
+let allLicenses = [];
+let selectedKey = null;
+
+// ── Generate random license key ──
+function generateKey() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no I,O,0,1 (confusing)
+  const segment = () => Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  return `CNPO-${segment()}-${segment()}-${segment()}`;
+}
+
+// ── Calculate expiry date ──
+function calculateExpiry(plan) {
+  const now = new Date();
+  if (plan === 'monthly') {
+    return new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  } else if (plan === 'yearly') {
+    return new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+  }
+  return null; // lifetime — no expiry
+}
+
+// ── Format date ──
+function formatDate(ts) {
+  if (!ts) return 'Never (Lifetime)';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ── Format date + time ──
+function formatDateTime(ts) {
+  if (!ts) return 'Never';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let hours = d.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${hours}:${mins} ${ampm}`;
+}
+
+// ── Days until ──
+function daysUntil(ts) {
+  if (!ts) return null;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return Math.ceil((d - new Date()) / (1000*60*60*24));
+}
+
+// ── Get status ──
+function getStatus(license) {
+  if (!license.active) return 'inactive';
+  const days = daysUntil(license.expiresAt);
+  if (days !== null && days <= 0) return 'expired';
+  return 'active';
+}
+
+// ── Create License ──
+window.createLicense = async function() {
+  const shopName = document.getElementById('shopName').value.trim();
+  const plan = document.getElementById('plan').value;
+  const maxDevices = parseInt(document.getElementById('maxDevices').value) || 3;
+  const customerPhone = document.getElementById('customerPhone').value.trim();
+
+  if (!shopName) { showToast('❌ Shop name is required'); return; }
+
+  const key = generateKey();
+  const expiresAt = calculateExpiry(plan);
+
+  try {
+    await setDoc(doc(db, "licenses", key), {
+      shopName: shopName,
+      active: true,
+      plan: plan,
+      maxDevices: maxDevices,
+      expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
+      registeredDevices: [],
+      customerPhone: customerPhone || '',
+      activatedAt: serverTimestamp(),
+    });
+
+    // Show the key
+    document.getElementById('newKeyDisplay').style.display = 'block';
+    document.getElementById('newKeyText').textContent = key;
+    document.getElementById('shopName').value = '';
+    document.getElementById('customerPhone').value = '';
+
+    showToast(`✅ License created: ${key}`);
+  } catch (e) {
+    showToast(`❌ Error: ${e.message}`);
+  }
+};
+
+// ── Load Licenses ──
+async function loadLicenses() {
+  try {
+    const snapshot = await getDocs(licensesRef);
+    allLicenses = [];
+    snapshot.forEach(d => {
+      allLicenses.push({ key: d.id, ...d.data() });
+    });
+    renderStats();
+    renderLicenses();
+  } catch (e) {
+    showToast(`❌ Error loading: ${e.message}`);
+  }
+}
+
+// ── Render Stats ──
+function renderStats() {
+  const active = allLicenses.filter(l => getStatus(l) === 'active').length;
+  const expired = allLicenses.filter(l => getStatus(l) === 'expired').length;
+  const inactive = allLicenses.filter(l => getStatus(l) === 'inactive').length;
+  const total = allLicenses.length;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num" style="color:#2E7D32">${active}</div><div class="stat-label">Active</div></div>
+    <div class="stat"><div class="stat-num" style="color:#C62828">${expired}</div><div class="stat-label">Expired</div></div>
+    <div class="stat"><div class="stat-num" style="color:#666">${inactive}</div><div class="stat-label">Inactive</div></div>
+  `;
+}
+
+// ── Render License Table ──
+window.renderLicenses = function() {
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allLicenses.filter(l =>
+    l.shopName?.toLowerCase().includes(query) || l.key?.toLowerCase().includes(query)
+  );
+
+  const tbody = document.getElementById('licenseTable');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+
+  tbody.innerHTML = filtered.map(l => {
+    const status = getStatus(l);
+    const days = daysUntil(l.expiresAt);
+    const plan = l.plan || 'free';
+    const devices = (l.registeredDevices || []).length;
+    const maxDev = l.maxDevices || 3;
+
+    return `<tr onclick="showDetail('${l.key}')" style="cursor:pointer">
+      <td><code style="font-size:11px">${l.key}</code></td>
+      <td>${l.shopName || '-'}</td>
+      <td><span class="badge badge-${plan}">${plan}</span></td>
+      <td><span class="badge badge-${status}">${status}${days !== null && status === 'active' ? ` (${days}d)` : ''}</span></td>
+      <td style="white-space:nowrap">${formatDate(l.expiresAt)}</td>
+      <td>${devices}/${maxDev}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showDetail('${l.key}')">View</button>
+      </td>
+    </tr>`;
+  }).join('');
+};
+
+// ── Show Detail Modal ──
+window.showDetail = function(key) {
+  selectedKey = key;
+  const l = allLicenses.find(x => x.key === key);
+  if (!l) return;
+
+  const status = getStatus(l);
+  const days = daysUntil(l.expiresAt);
+  const devices = l.registeredDevices || [];
+
+  document.getElementById('modalTitle').textContent = l.shopName || key;
+  document.getElementById('renewBtn').style.display = l.plan === 'lifetime' ? 'none' : '';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div style="margin-bottom:12px;">
+      <label>License Key</label>
+      <div class="key-display" onclick="navigator.clipboard.writeText('${key}'); showToast('✅ Copied!')">${key}</div>
+    </div>
+    <div class="form-row">
+      <div><label>Plan</label><div><span class="badge badge-${l.plan || 'free'}">${l.plan || 'free'}</span></div></div>
+      <div><label>Status</label><div><span class="badge badge-${status}">${status}</span></div></div>
+    </div>
+    <div class="form-row">
+      <div><label>Shop Name</label><div>${l.shopName || '-'}</div></div>
+      <div><label>Customer Phone</label><div>${l.customerPhone || '-'}</div></div>
+    </div>
+    <div class="form-row">
+      <div><label>Max Devices</label><div>${l.maxDevices || 3}</div></div>
+      <div><label>Expires</label><div>${formatDate(l.expiresAt)}${days !== null ? ` (${days > 0 ? days + ' days left' : 'EXPIRED'})` : ''}</div></div>
+    </div>
+    <div><label>Registered Devices (${devices.length}/${l.maxDevices || 3})</label>
+      ${devices.length === 0 ? '<div style="color:#999; font-size:12px;">No devices registered</div>' :
+        devices.map((d, i) => {
+          const lastUsed = l.deviceLastUsed && l.deviceLastUsed[d] ? formatDateTime(l.deviceLastUsed[d]) : 'Never';
+          return `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;flex-wrap:wrap;">
+          <span class="device-tag">${d}</span>
+          <span style="font-size:11px;color:#888;">Last used: ${lastUsed}</span>
+          <button class="btn btn-danger btn-sm" onclick="removeDevice('${key}', '${d}')">Remove</button>
+        </div>`;
+        }).join('')}
+    </div>
+  `;
+
+  document.getElementById('detailModal').classList.add('show');
+};
+
+// ── Close Modal ──
+window.closeModal = function() {
+  document.getElementById('detailModal').classList.remove('show');
+  selectedKey = null;
+};
+
+// ── Toggle Active ──
+window.toggleActive = async function() {
+  if (!selectedKey) return;
+  const l = allLicenses.find(x => x.key === selectedKey);
+  if (!l) return;
+  const newActive = !l.active;
+  try {
+    await updateDoc(doc(db, "licenses", selectedKey), { active: newActive });
+    l.active = newActive;
+    showToast(`✅ License ${newActive ? 'activated' : 'deactivated'}`);
+    closeModal();
+    loadLicenses();
+  } catch (e) {
+    showToast(`❌ Error: ${e.message}`);
+  }
+};
+
+// ── Renew License ──
+window.renewLicense = async function() {
+  if (!selectedKey) return;
+  const l = allLicenses.find(x => x.key === selectedKey);
+  if (!l || l.plan === 'lifetime') return;
+
+  const now = l.expiresAt ? (l.expiresAt.toDate ? l.expiresAt.toDate() : new Date(l.expiresAt)) : new Date();
+  const base = now > new Date() ? now : new Date(); // renew from expiry or now, whichever is later
+
+  let newExpiry;
+  if (l.plan === 'monthly') {
+    newExpiry = new Date(base.getFullYear(), base.getMonth() + 1, base.getDate());
+  } else if (l.plan === 'yearly') {
+    newExpiry = new Date(base.getFullYear() + 1, base.getMonth(), base.getDate());
+  }
+
+  try {
+    await updateDoc(doc(db, "licenses", selectedKey), {
+      expiresAt: Timestamp.fromDate(newExpiry),
+      active: true,
+    });
+    showToast(`✅ Renewed until ${newExpiry.toLocaleDateString()}`);
+    closeModal();
+    loadLicenses();
+  } catch (e) {
+    showToast(`❌ Error: ${e.message}`);
+  }
+};
+
+// ── Remove Device ──
+window.removeDevice = async function(key, deviceId) {
+  const l = allLicenses.find(x => x.key === key);
+  if (!l) return;
+  const devices = (l.registeredDevices || []).filter(d => d !== deviceId);
+  try {
+    await updateDoc(doc(db, "licenses", key), { registeredDevices: devices });
+    l.registeredDevices = devices;
+    showToast(`✅ Device removed`);
+    showDetail(key); // refresh modal
+    renderLicenses();
+  } catch (e) {
+    showToast(`❌ Error: ${e.message}`);
+  }
+};
+
+// ── Delete License ──
+window.deleteLicense = async function() {
+  if (!selectedKey) return;
+  if (!confirm(`Delete license ${selectedKey}? This cannot be undone.`)) return;
+  try {
+    await deleteDoc(doc(db, "licenses", selectedKey));
+    showToast(`✅ License deleted`);
+    closeModal();
+    loadLicenses();
+  } catch (e) {
+    showToast(`❌ Error: ${e.message}`);
+  }
+};
+
+// ── Copy Key ──
+window.copyKey = function() {
+  const key = document.getElementById('newKeyText').textContent;
+  navigator.clipboard.writeText(key);
+  showToast('✅ License key copied!');
+};
+
+// ── Toast ──
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+};
+
+
+let allTrialDevices = [];
+
+// ── Load Trial Devices ──
+async function loadTrialDevices() {
+  try {
+    const snapshot = await getDocs(collection(db, "trial_devices"));
+    allTrialDevices = [];
+    snapshot.forEach(d => {
+      allTrialDevices.push({ deviceId: d.id, ...d.data() });
+    });
+    renderTrialDevices();
+  } catch (e) {
+    showToast(`❌ Error loading trial devices: ${e.message}`);
+  }
+}
+
+// ── Render Trial Devices Table ──
+function renderTrialDevices() {
+  const tbody = document.getElementById('trialTable');
+  if (allTrialDevices.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('trialEmptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('trialEmptyState').style.display = 'none';
+
+  tbody.innerHTML = allTrialDevices.map(t => {
+    const startedAt = t.trialStartedAt ? formatDate(t.trialStartedAt) : 'Unknown';
+    const lastUsed = t.lastUsedAt ? formatDateTime(t.lastUsedAt) : 'Never';
+    const phone = t.customerPhone || '-';
+    const daysSinceStart = t.trialStartedAt ? Math.ceil((new Date() - (t.trialStartedAt.toDate ? t.trialStartedAt.toDate() : new Date(t.trialStartedAt))) / (1000*60*60*24)) : 0;
+    const remaining = (t.trialDurationDays || 14) - daysSinceStart;
+    const canWhatsApp = t.customerPhone && t.customerPhone !== '-';
+    const waLink = canWhatsApp ? `https://wa.me/${t.customerPhone}?text=${encodeURIComponent('Hi! 👋 This is a reminder from Codynest POS. Your 14-day free trial has ' + (remaining > 0 ? remaining + ' days remaining' : 'expired') + '. Would you like to upgrade to a Premium plan? Contact us at 0315-3507075 or reply to this message.')}` : '';
+
+    return `<tr>
+      <td>${canWhatsApp
+        ? `<a href="${waLink}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;">${phone} 💬</a>`
+        : phone}</td>
+      <td><span class="device-tag">${t.deviceId}</span></td>
+      <td>${t.deviceModel || '-'}</td>
+      <td>${startedAt}</td>
+      <td>${lastUsed}</td>
+      <td>${t.trialDurationDays || 14} days${remaining > 0 ? ` (${remaining} left)` : ' (expired)'}</td>
+      <td>
+        ${canWhatsApp ? `<button class="btn btn-success btn-sm" onclick="window.open('${waLink}', '_blank')">💬 WhatsApp</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteTrialDevice('${t.deviceId}')">🗑️ Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Delete Trial Device (allows new trial on that device) ──
+window.deleteTrialDevice = async function(deviceId) {
+  if (!confirm(`Delete trial record for device ${deviceId}?
+This will allow the device to start a new 14-day trial.`)) return;
+  try {
+    await deleteDoc(doc(db, "trial_devices", deviceId));
+    allTrialDevices = allTrialDevices.filter(t => t.deviceId !== deviceId);
+    renderTrialDevices();
+    showToast(`✅ Trial record deleted — device can now start a new trial`);
+  } catch (e) {
+    showToast(`❌ Error: ${e.message}`);
+  }
+};
+
+// ── Init ──
+loadLicenses();
+loadTrialDevices();
+
+// Close modal on overlay click
+document.getElementById('detailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+
+</body>
+</html>

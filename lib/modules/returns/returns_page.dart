@@ -1,9 +1,11 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/return_model.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 class ReturnsPage extends GetView<ReturnsController> {
@@ -16,69 +18,74 @@ class ReturnsPage extends GetView<ReturnsController> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Returns History")),
-      body: Obx(() {
-        if (controller.returns.isEmpty) {
-          return _EmptyReturns();
-        }
+      body: PremiumGate(
+        feature: 'Returns & Refunds',
+        child: Obx(() {
+          if (controller.returns.isEmpty) {
+            return _EmptyReturns();
+          }
 
-        final returnsList = controller.returns.reversed.toList();
-        final totalRefund =
-            returnsList.fold<double>(0, (sum, r) => sum + r.refundAmount);
+          final returnsList = controller.returns.reversed.toList();
+          final totalRefund = returnsList.fold<double>(
+            0,
+            (sum, r) => sum + r.refundAmount,
+          );
 
-        return Column(
-          children: [
-            // ---------- Summary banner ----------
-            Container(
-              margin: const EdgeInsets.all(AppSpacing.lg),
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.warning,
-                    AppColors.warning.withValues(alpha: 0.75),
+          return Column(
+            children: [
+              // ---------- Summary banner ----------
+              Container(
+                margin: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.warning,
+                      AppColors.warning.withValues(alpha: 0.75),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _BannerStat(
+                        label: "Total Refunds",
+                        value: Formatters.currency(totalRefund),
+                      ),
+                    ),
+                    Container(width: 1, height: 36, color: Colors.white24),
+                    Expanded(
+                      child: _BannerStat(
+                        label: "Returns",
+                        value: returnsList.length.toString(),
+                      ),
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _BannerStat(
-                      label: "Total Refunds",
-                      value: Formatters.currency(totalRefund),
-                    ),
-                  ),
-                  Container(width: 1, height: 36, color: Colors.white24),
-                  Expanded(
-                    child: _BannerStat(
-                      label: "Returns",
-                      value: returnsList.length.toString(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  0,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    0,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  itemCount: returnsList.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (_, index) {
+                    final ret = returnsList[index];
+                    return AppAnimations.staggerItem(index: index, child: _ReturnCard(returnRecord: ret));
+                  },
                 ),
-                itemCount: returnsList.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: AppSpacing.md),
-                itemBuilder: (_, index) {
-                  final ret = returnsList[index];
-                  return _ReturnCard(returnRecord: ret);
-                },
               ),
-            ),
-          ],
-        );
-      }),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
@@ -93,7 +100,8 @@ class _ReturnCard extends StatelessWidget {
     final cs = theme.colorScheme;
     final controller = Get.find<ReturnsController>();
 
-    return Card(
+    return TapScale(
+      child: Card(
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -200,8 +208,9 @@ class _ReturnCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.warning.withValues(alpha: 0.12),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       child: Text(
                         "×${item.returnQty}",
@@ -238,13 +247,17 @@ class _ReturnCard extends StatelessWidget {
                     saleRef = sale.invoiceNumber;
                   } else {
                     final shortId = returnRecord.saleId.length > 8
-                        ? returnRecord.saleId.substring(returnRecord.saleId.length - 8)
+                        ? returnRecord.saleId.substring(
+                            returnRecord.saleId.length - 8,
+                          )
                         : returnRecord.saleId;
                     saleRef = "Sale #$shortId";
                   }
                 } catch (_) {
                   final shortId = returnRecord.saleId.length > 8
-                      ? returnRecord.saleId.substring(returnRecord.saleId.length - 8)
+                      ? returnRecord.saleId.substring(
+                          returnRecord.saleId.length - 8,
+                        )
                       : returnRecord.saleId;
                   saleRef = "Sale #$shortId";
                 }
@@ -265,6 +278,7 @@ class _ReturnCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -320,7 +334,10 @@ class _BannerStat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 11),
+        ),
       ],
     );
   }
@@ -329,37 +346,10 @@ class _BannerStat extends StatelessWidget {
 class _EmptyReturns extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.assignment_return_outlined,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text("No returns yet", style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              "Process refunds from Sales History",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return const AppEmptyState(
+      icon: Icons.assignment_return_outlined,
+      title: 'No returns yet',
+      subtitle: 'Processed returns will appear here',
     );
   }
 }

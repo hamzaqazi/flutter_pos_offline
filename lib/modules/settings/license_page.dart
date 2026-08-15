@@ -1,0 +1,572 @@
+import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+class LicensePage extends StatelessWidget {
+  const LicensePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('License & Subscription')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Plan Header Card ──
+            _PlanHeader(),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // ── License Details ──
+            AppSectionHeader(
+              title: 'License Details',
+              subtitle: 'Your current license information',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _DetailsCard(),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // ── Available Plans ──
+            AppSectionHeader(
+              title: 'Available Plans',
+              subtitle: 'Upgrade to unlock all features',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _PlanComparisonCards(),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // ── Actions ──
+            if (LicenseService.isActivated) _DeactivateButton(),
+            if (!LicenseService.isPaidPlan) _UpgradeSection(),
+            const SizedBox(height: AppSpacing.xxl),
+
+            // ── Support ──
+            _SupportCard(),
+            const SizedBox(height: AppSpacing.huge),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Plan Header
+// ────────────────────────────────────────────────────────────
+
+class _PlanHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isPremium = LicenseService.isPremium;
+    final isTrial = LicenseService.isTrialActive;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isPremium
+              ? [AppColors.seed, AppColors.seed.withValues(alpha: 0.7)]
+              : [AppColors.warning, AppColors.warning.withValues(alpha: 0.7)],
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      child: Column(
+        children: [
+          // Icon
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isPremium
+                  ? (LicenseService.storedPlan == 'lifetime'
+                      ? Icons.workspace_premium
+                      : Icons.verified)
+                  : Icons.lock_outline,
+              size: 36,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // Plan name
+          Text(
+            LicenseService.planDisplayWithEmoji,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          // Subtitle
+          if (isTrial)
+            Text(
+              '${LicenseService.trialDaysRemaining} days remaining — full access',
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            )
+          else if (isPremium && LicenseService.storedPlan == 'lifetime')
+            const Text(
+              'All features unlocked forever',
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            )
+          else if (isPremium && LicenseService.expiresAt != null)
+            Text(
+              'Renews ${_formatDate(LicenseService.expiresAt!)}',
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            )
+          else
+            Text(
+              'Limited to ${LicenseService.freeMaxProducts} products',
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Details Card
+// ────────────────────────────────────────────────────────────
+
+class _DetailsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          children: [
+            // Shop Name
+            if (LicenseService.shopName.isNotEmpty)
+              AppDetailRow(
+                icon: Icons.store_outlined,
+                label: 'Shop Name',
+                value: LicenseService.shopName,
+              ),
+
+            // License Key
+            if (LicenseService.isActivated) ...[
+              if (LicenseService.shopName.isNotEmpty) const AppDetailDivider(),
+              AppDetailRow(
+                icon: Icons.vpn_key_outlined,
+                label: 'License Key',
+                value: LicenseService.licenseKey,
+                monospace: true,
+              ),
+              const AppDetailDivider(),
+            ],
+
+            // Plan
+            AppDetailRow(
+              icon: Icons.card_membership_outlined,
+              label: 'Plan',
+              value: LicenseService.planDisplayName,
+            ),
+
+            // Expiry
+            if (LicenseService.expiresAt != null) ...[
+              const AppDetailDivider(),
+              Builder(builder: (_) {
+                final exp = LicenseService.expiresAt!;
+                final days = LicenseService.daysUntilExpiry ?? 0;
+                final isWarning = days <= 30;
+                final isCritical = days <= 7;
+                final color = isCritical
+                    ? AppColors.danger
+                    : isWarning
+                    ? AppColors.warning
+                    : AppColors.success;
+                return AppDetailRow(
+                  icon: Icons.event_outlined,
+                  label: 'Expires',
+                  value: '${_formatDate(exp)} ($days days left)',
+                  valueColor: color,
+                );
+              }),
+            ],
+
+            // Lifetime
+            if (LicenseService.storedPlan == 'lifetime' &&
+                LicenseService.isActivated) ...[
+              const AppDetailDivider(),
+              const AppDetailRow(
+                icon: Icons.all_inclusive,
+                label: 'Expires',
+                value: 'Never — Lifetime License',
+                valueColor: AppColors.success,
+              ),
+            ],
+
+            // Trial start
+            if (LicenseService.isTrialActive && !LicenseService.isActivated) ...[
+              const AppDetailDivider(),
+              AppDetailRow(
+                icon: Icons.celebration_outlined,
+                label: 'Trial Started',
+                value: _formatDate(LicenseService.trialStartDate!),
+              ),
+            ],
+
+            // Device ID
+            const AppDetailDivider(),
+            FutureBuilder<String>(
+              future: LicenseService.deviceId,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const SizedBox.shrink();
+                return AppDetailRow(
+                  icon: Icons.devices,
+                  label: 'Device ID',
+                  value: snapshot.data!,
+                  monospace: true,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Plan Comparison
+// ────────────────────────────────────────────────────────────
+
+class _PlanComparisonCards extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final currentPlan = LicenseService.storedPlan;
+    final isTrial = LicenseService.isTrialActive;
+
+    return Column(
+      children: [
+        // Free
+        _PlanRow(
+          icon: Icon(CupertinoIcons.gift, size: 28, color: AppColors.success),
+          title: 'Free',
+          price: 'Free',
+          features: '25 products, basic POS',
+          isCurrent: !isTrial && !LicenseService.isActivated,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Monthly
+        _PlanRow(
+          icon: Icon(CupertinoIcons.calendar, size: 28, color: AppColors.seed),
+          title: 'Monthly',
+          price: 'Rs 500/mo',
+          features: 'Unlimited products, all features',
+          isCurrent: currentPlan == 'monthly',
+          onTap: () => _openWhatsApp(context, 'Monthly'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Yearly
+        _PlanRow(
+          icon: Icon(CupertinoIcons.calendar_today, size: 28, color: AppColors.seed),
+          title: 'Yearly',
+          price: 'Rs 4,000/yr',
+          features: 'All features, 33% off monthly',
+          badge: '33% off',
+          isCurrent: currentPlan == 'yearly',
+          onTap: () => _openWhatsApp(context, 'Yearly'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Lifetime
+        _PlanRow(
+          icon: Icon(CupertinoIcons.infinite, size: 28, color: AppColors.seed),
+          title: 'Lifetime',
+          price: 'Rs 10,000',
+          features: 'All features forever, best value',
+          badge: 'Best value',
+          isCurrent: currentPlan == 'lifetime',
+          isHighlighted: true,
+          onTap: () => _openWhatsApp(context, 'Lifetime'),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlanRow extends StatelessWidget {
+  const _PlanRow({
+    required this.icon,
+    required this.title,
+    required this.price,
+    required this.features,
+    this.isCurrent = false,
+    this.isHighlighted = false,
+    this.badge,
+    this.onTap,
+  });
+
+  final Widget icon;
+  final String title;
+  final String price;
+  final String features;
+  final bool isCurrent;
+  final bool isHighlighted;
+  final String? badge;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: isCurrent ? null : onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              icon,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(title, style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        )),
+                        if (badge != null) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          AppBadge(
+                            label: badge!,
+                            type: isHighlighted ? AppBadgeType.info : AppBadgeType.neutral,
+                          ),
+                        ],
+                      ],
+                    ),
+                    Text(features, style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    )),
+                  ],
+                ),
+              ),
+              if (isCurrent)
+                AppBadge(label: 'Current', type: AppBadgeType.success)
+              else
+                Text(price, style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: isHighlighted ? cs.primary : null,
+                )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Deactivate Button
+// ────────────────────────────────────────────────────────────
+
+class _DeactivateButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(),
+        const SizedBox(height: AppSpacing.md),
+        OutlinedButton.icon(
+          onPressed: () => _confirmDeactivate(context),
+          icon: Icon(Icons.logout, size: 18, color: AppColors.danger.withValues(alpha: 0.7)),
+          label: Text('Deactivate License',
+            style: TextStyle(color: AppColors.danger.withValues(alpha: 0.7))),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: AppColors.danger.withValues(alpha: 0.3)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _confirmDeactivate(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Deactivate License?'),
+        content: const Text(
+          'This will remove your license from this device. '
+          'Your data will NOT be deleted, but premium features will be locked.\n\n'
+          'You can reactivate anytime with the same license key.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            onPressed: () async {
+              await LicenseService.deactivate(
+                reason: 'License deactivated by user from settings.',
+              );
+              Navigator.of(context).pop();
+              Get.offAllNamed('/activation');
+            },
+            child: const Text('Deactivate'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Upgrade Section (for free/trial users)
+// ────────────────────────────────────────────────────────────
+
+class _UpgradeSection extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 48,
+          child: FilledButton.icon(
+            onPressed: () => _openWhatsApp(context, 'Any Plan'),
+            icon: Image.asset(
+              'lib/assets/images/whatsapp-logo1.png',
+              width: 24, height: 24,
+            ),
+            label: const Text('Purchase via WhatsApp'),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        SizedBox(
+          height: 44,
+          child: OutlinedButton.icon(
+            onPressed: () => Launcher.makeCall('923153507075'),
+            icon: const Icon(Icons.call, size: 18),
+            label: const Text('Call: 0315-3507075'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Support Card
+// ────────────────────────────────────────────────────────────
+
+class _SupportCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.support_agent, size: 20, color: cs.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Text('Need Help?', style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                )),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'For license activation, renewal, or any issues, contact us:',
+              style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // WhatsApp
+            InkWell(
+              onTap: () => _openWhatsApp(context, 'Support'),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: Row(
+                  children: [
+                    Image.asset('lib/assets/images/whatsapp-logo1.png', width: 18, height: 18),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text('WhatsApp: 0315-3507075', style: TextStyle(
+                      color: Colors.green[700], fontWeight: FontWeight.w600, fontSize: 14,
+                    )),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            // Call
+            InkWell(
+              onTap: () => Launcher.makeCall('923153507075'),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: Row(
+                  children: [
+                    Icon(Icons.call, size: 18, color: cs.primary),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text('Call: 0315-3507075', style: TextStyle(
+                      color: cs.primary, fontWeight: FontWeight.w600, fontSize: 14,
+                    )),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            // Website
+            Row(
+              children: [
+                Icon(Icons.language, size: 18, color: cs.onSurfaceVariant),
+                const SizedBox(width: AppSpacing.sm),
+                Text('Codynest.com', style: TextStyle(
+                  color: cs.onSurfaceVariant, fontWeight: FontWeight.w500, fontSize: 14,
+                )),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────
+
+String _formatDate(DateTime date) {
+  const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return '${date.day} ${months[date.month]} ${date.year}';
+}
+
+void _openWhatsApp(BuildContext context, String plan) async {
+  final success = await Launcher.openWhatsApp(
+    '923153507075',
+    'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
+  );
+  if (!success && context.mounted) {
+    Get.snackbar('Contact Us', 'WhatsApp/Call: 0315-3507075',
+      snackPosition: SnackPosition.BOTTOM);
+  }
+}

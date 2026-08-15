@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:flutter/material.dart';
@@ -563,50 +564,17 @@ class _BackupTile extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  final VoidCallback onRefresh;
-
-  const _EmptyState({required this.onRefresh});
+  const _EmptyState({this.onRefresh});
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: AppColors.seed.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.folder_off_outlined,
-                size: 48,
-                color: AppColors.seed.withValues(alpha: 0.5),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text('No backups yet', style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Enable auto-backup in Settings to keep\nyour data safe automatically',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            OutlinedButton.icon(
-              onPressed: onRefresh,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.history_outlined,
+      title: 'No backups yet',
+      subtitle: 'Enable auto-backup or create a manual backup',
+      actionLabel: onRefresh != null ? 'Refresh' : null,
+      onAction: onRefresh,
     );
   }
 }

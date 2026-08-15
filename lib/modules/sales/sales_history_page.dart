@@ -1,10 +1,15 @@
+import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/returns/return_dialog.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:get/get.dart';
 
 import 'sales_controller.dart';
@@ -19,7 +24,7 @@ class SalesHistoryPage extends GetView<SalesController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Sales History")),
+      appBar: AppShellAppBar(title: const Text("Sales History")),
       body: Obx(() {
         if (controller.sales.isEmpty) {
           return _EmptySales();
@@ -52,7 +57,7 @@ class SalesHistoryPage extends GetView<SalesController> {
         return Column(
           children: [
             // ---------- Summary banner ----------
-            Container(
+            AppAnimations.slideUp(child: Container(
               margin: const EdgeInsets.all(AppSpacing.lg),
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
@@ -160,6 +165,7 @@ class SalesHistoryPage extends GetView<SalesController> {
               ),
             ),
 
+            ),
             // ---------- Search bar ----------
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -297,7 +303,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                   AppSpacing.lg,
                   0,
                   AppSpacing.lg,
-                  AppSpacing.lg,
+                  AppSpacing.navClearance,
                 ),
                 itemCount: sales.length,
                 separatorBuilder: (_, __) =>
@@ -322,7 +328,10 @@ class SalesHistoryPage extends GetView<SalesController> {
                   );
                   final saleNetProfit = sale.profit - saleProfitReversed;
 
-                  return Card(
+                  return AppAnimations.staggerItem(
+                    index: index,
+                    child: TapScale(
+                      child: Card(
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: () {
@@ -579,7 +588,13 @@ class SalesHistoryPage extends GetView<SalesController> {
                                   //   ),
                                   // ),
                                   child: IconButton.filledTonal(
-                                    onPressed: () => showReturnDialog(sale),
+                                    onPressed: () {
+                                      if (!LicenseService.isPremium) {
+                                        _showUpgradeDialog(context);
+                                        return;
+                                      }
+                                      showReturnDialog(sale);
+                                    },
                                     icon: const Icon(
                                       Icons.assignment_return_outlined,
                                       size: 20,
@@ -636,6 +651,8 @@ class SalesHistoryPage extends GetView<SalesController> {
                         ),
                       ),
                     ),
+                    ),
+                    ),
                   );
                 },
               ),
@@ -677,40 +694,87 @@ class _BannerStat extends StatelessWidget {
   }
 }
 
-class _EmptySales extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+void _showUpgradeDialog(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) {
+      final theme = Theme.of(context);
+      final cs = theme.colorScheme;
+      return Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.xl,
+          right: AppSpacing.xl,
+          top: AppSpacing.xl,
+          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.receipt_long_outlined,
-                size: 48,
-                color: theme.colorScheme.primary,
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text("No sales yet", style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
+            Icon(Icons.lock_outline, size: 40, color: AppColors.warning),
+            const SizedBox(height: AppSpacing.md),
             Text(
-              "Completed sales will appear here",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              'Returns & Refunds',
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'This feature is available on Premium plans.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            // WhatsApp purchase button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () => Launcher.openWhatsApp(
+                  '923153507075',
+                  'Hi, I want to purchase Codynest POS license.\nPlan: Any\nFeature: Returns & Refunds',
+                ),
+                icon: const Icon(Icons.chat, size: 20),
+                label: const Text('Purchase via WhatsApp'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            // Call option
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton.icon(
+                onPressed: () => Launcher.makeCall('923153507075'),
+                icon: const Icon(Icons.call, size: 18),
+                label: const Text('Call: 0315-3507075'),
               ),
             ),
           ],
         ),
-      ),
+      );
+    },
+  );
+}
+
+class _EmptySales extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const AppEmptyState(
+      icon: Icons.receipt_long_outlined,
+      title: 'No sales yet',
+      subtitle: 'Completed sales will appear here',
     );
   }
 }

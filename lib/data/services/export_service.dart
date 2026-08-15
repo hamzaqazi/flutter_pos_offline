@@ -165,6 +165,19 @@ class ExportService {
       );
       backup['lastInvoiceNumber'] = lastInvoiceNum;
 
+      // Trial data — included to prevent trial reset exploit on import.
+      // When importing, the older (earlier) trial_startDate wins, so a
+      // fresh trial cannot override an expired one from a backup.
+      final trialStart = settingsBox.get('trial_startDate');
+      if (trialStart != null) {
+        backup['trial_startDate'] = trialStart;
+        backup['trial_expired'] = settingsBox.get('trial_expired', defaultValue: false);
+        final trialPhone = settingsBox.get('trial_customerPhone');
+        if (trialPhone != null) {
+          backup['trial_customerPhone'] = trialPhone;
+        }
+      }
+
       // Active cashier
       if (staffController.activeCashierId.value != null) {
         backup['activeCashierId'] = staffController.activeCashierId.value;

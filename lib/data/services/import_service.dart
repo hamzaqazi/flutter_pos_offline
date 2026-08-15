@@ -10,6 +10,7 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 /// Service for importing data from a JSON backup file.
@@ -170,6 +171,34 @@ class ImportService {
         settingsBox.put('lastInvoiceNumber', data['lastInvoiceNumber']);
       }
 
+      // ── Prevent trial reset exploit ──
+      // If the backup has an earlier (expired) trial_startDate, it means the
+      // user exported from an expired trial, cleared data, started a fresh trial,
+      // and is now importing the backup. We override the fresh trial with the
+      // older expired one so the exploit fails.
+      final settingsBox = Hive.box('settings');
+      final currentTrialStart = settingsBox.get('trial_startDate') as String?;
+      final backupTrialStart = data['trial_startDate'] as String?;
+      if (currentTrialStart != null && backupTrialStart != null) {
+        final currentDate = DateTime.tryParse(currentTrialStart);
+        final backupDate = DateTime.tryParse(backupTrialStart);
+        if (currentDate != null && backupDate != null
+            && backupDate.isBefore(currentDate)) {
+          // Backup trial is older (expired) — use it instead of fresh one
+          await settingsBox.put('trial_startDate', backupTrialStart);
+          final backupExpired = data['trial_expired'] as bool?;
+          await settingsBox.put('trial_expired', backupExpired ?? true);
+          debugPrint('🔒 Trial reset exploit blocked — older trial date restored from backup');
+        }
+      } else if (backupTrialStart != null) {
+        // Backup has trial data but current doesn't — restore from backup
+        await settingsBox.put('trial_startDate', backupTrialStart);
+        await settingsBox.put('trial_expired', data['trial_expired'] ?? false);
+        if (data['trial_customerPhone'] != null) {
+          await settingsBox.put('trial_customerPhone', data['trial_customerPhone']);
+        }
+      }
+
       // Reload all controllers
       await _reloadAllControllers();
 
@@ -196,9 +225,15 @@ class ImportService {
       'license_key',
       'license_shopName',
       'license_expiresAt',
+      'license_plan',
+      'license_lastVerified',
       'license_pin',
       'license_pinEnabled',
       'license_deactivationReason',
+      'trial_startDate',
+      'trial_expired',
+      'trial_customerPhone',
+      'trial_registrationPending',
       'autoBackup_enabled',
       'autoBackup_frequency',
       'autoBackup_lastBackup',

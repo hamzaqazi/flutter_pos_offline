@@ -1,4 +1,7 @@
+import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/customer_model.dart';
@@ -24,7 +27,7 @@ class CartPage extends GetView<CartController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppShellAppBar(
         title: const Text("Cart"),
         actions: [
           Obx(() {
@@ -36,13 +39,17 @@ class CartPage extends GetView<CartController> {
                   onPressed: () => _holdCartDialog(controller),
                   icon: const Icon(Icons.pause_circle_outline, size: 18),
                   label: const Text("Hold"),
-                  style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.warning,
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: () => controller.clearCart(),
                   icon: const Icon(Icons.delete_outline, size: 18),
                   label: const Text("Clear"),
-                  style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                  ),
                 ),
               ],
             );
@@ -55,57 +62,22 @@ class CartPage extends GetView<CartController> {
           // Held carts banner (always visible when carts are held, even with empty cart)
           Obx(() {
             if (controller.heldCarts.isEmpty) return const SizedBox.shrink();
-            return Container(
-              margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
-              child: Card(
-                color: AppColors.warning.withValues(alpha: 0.08),
-                child: InkWell(
-                  onTap: () => _showHeldCartsSheet(controller),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                          ),
-                          child: const Icon(
-                            Icons.pause_circle_filled,
-                            color: AppColors.warning,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}",
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                "Tap to view and resume",
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 14,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                0,
+              ),
+              child: AppBanner(
+                type: AppBannerType.warning,
+                icon: Icons.pause_circle_filled,
+                title:
+                    '${controller.heldCartCount} held cart${controller.heldCartCount == 1 ? '' : 's'}',
+                subtitle: 'Tap to view and resume',
+                actionLabel: 'View',
+                onAction: () => _showHeldCartsSheet(controller),
+                margin: EdgeInsets.zero,
               ),
             );
           }),
@@ -128,21 +100,29 @@ class CartPage extends GetView<CartController> {
                           const SizedBox(height: AppSpacing.md),
                       itemBuilder: (_, index) {
                         final item = controller.cartItems[index];
-                        return _CartTile(
-                          item: item,
-                          onIncrease: () => controller.increaseQuantity(index),
-                          onDecrease: () => controller.decreaseQuantity(index),
+                        return AppAnimations.staggerItem(
+                          index: index,
+                          child: _CartTile(
+                            item: item,
+                            onIncrease: () => controller.increaseQuantity(index),
+                            onDecrease: () => controller.decreaseQuantity(index),
+                          ),
                         );
                       },
                     ),
                   ),
-                  _SummaryBar(
-                    total: controller.totalAmount,
-                    subtotal: controller.subtotalAmount,
-                    tax: controller.taxAmount,
-                    savings: controller.totalSavings,
-                    itemCount: controller.totalItems,
-                    onCheckout: () => _checkout(context),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: AppSpacing.navClearance,
+                    ),
+                    child: _SummaryBar(
+                      total: controller.totalAmount,
+                      subtotal: controller.subtotalAmount,
+                      tax: controller.taxAmount,
+                      savings: controller.totalSavings,
+                      itemCount: controller.totalItems,
+                      onCheckout: () => _checkout(context),
+                    ),
                   ),
                 ],
               );
@@ -203,7 +183,9 @@ class CartPage extends GetView<CartController> {
                     Expanded(
                       child: FilledButton(
                         onPressed: () {
-                          controller.holdCart(label: labelController.text.trim());
+                          controller.holdCart(
+                            label: labelController.text.trim(),
+                          );
                           Get.back();
                         },
                         style: FilledButton.styleFrom(
@@ -241,7 +223,9 @@ class CartPage extends GetView<CartController> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Get.theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                color: Get.theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -264,89 +248,104 @@ class CartPage extends GetView<CartController> {
             ),
             const Divider(height: 1),
             Flexible(
-              child: Obx(() => ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: controller.heldCarts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
-                itemBuilder: (_, index) {
-                  final held = controller.heldCarts[index];
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                            ),
-                            child: const Icon(
-                              Icons.pause_circle_filled,
-                              color: AppColors.warning,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  held.label.isNotEmpty ? held.label : "Held Cart",
-                                  style: Get.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
+              child: Obx(
+                () => ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  itemCount: controller.heldCarts.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (_, index) {
+                    final held = controller.heldCarts[index];
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: AppColors.warning.withValues(
+                                  alpha: 0.12,
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "${held.totalItems} items • ${Formatters.currency(held.totalAmount)}",
-                                  style: Get.textTheme.bodySmall?.copyWith(
-                                    color: Get.theme.colorScheme.onSurfaceVariant,
-                                  ),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusSm,
                                 ),
-                                Text(
-                                  Formatters.dateTime(held.heldAt),
-                                  style: Get.textTheme.bodySmall?.copyWith(
-                                    color: Get.theme.colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Delete button
-                          IconButton(
-                            onPressed: () {
-                              controller.deleteHeldCart(held.id);
-                            },
-                            icon: const Icon(Icons.delete_outline, size: 20),
-                            color: AppColors.danger,
-                            tooltip: "Discard held cart",
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          // Resume button
-                          SizedBox(
-                            width: 90,
-                            child: FilledButton.tonalIcon(
-                              onPressed: () {
-                                controller.resumeCart(held.id);
-                                Get.back(); // Close bottom sheet
-                              },
-                              icon: const Icon(Icons.play_arrow, size: 18),
-                              label: const Text("Resume"),
-                              style: FilledButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
+                              ),
+                              child: const Icon(
+                                Icons.pause_circle_filled,
+                                color: AppColors.warning,
+                                size: 24,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    held.label.isNotEmpty
+                                        ? held.label
+                                        : "Held Cart",
+                                    style: Get.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "${held.totalItems} items • ${Formatters.currency(held.totalAmount)}",
+                                    style: Get.textTheme.bodySmall?.copyWith(
+                                      color: Get
+                                          .theme
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                                  ),
+                                  Text(
+                                    Formatters.dateTime(held.heldAt),
+                                    style: Get.textTheme.bodySmall?.copyWith(
+                                      color: Get
+                                          .theme
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Delete button
+                            IconButton(
+                              onPressed: () {
+                                controller.deleteHeldCart(held.id);
+                              },
+                              icon: const Icon(Icons.delete_outline, size: 20),
+                              color: AppColors.danger,
+                              tooltip: "Discard held cart",
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            // Resume button
+                            SizedBox(
+                              width: 90,
+                              child: FilledButton.tonalIcon(
+                                onPressed: () {
+                                  controller.resumeCart(held.id);
+                                  Get.back(); // Close bottom sheet
+                                },
+                                icon: const Icon(Icons.play_arrow, size: 18),
+                                label: const Text("Resume"),
+                                style: FilledButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              )),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),
@@ -378,12 +377,14 @@ class CartPage extends GetView<CartController> {
                   cart.subtotalAmount * checkoutDiscountPct / 100;
               // For tax-exclusive: discount reduces subtotal, then tax is recalculated
               final settings = SettingsService.getSettings();
-              final discountedSubtotal = cart.subtotalAmount - checkoutDiscountAmount;
+              final discountedSubtotal =
+                  cart.subtotalAmount - checkoutDiscountAmount;
               final taxOnDiscounted = settings.taxInclusive
-                  ? discountedSubtotal - (discountedSubtotal / (1 + settings.taxRate / 100))
+                  ? discountedSubtotal -
+                        (discountedSubtotal / (1 + settings.taxRate / 100))
                   : discountedSubtotal * settings.taxRate / 100;
               final grandTotal = settings.taxInclusive
-                  ? discountedSubtotal  // tax already included
+                  ? discountedSubtotal // tax already included
                   : discountedSubtotal + taxOnDiscounted;
 
               final cash = double.tryParse(cashController.text.trim()) ?? 0;
@@ -406,10 +407,12 @@ class CartPage extends GetView<CartController> {
                     Container(
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary
-                            .withValues(alpha: 0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusMd),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.08,
+                        ),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusMd,
+                        ),
                       ),
                       child: Column(
                         children: [
@@ -417,8 +420,10 @@ class CartPage extends GetView<CartController> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("Subtotal",
-                                  style: theme.textTheme.bodyMedium),
+                              Text(
+                                "Subtotal",
+                                style: theme.textTheme.bodyMedium,
+                              ),
                               Text(
                                 Formatters.currency(cart.subtotalAmount),
                                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -433,15 +438,15 @@ class CartPage extends GetView<CartController> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text("Product discounts",
-                                    style:
-                                        theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.success,
-                                    )),
+                                Text(
+                                  "Product discounts",
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.success,
+                                  ),
+                                ),
                                 Text(
                                   "-${Formatters.currency(cart.totalSavings)}",
-                                  style:
-                                      theme.textTheme.bodyMedium?.copyWith(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     color: AppColors.success,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -456,15 +461,14 @@ class CartPage extends GetView<CartController> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                    "${SettingsService.getSettings().taxInclusive ? 'Tax incl.' : 'Tax'} (${SettingsService.getSettings().taxRate}%)",
-                                    style:
-                                        theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.accent,
-                                    )),
+                                  "${SettingsService.getSettings().taxInclusive ? 'Tax incl.' : 'Tax'} (${SettingsService.getSettings().taxRate}%)",
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.accent,
+                                  ),
+                                ),
                                 Text(
                                   Formatters.currency(cart.taxAmount),
-                                  style:
-                                      theme.textTheme.bodyMedium?.copyWith(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     color: AppColors.accent,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -479,15 +483,14 @@ class CartPage extends GetView<CartController> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                    "Checkout discount ($checkoutDiscountPct%)",
-                                    style:
-                                        theme.textTheme.bodySmall?.copyWith(
-                                      color: AppColors.danger,
-                                    )),
+                                  "Checkout discount ($checkoutDiscountPct%)",
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: AppColors.danger,
+                                  ),
+                                ),
                                 Text(
                                   "-${Formatters.currency(checkoutDiscountAmount)}",
-                                  style:
-                                      theme.textTheme.bodyMedium?.copyWith(
+                                  style: theme.textTheme.bodyMedium?.copyWith(
                                     color: AppColors.danger,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -502,12 +505,13 @@ class CartPage extends GetView<CartController> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("Total payable",
-                                  style: theme.textTheme.titleMedium),
+                              Text(
+                                "Total payable",
+                                style: theme.textTheme.titleMedium,
+                              ),
                               Text(
                                 Formatters.currency(grandTotal),
-                                style:
-                                    theme.textTheme.titleLarge?.copyWith(
+                                style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -549,25 +553,50 @@ class CartPage extends GetView<CartController> {
                     Wrap(
                       spacing: AppSpacing.sm,
                       children: [
-                        _discountChip("0%", "0", checkoutDiscountController,
-                            setState),
-                        _discountChip("5%", "5", checkoutDiscountController,
-                            setState),
-                        _discountChip("10%", "10", checkoutDiscountController,
-                            setState),
-                        _discountChip("15%", "15", checkoutDiscountController,
-                            setState),
-                        _discountChip("20%", "20", checkoutDiscountController,
-                            setState),
-                        _discountChip("25%", "25", checkoutDiscountController,
-                            setState),
+                        _discountChip(
+                          "0%",
+                          "0",
+                          checkoutDiscountController,
+                          setState,
+                        ),
+                        _discountChip(
+                          "5%",
+                          "5",
+                          checkoutDiscountController,
+                          setState,
+                        ),
+                        _discountChip(
+                          "10%",
+                          "10",
+                          checkoutDiscountController,
+                          setState,
+                        ),
+                        _discountChip(
+                          "15%",
+                          "15",
+                          checkoutDiscountController,
+                          setState,
+                        ),
+                        _discountChip(
+                          "20%",
+                          "20",
+                          checkoutDiscountController,
+                          setState,
+                        ),
+                        _discountChip(
+                          "25%",
+                          "25",
+                          checkoutDiscountController,
+                          setState,
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
                     // ---------- Customer selector ----------
                     Obx(() {
-                      final customersController = Get.find<CustomersController>();
+                      final customersController =
+                          Get.find<CustomersController>();
                       final customers = customersController.customers;
                       return DropdownButtonFormField<String>(
                         value: selectedCustomerId,
@@ -581,10 +610,12 @@ class CartPage extends GetView<CartController> {
                             value: null,
                             child: Text("Walk-in customer"),
                           ),
-                          ...customers.map((c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.name),
-                          )),
+                          ...customers.map(
+                            (c) => DropdownMenuItem(
+                              value: c.id,
+                              child: Text(c.name),
+                            ),
+                          ),
                         ],
                         onChanged: (value) =>
                             setState(() => selectedCustomerId = value),
@@ -608,12 +639,24 @@ class CartPage extends GetView<CartController> {
                     Wrap(
                       spacing: AppSpacing.sm,
                       children: [
-                        _quickChip("Exact", grandTotal, cashController,
-                            setState),
                         _quickChip(
-                            "+500", grandTotal + 500, cashController, setState),
-                        _quickChip("+1000", grandTotal + 1000,
-                            cashController, setState),
+                          "Exact",
+                          grandTotal,
+                          cashController,
+                          setState,
+                        ),
+                        _quickChip(
+                          "+500",
+                          grandTotal + 500,
+                          cashController,
+                          setState,
+                        ),
+                        _quickChip(
+                          "+1000",
+                          grandTotal + 1000,
+                          cashController,
+                          setState,
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -621,8 +664,7 @@ class CartPage extends GetView<CartController> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Change",
-                              style: theme.textTheme.bodyMedium),
+                          Text("Change", style: theme.textTheme.bodyMedium),
                           Text(
                             enough
                                 ? Formatters.currency(change)
@@ -651,24 +693,32 @@ class CartPage extends GetView<CartController> {
                             onPressed: enough
                                 ? () {
                                     Get.back();
-                                    final invNum = Get.find<SalesController>().peekNextInvoiceNumber();
+                                    final invNum = Get.find<SalesController>()
+                                        .peekNextInvoiceNumber();
                                     Get.to(
                                       () => InvoicePreviewPage(
                                         items: cart.cartItems,
                                         subtotal: cart.subtotalAmount,
-                                        checkoutDiscount:
-                                            checkoutDiscountPct,
+                                        checkoutDiscount: checkoutDiscountPct,
                                         taxRate: settings.taxRate,
                                         taxInclusive: settings.taxInclusive,
                                         taxAmount: settings.taxInclusive
-                                            ? (grandTotal - grandTotal / (1 + settings.taxRate / 100))
+                                            ? (grandTotal -
+                                                  grandTotal /
+                                                      (1 +
+                                                          settings.taxRate /
+                                                              100))
                                             : taxOnDiscounted,
                                         total: grandTotal,
                                         cash: cash,
                                         change: change,
                                         totalSavings: totalAllSavings,
                                         customerId: selectedCustomerId ?? '',
-                                        cashierId: Get.find<StaffController>().activeCashierId.value ?? '',
+                                        cashierId:
+                                            Get.find<StaffController>()
+                                                .activeCashierId
+                                                .value ??
+                                            '',
                                         invoiceNumber: invNum,
                                       ),
                                     );
@@ -738,7 +788,8 @@ class _CartTile extends StatelessWidget {
     final accent = AppColors.forCategory(item.product.category);
     final hasDiscount = item.product.discount > 0;
 
-    return Card(
+    return TapScale(
+      child: Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
@@ -779,11 +830,14 @@ class _CartTile extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.danger.withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
                           child: Text(
                             "-${item.product.discount.toStringAsFixed(0)}%",
@@ -848,19 +902,28 @@ class _CartTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _StepBtn(icon: Icons.add, onTap: onIncrease, color: cs.primary),
+                  _StepBtn(
+                    icon: Icons.add,
+                    onTap: onIncrease,
+                    color: cs.primary,
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
+      ),
     );
   }
 }
 
 class _StepBtn extends StatelessWidget {
-  const _StepBtn({required this.icon, required this.onTap, required this.color});
+  const _StepBtn({
+    required this.icon,
+    required this.onTap,
+    required this.color,
+  });
   final IconData icon;
   final VoidCallback onTap;
   final Color color;
@@ -980,46 +1043,12 @@ class _SummaryBar extends StatelessWidget {
 class _EmptyCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.shopping_cart_outlined,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text("Your cart is empty", style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              "Add products to start a sale",
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton.icon(
-              onPressed: () => Get.toNamed('/products'),
-              icon: const Icon(Icons.storefront_outlined),
-              label: const Text("Browse products"),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(220, 52),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.shopping_cart_outlined,
+      title: 'Your cart is empty',
+      subtitle: 'Add products to start a sale',
+      actionLabel: 'Browse products',
+      onAction: () => ShellController.to.goProducts(),
     );
   }
 }
@@ -1050,7 +1079,11 @@ class _SkuQuickAdd extends StatelessWidget {
               onPressed: () => BarcodeScannerHelper.scanAndLookup(
                 onScanned: (code) => BarcodeScannerHelper.addSkuToCart(code),
               ),
-              icon: Icon(Icons.qr_code_scanner, color: AppColors.accent, size: 24),
+              icon: Icon(
+                Icons.qr_code_scanner,
+                color: AppColors.accent,
+                size: 24,
+              ),
               tooltip: "Scan barcode",
               style: IconButton.styleFrom(
                 minimumSize: const Size(48, 48),
