@@ -239,6 +239,7 @@ class ImportService {
       'autoBackup_lastBackup',
       'autoBackup_maxBackups',
       'autoBackup_keepLast',
+      'web_deviceId', // Preserve web browser fingerprint across imports
     ]) {
       final value = settingsBox.get(key);
       if (value != null) {

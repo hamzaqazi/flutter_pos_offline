@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-import 'dart:io';
 
 /// Service for license key validation via Firebase Firestore.
 ///
@@ -259,14 +258,37 @@ class LicenseService {
   static Future<void> registerTrialDevice({String customerPhone = ''}) async {
     try {
       final currentDeviceId = await deviceId;
-      final deviceInfo = DeviceInfoPlugin();
       String deviceModel = 'unknown';
-      if (Platform.isAndroid) {
-        final android = await deviceInfo.androidInfo;
-        deviceModel = '${android.brand} ${android.model}';
-      } else if (Platform.isIOS) {
-        final ios = await deviceInfo.iosInfo;
-        deviceModel = ios.utsname.machine;
+
+      if (kIsWeb) {
+        final deviceInfo = DeviceInfoPlugin();
+        final web = await deviceInfo.webBrowserInfo;
+        deviceModel = '${web.browserName.name} ${web.platform ?? ""}'.trim();
+        if (deviceModel.isEmpty || deviceModel == 'unknown') {
+          deviceModel = 'Web Browser';
+        }
+      } else {
+        final deviceInfo = DeviceInfoPlugin();
+        try {
+          if (defaultTargetPlatform == TargetPlatform.android) {
+            final android = await deviceInfo.androidInfo;
+            deviceModel = '${android.brand} ${android.model}';
+          } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+            final ios = await deviceInfo.iosInfo;
+            deviceModel = ios.utsname.machine;
+          } else if (defaultTargetPlatform == TargetPlatform.macOS) {
+            final mac = await deviceInfo.macOsInfo;
+            deviceModel = mac.computerName;
+          } else if (defaultTargetPlatform == TargetPlatform.windows) {
+            final win = await deviceInfo.windowsInfo;
+            deviceModel = win.computerName;
+          } else if (defaultTargetPlatform == TargetPlatform.linux) {
+            final linux = await deviceInfo.linuxInfo;
+            deviceModel = linux.prettyName ?? 'Linux';
+          }
+        } catch (e) {
+          debugPrint('⚠️ Failed to get device model: $e');
+        }
       }
 
       final docData = <String, dynamic>{
@@ -368,13 +390,41 @@ class LicenseService {
 
   /// Get this device's unique ID.
   static Future<String> get deviceId async {
+    // ── Web: generate a browser fingerprint ──
+    if (kIsWeb) {
+      // Check if we already have a stored web device ID
+      final storedId = _box.get('web_deviceId') as String?;
+      if (storedId != null && storedId.isNotEmpty) {
+        return 'web_$storedId';
+      }
+      // Generate a unique ID for this browser instance
+      // (stored in Hive so it persists across sessions)
+      final newId = DateTime.now().microsecondsSinceEpoch.toString();
+      await _box.put('web_deviceId', newId);
+      return 'web_$newId';
+    }
+
+    // ── Native platforms ──
     final deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
-      final android = await deviceInfo.androidInfo;
-      return 'android_${android.id}';
-    } else if (Platform.isIOS) {
-      final ios = await deviceInfo.iosInfo;
-      return 'ios_${ios.identifierForVendor ?? "unknown"}';
+    try {
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        final android = await deviceInfo.androidInfo;
+        return 'android_${android.id}';
+      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final ios = await deviceInfo.iosInfo;
+        return 'ios_${ios.identifierForVendor ?? "unknown"}';
+      } else if (defaultTargetPlatform == TargetPlatform.macOS) {
+        final mac = await deviceInfo.macOsInfo;
+        return 'macos_${mac.systemGUID ?? "unknown"}';
+      } else if (defaultTargetPlatform == TargetPlatform.windows) {
+        final win = await deviceInfo.windowsInfo;
+        return 'windows_${win.computerName}';
+      } else if (defaultTargetPlatform == TargetPlatform.linux) {
+        final linux = await deviceInfo.linuxInfo;
+        return 'linux_${linux.machineId ?? "unknown"}';
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to get device ID: $e');
     }
     return 'unknown';
   }
