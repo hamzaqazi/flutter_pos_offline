@@ -25,7 +25,7 @@ class LicenseService {
   static const int trialDurationDays = 14;
 
   /// Maximum products allowed on the free plan.
-  static const int freeMaxProducts = 25;
+  static const int freeMaxProducts = 14;
 
   /// Number of days to trust premium status when offline.
   static const int offlineGraceDays = 3;
@@ -139,34 +139,6 @@ class LicenseService {
     if (isTrialActive) return true;
 
     // Neither paid nor trial
-    return false;
-
-    // Lifetime never expires
-    final p = storedPlan;
-    if (p == 'lifetime') return true;
-
-    // Monthly / yearly — check expiry
-    if (p == 'monthly' || p == 'yearly') {
-      if (isExpired) return false;
-
-      // Offline grace: trust premium for N days without verification
-      final lastVerifiedStr = _box.get('license_lastVerified') as String?;
-      if (lastVerifiedStr != null) {
-        final lastVerified = DateTime.tryParse(lastVerifiedStr);
-        if (lastVerified != null) {
-          final daysSinceVerification = DateTime.now()
-              .difference(lastVerified)
-              .inDays;
-          if (daysSinceVerification < offlineGraceDays) {
-            return true;
-          }
-        }
-      }
-
-      // If we recently verified (or can't check), trust the saved plan
-      return p != 'free';
-    }
-
     return false;
   }
 
@@ -299,6 +271,7 @@ class LicenseService {
 
       final docData = <String, dynamic>{
         'trialStartedAt': FieldValue.serverTimestamp(),
+        'lastUsedAt': FieldValue.serverTimestamp(),
         'deviceModel': deviceModel,
         'trialDurationDays': trialDurationDays,
       };
@@ -318,6 +291,21 @@ class LicenseService {
       debugPrint('⚠️ Failed to register trial device in Firestore: $e');
       // Mark for retry on next online connection
       await _box.put('trial_registrationPending', true);
+    }
+  }
+
+  /// Update the "last used" timestamp for this device's trial record.
+  /// Called on app start so the admin panel can see when a trial device
+  /// was last active.
+  static Future<void> _touchTrialDeviceLastUsed() async {
+    try {
+      final currentDeviceId = await deviceId;
+      await FirebaseFirestore.instance
+          .collection('trial_devices')
+          .doc(currentDeviceId)
+          .update({'lastUsedAt': FieldValue.serverTimestamp()});
+    } catch (e) {
+      debugPrint('⚠️ Failed to update trial device last-used timestamp: $e');
     }
   }
 
@@ -460,6 +448,12 @@ class LicenseService {
             .update({'registeredDevices': registeredDevices});
       }
 
+      // Record when this device was activated / last used
+      await _touchLicenseDeviceLastUsed(
+        key.trim().toUpperCase(),
+        currentDeviceId,
+      );
+
       // Save activation locally
       await _saveActivation(
         key: key.trim().toUpperCase(),
@@ -522,6 +516,7 @@ class LicenseService {
         await retryTrialRegistration();
       }
 
+      await _touchTrialDeviceLastUsed();
       return isTrialActive;
     }
 
@@ -582,6 +577,9 @@ class LicenseService {
 
       // Save last verified timestamp for offline grace
       await _box.put('license_lastVerified', DateTime.now().toIso8601String());
+
+      // Update "last used" timestamp for this device on the license record
+      await _touchLicenseDeviceLastUsed(key, currentDeviceId);
 
       return true;
     } catch (e) {
@@ -655,7 +653,9 @@ class LicenseService {
           .collection('trial_devices')
           .doc(currentDeviceId)
           .delete();
-      debugPrint('✅ Removed device from trial_devices (upgraded to paid license)');
+      debugPrint(
+        '✅ Removed device from trial_devices (upgraded to paid license)',
+      );
     } catch (e) {
       debugPrint('⚠️ Failed to remove trial device record: $e');
     }
@@ -682,11 +682,33 @@ class LicenseService {
       if (registeredDevices.contains(currentDeviceId)) {
         registeredDevices.remove(currentDeviceId);
         await FirebaseFirestore.instance.collection('licenses').doc(key).update(
-          {'registeredDevices': registeredDevices},
+          {
+            'registeredDevices': registeredDevices,
+            'deviceLastUsed.$currentDeviceId': FieldValue.delete(),
+          },
         );
       }
     } catch (e) {
       debugPrint('⚠️ Failed to unregister device: $e');
+    }
+  }
+
+  /// Update the "last used" timestamp for [deviceId] on the license record,
+  /// stored as a `deviceLastUsed.<deviceId>` map entry so the admin panel
+  /// can show per-device activity alongside `registeredDevices`.
+  static Future<void> _touchLicenseDeviceLastUsed(
+    String key,
+    String targetDeviceId,
+  ) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('licenses')
+          .doc(key)
+          .update({
+            'deviceLastUsed.$targetDeviceId': FieldValue.serverTimestamp(),
+          });
+    } catch (e) {
+      debugPrint('⚠️ Failed to update device last-used timestamp: $e');
     }
   }
 

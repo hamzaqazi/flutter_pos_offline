@@ -148,6 +148,7 @@ tr:hover { background: #fafafa; }
             <th>Device ID</th>
             <th>Model</th>
             <th>Trial Started</th>
+            <th>Last Used</th>
             <th>Duration</th>
             <th>Actions</th>
           </tr>
@@ -224,6 +225,18 @@ function formatDate(ts) {
   const d = ts.toDate ? ts.toDate() : new Date(ts);
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ── Format date + time ──
+function formatDateTime(ts) {
+  if (!ts) return 'Never';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let hours = d.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${hours}:${mins} ${ampm}`;
 }
 
 // ── Days until ──
@@ -375,10 +388,14 @@ window.showDetail = function(key) {
     </div>
     <div><label>Registered Devices (${devices.length}/${l.maxDevices || 3})</label>
       ${devices.length === 0 ? '<div style="color:#999; font-size:12px;">No devices registered</div>' :
-        devices.map((d, i) => `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
+        devices.map((d, i) => {
+          const lastUsed = l.deviceLastUsed && l.deviceLastUsed[d] ? formatDateTime(l.deviceLastUsed[d]) : 'Never';
+          return `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;flex-wrap:wrap;">
           <span class="device-tag">${d}</span>
+          <span style="font-size:11px;color:#888;">Last used: ${lastUsed}</span>
           <button class="btn btn-danger btn-sm" onclick="removeDevice('${key}', '${d}')">Remove</button>
-        </div>`).join('')}
+        </div>`;
+        }).join('')}
     </div>
   `;
 
@@ -511,6 +528,7 @@ function renderTrialDevices() {
 
   tbody.innerHTML = allTrialDevices.map(t => {
     const startedAt = t.trialStartedAt ? formatDate(t.trialStartedAt) : 'Unknown';
+    const lastUsed = t.lastUsedAt ? formatDateTime(t.lastUsedAt) : 'Never';
     const phone = t.customerPhone || '-';
     const daysSinceStart = t.trialStartedAt ? Math.ceil((new Date() - (t.trialStartedAt.toDate ? t.trialStartedAt.toDate() : new Date(t.trialStartedAt))) / (1000*60*60*24)) : 0;
     const remaining = (t.trialDurationDays || 14) - daysSinceStart;
@@ -524,6 +542,7 @@ function renderTrialDevices() {
       <td><span class="device-tag">${t.deviceId}</span></td>
       <td>${t.deviceModel || '-'}</td>
       <td>${startedAt}</td>
+      <td>${lastUsed}</td>
       <td>${t.trialDurationDays || 14} days${remaining > 0 ? ` (${remaining} left)` : ' (expired)'}</td>
       <td>
         ${canWhatsApp ? `<button class="btn btn-success btn-sm" onclick="window.open('${waLink}', '_blank')">💬 WhatsApp</button>` : ''}
