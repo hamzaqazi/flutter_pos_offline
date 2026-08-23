@@ -40,14 +40,21 @@ class SalesHistoryPage extends GetView<SalesController> {
             .where((r) => saleIds.contains(r.saleId))
             .toList();
         final totalRefundAmount = filteredReturns.fold<double>(
-          0, (sum, r) => sum + r.refundAmount,
+          0,
+          (sum, r) => sum + r.refundAmount,
         );
         final totalProfitReversed = filteredReturns.fold<double>(
-          0, (sum, r) => sum + r.refundProfit,
+          0,
+          (sum, r) => sum + r.refundProfit,
         );
 
-        final totalRevenue = sales.fold<double>(0, (sum, s) => sum + s.total) - totalRefundAmount;
-        final totalGrossProfit = sales.fold<double>(0, (sum, s) => sum + s.profit);
+        final totalRevenue =
+            sales.fold<double>(0, (sum, s) => sum + s.total) -
+            totalRefundAmount;
+        final totalGrossProfit = sales.fold<double>(
+          0,
+          (sum, s) => sum + s.profit,
+        );
         final totalProfit = totalGrossProfit - totalProfitReversed;
         final totalDiscount = sales.fold<double>(
           0,
@@ -57,114 +64,116 @@ class SalesHistoryPage extends GetView<SalesController> {
         return Column(
           children: [
             // ---------- Summary banner ----------
-            AppAnimations.slideUp(child: Container(
-              margin: const EdgeInsets.all(AppSpacing.lg),
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.seed,
-                    AppColors.seed.withValues(alpha: 0.75),
-                  ],
+            AppAnimations.slideUp(
+              child: Container(
+                margin: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.seed,
+                      AppColors.seed.withValues(alpha: 0.75),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _BannerStat(
-                          label: "Revenue",
-                          value: Formatters.currency(totalRevenue),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _BannerStat(
+                            label: "Revenue",
+                            value: Formatters.currency(totalRevenue),
+                          ),
                         ),
-                      ),
-                      Container(width: 1, height: 36, color: Colors.white24),
-                      Expanded(
-                        child: _BannerStat(
-                          label: totalProfitReversed > 0 ? "Net Profit" : "Profit",
-                          value: Formatters.currency(totalProfit),
+                        Container(width: 1, height: 36, color: Colors.white24),
+                        Expanded(
+                          child: _BannerStat(
+                            label: totalProfitReversed > 0
+                                ? "Net Profit"
+                                : "Profit",
+                            value: Formatters.currency(totalProfit),
+                          ),
                         ),
-                      ),
-                      Container(width: 1, height: 36, color: Colors.white24),
-                      Expanded(
-                        child: _BannerStat(
-                          label: "Sales",
-                          value: sales.length.toString(),
+                        Container(width: 1, height: 36, color: Colors.white24),
+                        Expanded(
+                          child: _BannerStat(
+                            label: "Sales",
+                            value: sales.length.toString(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (totalProfitReversed > 0) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.assignment_return_outlined,
+                              color: Colors.white70,
+                              size: 14,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              "Refunds: ${Formatters.currency(totalRefundAmount)} (profit reversed: ${Formatters.currency(totalProfitReversed)})",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                  ),
-                  if (totalProfitReversed > 0) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusSm,
+                    if (totalDiscount > 0) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.discount_outlined,
+                              color: Colors.white70,
+                              size: 14,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Text(
+                              "Total discounts given: ${Formatters.currency(totalDiscount)}",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.assignment_return_outlined,
-                            color: Colors.white70,
-                            size: 14,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Text(
-                            "Refunds: ${Formatters.currency(totalRefundAmount)} (profit reversed: ${Formatters.currency(totalProfitReversed)})",
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ],
-                  if (totalDiscount > 0) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.xs,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusSm,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.discount_outlined,
-                            color: Colors.white70,
-                            size: 14,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Text(
-                            "Total discounts given: ${Formatters.currency(totalDiscount)}",
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
-
             ),
             // ---------- Search bar ----------
             Padding(
@@ -332,326 +341,351 @@ class SalesHistoryPage extends GetView<SalesController> {
                     index: index,
                     child: TapScale(
                       child: Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () {
-                        Get.to(
-                          () => InvoicePreviewPage(
-                            items: sale.items,
-                            subtotal: sale.subtotal,
-                            checkoutDiscount: sale.checkoutDiscount,
-                            taxAmount: sale.taxAmount,
-                            total: sale.total,
-                            cash: sale.cash,
-                            change: sale.change,
-                            totalSavings: sale.discount,
-                            customerId: sale.customerId,
-                            cashierId: sale.cashierId,
-                            invoiceNumber: sale.invoiceNumber,
-                            readOnly: true,
-                          ),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              decoration: BoxDecoration(
-                                color: AppColors.success.withValues(
-                                  alpha: 0.12,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusSm,
-                                ),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () {
+                            Get.to(
+                              () => InvoicePreviewPage(
+                                items: sale.items,
+                                subtotal: sale.subtotal,
+                                checkoutDiscount: sale.checkoutDiscount,
+                                taxAmount: sale.taxAmount,
+                                total: sale.total,
+                                cash: sale.cash,
+                                change: sale.change,
+                                totalSavings: sale.discount,
+                                customerId: sale.customerId,
+                                cashierId: sale.cashierId,
+                                invoiceNumber: sale.invoiceNumber,
+                                readOnly: true,
                               ),
-                              child: const Icon(
-                                Icons.receipt_long,
-                                color: AppColors.success,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        Formatters.currency(sale.total),
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                      ),
-                                      // if (sale.hasInvoiceNumber) ...[
-                                      //   const SizedBox(width: AppSpacing.sm),
-                                      //   Container(
-                                      //     padding: const EdgeInsets.symmetric(
-                                      //       horizontal: AppSpacing.xs,
-                                      //       vertical: 1,
-                                      //     ),
-                                      //     decoration: BoxDecoration(
-                                      //       color: cs.primary.withValues(
-                                      //         alpha: 0.1,
-                                      //       ),
-                                      //       borderRadius: BorderRadius.circular(
-                                      //         AppSpacing.radiusSm,
-                                      //       ),
-                                      //     ),
-                                      //     child: Text(
-                                      //       sale.invoiceNumber,
-                                      //       style: TextStyle(
-                                      //         color: cs.primary,
-                                      //         fontSize: 10,
-                                      //         fontWeight: FontWeight.w700,
-                                      //         letterSpacing: 0.5,
-                                      //       ),
-                                      //     ),
-                                      //   ),
-                                      // ],
-                                    ],
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm,
+                                    ),
                                   ),
-                                  if (sale.hasInvoiceNumber) ...[
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSpacing.xs,
-                                        vertical: 1,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: cs.primary.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusSm,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        sale.invoiceNumber,
-                                        style: TextStyle(
-                                          color: cs.primary,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 0.5,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  // Show customer name
-                                  if (sale.hasCustomer)
-                                    Builder(
-                                      builder: (_) {
-                                        final customersController =
-                                            Get.find<CustomersController>();
-                                        final customer = customersController
-                                            .findById(sale.customerId);
-                                        if (customer != null) {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 2,
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.person_outline,
-                                                  size: 12,
-                                                  color: cs.onSurfaceVariant,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  customer.name,
-                                                  style: theme
-                                                      .textTheme
-                                                      .bodySmall
-                                                      ?.copyWith(
-                                                        color:
-                                                            cs.onSurfaceVariant,
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }
-                                        return const SizedBox.shrink();
-                                      },
-                                    ),
-                                  const SizedBox(height: 2),
-                                  Wrap(
-                                    spacing: AppSpacing.sm,
-                                    runSpacing: AppSpacing.xs,
+                                  child: const Icon(
+                                    Icons.receipt_long,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: Column(
                                     crossAxisAlignment:
-                                        WrapCrossAlignment.center,
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        Formatters.dateTime(sale.date),
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: cs.onSurfaceVariant,
-                                            ),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            Formatters.currency(sale.total),
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                          ),
+                                          // if (sale.hasInvoiceNumber) ...[
+                                          //   const SizedBox(width: AppSpacing.sm),
+                                          //   Container(
+                                          //     padding: const EdgeInsets.symmetric(
+                                          //       horizontal: AppSpacing.xs,
+                                          //       vertical: 1,
+                                          //     ),
+                                          //     decoration: BoxDecoration(
+                                          //       color: cs.primary.withValues(
+                                          //         alpha: 0.1,
+                                          //       ),
+                                          //       borderRadius: BorderRadius.circular(
+                                          //         AppSpacing.radiusSm,
+                                          //       ),
+                                          //     ),
+                                          //     child: Text(
+                                          //       sale.invoiceNumber,
+                                          //       style: TextStyle(
+                                          //         color: cs.primary,
+                                          //         fontSize: 10,
+                                          //         fontWeight: FontWeight.w700,
+                                          //         letterSpacing: 0.5,
+                                          //       ),
+                                          //     ),
+                                          //   ),
+                                          // ],
+                                        ],
                                       ),
-                                      if (sale.profit > 0)
+                                      if (sale.hasInvoiceNumber) ...[
+                                        const SizedBox(width: AppSpacing.sm),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: AppSpacing.xs,
                                             vertical: 1,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: (saleProfitReversed > 0
-                                                    ? AppColors.warning
-                                                    : AppColors.success)
-                                                .withValues(alpha: 0.12),
+                                            color: cs.primary.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusSm,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            sale.invoiceNumber,
+                                            style: TextStyle(
+                                              color: cs.primary,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                      // Show customer name
+                                      if (sale.hasCustomer)
+                                        Builder(
+                                          builder: (_) {
+                                            final customersController =
+                                                Get.find<CustomersController>();
+                                            final customer = customersController
+                                                .findById(sale.customerId);
+                                            if (customer != null) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 2,
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.person_outline,
+                                                      size: 12,
+                                                      color:
+                                                          cs.onSurfaceVariant,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      customer.name,
+                                                      style: theme
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: cs
+                                                                .onSurfaceVariant,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            }
+                                            return const SizedBox.shrink();
+                                          },
+                                        ),
+                                      const SizedBox(height: 2),
+                                      Wrap(
+                                        spacing: AppSpacing.sm,
+                                        runSpacing: AppSpacing.xs,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        children: [
+                                          Text(
+                                            Formatters.dateTime(sale.date),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: cs.onSurfaceVariant,
+                                                ),
+                                          ),
+                                          if (sale.profit > 0)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: AppSpacing.xs,
+                                                    vertical: 1,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color:
+                                                    (saleProfitReversed > 0
+                                                            ? AppColors.warning
+                                                            : AppColors.success)
+                                                        .withValues(
+                                                          alpha: 0.12,
+                                                        ),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      AppSpacing.radiusSm,
+                                                    ),
+                                              ),
+                                              child: Text(
+                                                saleProfitReversed > 0
+                                                    ? "${Formatters.currency(saleNetProfit)} net profit"
+                                                    : "+${Formatters.currency(sale.profit)} profit",
+                                                style: TextStyle(
+                                                  color: saleProfitReversed > 0
+                                                      ? AppColors.warning
+                                                      : AppColors.success,
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      // Show refund badge if sale has returns
+                                      if (totalRefund > 0) ...[
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.xs,
+                                            vertical: 1,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.warning.withValues(
+                                              alpha: 0.12,
+                                            ),
                                             borderRadius: BorderRadius.circular(
                                               AppSpacing.radiusSm,
                                             ),
                                           ),
                                           child: Text(
                                             saleProfitReversed > 0
-                                                ? "${Formatters.currency(saleNetProfit)} net profit"
-                                                : "+${Formatters.currency(sale.profit)} profit",
-                                            style: TextStyle(
-                                              color: saleProfitReversed > 0
-                                                  ? AppColors.warning
-                                                  : AppColors.success,
+                                                ? "Refunded: ${Formatters.currency(totalRefund)} (profit −${Formatters.currency(saleProfitReversed)})"
+                                                : "Refunded: ${Formatters.currency(totalRefund)}",
+                                            style: const TextStyle(
+                                              color: AppColors.warning,
                                               fontSize: 10,
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ),
+                                      ],
                                     ],
                                   ),
-                                  // Show refund badge if sale has returns
-                                  if (totalRefund > 0) ...[
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSpacing.xs,
-                                        vertical: 1,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.warning.withValues(
-                                          alpha: 0.12,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusSm,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        saleProfitReversed > 0
-                                            ? "Refunded: ${Formatters.currency(totalRefund)} (profit −${Formatters.currency(saleProfitReversed)})"
-                                            : "Refunded: ${Formatters.currency(totalRefund)}",
-                                        style: const TextStyle(
-                                          color: AppColors.warning,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                ),
+
+                                // Return button
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                    vertical: AppSpacing.xs,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColors.warning.withValues(
+                                        alpha: 0.4,
                                       ),
                                     ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            // Return button
-                            Column(
-                              children: [
-                                if (itemCount > 0)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.sm,
-                                      vertical: AppSpacing.xs,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: cs.surfaceContainerHighest
-                                          .withValues(alpha: 0.6),
-                                      borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusSm,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      "$itemCount item${itemCount == 1 ? '' : 's'}",
-                                      style: theme.textTheme.bodySmall,
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm,
                                     ),
                                   ),
+                                  child: Column(
+                                    children: [
+                                      if (itemCount > 0)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: AppSpacing.sm,
+                                            vertical: AppSpacing.xs,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: cs.surfaceContainerHighest
+                                                .withValues(alpha: 0.6),
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusSm,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            "$itemCount item${itemCount == 1 ? '' : 's'}",
+                                            style: theme.textTheme.bodySmall,
+                                          ),
+                                        ),
 
-                                const SizedBox(height: 2),
+                                      const SizedBox(height: 2),
 
-                                Container(
-                                  // decoration: BoxDecoration(
-                                  //   border: Border.all(
-                                  //     color: AppColors.warning.withValues(
-                                  //       alpha: 0.4,
-                                  //     ),
-                                  //   ),
-                                  //   borderRadius: BorderRadius.circular(
-                                  //     AppSpacing.radiusSm,
-                                  //   ),
-                                  // ),
-                                  child: IconButton.filledTonal(
-                                    onPressed: () {
-                                      if (!LicenseService.isPremium) {
-                                        _showUpgradeDialog(context);
-                                        return;
-                                      }
-                                      showReturnDialog(sale);
-                                    },
-                                    icon: const Icon(
-                                      Icons.assignment_return_outlined,
-                                      size: 20,
-                                    ),
-                                    color: AppColors.warning,
-                                    tooltip: "Process return",
-                                    padding: const EdgeInsets.all(
-                                      AppSpacing.sm,
-                                    ),
-                                    constraints: const BoxConstraints(
-                                      minWidth: 36,
-                                      minHeight: 36,
-                                    ),
+                                      Container(
+                                        // decoration: BoxDecoration(
+                                        //   border: Border.all(
+                                        //     color: AppColors.warning.withValues(
+                                        //       alpha: 0.4,
+                                        //     ),
+                                        //   ),
+                                        //   borderRadius: BorderRadius.circular(
+                                        //     AppSpacing.radiusSm,
+                                        //   ),
+                                        // ),
+                                        child: IconButton.filled(
+                                          onPressed: () {
+                                            if (!LicenseService.isPremium) {
+                                              _showUpgradeDialog(context);
+                                              return;
+                                            }
+                                            showReturnDialog(sale);
+                                          },
+                                          icon: const Icon(
+                                            Icons.assignment_return_outlined,
+                                            size: 20,
+                                          ),
+                                          // color: AppColors.warning,
+                                          tooltip: "Process return",
+                                          padding: const EdgeInsets.all(
+                                            AppSpacing.sm,
+                                          ),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 36,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "Return",
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              // color: AppColors.warning,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "Return",
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.warning,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                const SizedBox(width: AppSpacing.sm),
+                                // if (itemCount > 0)
+                                //   Container(
+                                //     padding: const EdgeInsets.symmetric(
+                                //       horizontal: AppSpacing.sm,
+                                //       vertical: AppSpacing.xs,
+                                //     ),
+                                //     decoration: BoxDecoration(
+                                //       color: cs.surfaceContainerHighest.withValues(
+                                //         alpha: 0.6,
+                                //       ),
+                                //       borderRadius: BorderRadius.circular(
+                                //         AppSpacing.radiusSm,
+                                //       ),
+                                //     ),
+                                //     child: Text(
+                                //       "$itemCount item${itemCount == 1 ? '' : 's'}",
+                                //       style: theme.textTheme.bodySmall,
+                                //     ),
+                                //   ),
+                                // const SizedBox(width: AppSpacing.sm),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 14,
+                                  color: cs.onSurfaceVariant,
                                 ),
                               ],
                             ),
-                            const SizedBox(width: AppSpacing.sm),
-                            // if (itemCount > 0)
-                            //   Container(
-                            //     padding: const EdgeInsets.symmetric(
-                            //       horizontal: AppSpacing.sm,
-                            //       vertical: AppSpacing.xs,
-                            //     ),
-                            //     decoration: BoxDecoration(
-                            //       color: cs.surfaceContainerHighest.withValues(
-                            //         alpha: 0.6,
-                            //       ),
-                            //       borderRadius: BorderRadius.circular(
-                            //         AppSpacing.radiusSm,
-                            //       ),
-                            //     ),
-                            //     child: Text(
-                            //       "$itemCount item${itemCount == 1 ? '' : 's'}",
-                            //       style: theme.textTheme.bodySmall,
-                            //     ),
-                            //   ),
-                            // const SizedBox(width: AppSpacing.sm),
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 14,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    ),
                     ),
                   );
                 },
@@ -716,7 +750,8 @@ void _showUpgradeDialog(BuildContext context) {
           children: [
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: cs.outlineVariant,
                   borderRadius: BorderRadius.circular(2),
@@ -728,12 +763,16 @@ void _showUpgradeDialog(BuildContext context) {
             const SizedBox(height: AppSpacing.md),
             Text(
               'Returns & Refunds',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'This feature is available on Premium plans.',
-              style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
