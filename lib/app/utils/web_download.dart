@@ -3,17 +3,18 @@
 library;
 
 import 'dart:html';
-import 'dart:js_interop';
 
 /// Trigger a browser file download with the given content and filename.
 /// Works reliably on all modern browsers — creates a Blob, generates an
 /// object URL, clicks an invisible <a download="filename">, then revokes.
-Future<bool> downloadFileOnWeb(String content, String filename, String mimeType) async {
+Future<bool> downloadFileOnWeb(
+  String content,
+  String filename,
+  String mimeType,
+) async {
   try {
     // Create a Blob from the content string
-    final jsContent = content.toJS;
-    final jsArray = [jsContent].toJS;
-    final blob = Blob(jsArray, '$mimeType;charset=utf-8');
+    final blob = Blob([content], '$mimeType;charset=utf-8');
 
     // Create an object URL from the Blob
     final url = Url.createObjectUrlFromBlob(blob);

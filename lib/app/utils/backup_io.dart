@@ -60,7 +60,7 @@ Future<List<Map<String, dynamic>>> listNativeBackupFiles() async {
         'path': entity.path,
         'filename': filename,
         'sizeKB': sizeKB,
-        'modified': stat.millisecondsSinceEpoch,
+        'modified': stat.modified.millisecondsSinceEpoch,
       });
     }
   }
@@ -115,11 +115,7 @@ Future<void> shareNativeFile(
   String? subject,
   String? text,
 }) async {
-  await Share.shareXFiles(
-    [XFile(filePath)],
-    subject: subject,
-    text: text,
-  );
+  await Share.shareXFiles([XFile(filePath)], subject: subject, text: text);
 }
 
 /// Write a temp file and return its path (for CSV/JSON sharing).
@@ -133,10 +129,7 @@ Future<String> writeTempFile(String filename, String content) async {
 /// Initialize Workmanager for auto-backup scheduling (native only).
 Future<void> initWorkmanager() async {
   try {
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: false,
-    );
+    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
   } catch (e) {
     debugPrint('⚠️ Workmanager init failed: $e');
   }
