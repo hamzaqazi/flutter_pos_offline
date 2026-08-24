@@ -4,6 +4,7 @@ import '../../data/models/product_model.dart';
 import '../../data/services/category_service.dart';
 import '../../data/services/hive_service.dart';
 import '../../data/services/settings_service.dart';
+import '../../data/services/license_service.dart';
 
 class ProductsController extends GetxController {
   final products = <ProductModel>[].obs;
@@ -39,6 +40,16 @@ class ProductsController extends GetxController {
   }
 
   void addProduct(ProductModel product) {
+    // Check product limit for free tier
+    if (!LicenseService.isPremium && products.length >= LicenseService.maxProducts) {
+      Get.snackbar(
+        'Product Limit Reached',
+        'Free plan allows up to ${LicenseService.freeMaxProducts} products. Upgrade to Premium for unlimited.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
     HiveService.productBox.put(product.id, _toMap(product));
     products.add(product);
   }

@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codynest POS — Admin Panel</title>
+  <style>
+    :root {
+      --primary: #6750A4;
+      --primary-light: #EADDFF;
+      --on-primary: #fff;
+      --surface: #fff;
+      --surface-dim: #f8f7fa;
+      --surface-container: #f0eff4;
+      --on-surface: #1d1b20;
+      --on-surface-var: #49454f;
+      --danger: #BA1A1A;
+      --danger-light: #FFDAD6;
+      --success: #2E7D32;
+      --success-light: #E8F5E9;
+      --warning: #F57F17;
+      --warning-light: #FFF8E1;
+      --info: #1565C0;
+      --info-light: #E3F2FD;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--surface-dim);
+      color: var(--on-surface);
+      line-height: 1.5;
+    }
+
+    /* Auth Gate */
+    .auth-gate {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .auth-card .logo {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .auth-card h1 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .auth-card p {
+      font-size: 13px;
+      color: var(--on-surface-var);
+      margin-bottom: 24px;
+    }
+
+    /* Layout */
+    .header {
+      background: linear-gradient(135deg, var(--primary), #4f3d8e);
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #4CAF50;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      display: inline-block;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    .header .btn-outline-light {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .header .btn-outline-light:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 20px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface-container);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--on-surface-var);
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+    }
+
+    .tab:hover {
+      background: rgba(103, 80, 164, 0.08);
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 1px 4px rgba(103, 80, 164, 0.3);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 .icon {
+      font-size: 18px;
+    }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+
+    .stat:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .stat-icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .stat-num {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--on-surface-var);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a3d9e;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #9a1515;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #1B5E20;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--primary-light);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--on-surface-var);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-container);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+    }
+
+    .btn-whatsapp:hover {
+      background: #1da851;
+    }
+
+    /* Forms */
+    input,
+    select,
+    textarea {
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(103, 80, 164, 0.12);
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--on-surface-var);
+      margin-bottom: 4px;
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface-container);
+      padding: 10px 8px;
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--on-surface-var);
+      white-space: nowrap;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #eee;
+      vertical-align: middle;
+    }
+
+    tr:hover {
+      background: rgba(103, 80, 164, 0.03);
+    }
+
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .sortable:hover {
+      color: var(--primary);
+    }
+
+    .sort-arrow {
+      font-size: 9px;
+      margin-left: 2px;
+    }
+
+    /* Badges */
+    .badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    .badge-active {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .badge-expired {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .badge-inactive {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .badge-warning {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .badge-trial {
+      background: #FFF3E0;
+      color: #E65100;
+    }
+
+    .badge-monthly {
+      background: var(--info-light);
+      color: var(--info);
+    }
+
+    .badge-yearly {
+      background: #F3E5F5;
+      color: #7B1FA2;
+    }
+
+    .badge-lifetime {
+      background: var(--warning-light);
+      color: var(--warning);
+    }
+
+    .device-tag {
+      display: inline-block;
+      background: var(--surface-container);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: monospace;
+      margin: 2px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 520px;
+      width: 92%;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.2s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(12px);
+        opacity: 0
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1
+      }
+    }
+
+    .modal h3 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .detail-item label {
+      margin-bottom: 2px;
+    }
+
+    .detail-value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      z-index: 200;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Key Display */
+    .key-display {
+      font-family: monospace;
+      background: var(--surface-container);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      word-break: break-all;
+      cursor: pointer;
+      position: relative;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .key-display:hover {
+      background: #e8e5f0;
+    }
+
+    /* Empty / Loading */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty .icon {
+      font-size: 48px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .loading-skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+      height: 16px;
+      margin: 4px 0;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0
+      }
+
+      100% {
+        background-position: -200% 0
+      }
+    }
+
+    .skeleton-row {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    /* Responsive */
+    @media(max-width:700px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      th,
+      td {
+        padding: 6px 4px;
+        font-size: 11px;
+      }
+
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 12px;
+      }
+
+      .tabs {
+        flex-wrap: wrap;
+      }
+
+      .tab {
+        font-size: 12px;
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Auth Gate -->
+  <div id="authGate" class="auth-gate">
+    <div class="auth-card">
+      <div class="logo">🔑</div>
+      <h1>Codynest POS Admin</h1>
+      <p>Enter your admin password to continue</p>
+      <div class="form-group">
+        <input type="password" id="adminPassword" placeholder="Admin password"
+          onkeydown="if(event.key==='Enter')attemptLogin()">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;"
+        onclick="attemptLogin()">Unlock</button>
+      <div id="authError" style="color:var(--danger);font-size:12px;margin-top:8px;display:none;">Incorrect password
+      </div>
+      <!-- First-time setup: only shown if no password exists yet -->
+      <div id="setupSection" style="margin-top:16px;display:none;">
+        <p style="font-size:11px;color:#aaa;margin-bottom:8px;">🔒 First-time setup — create your admin password</p>
+        <div class="form-group">
+          <label>Set admin password</label>
+          <div style="display:flex;gap:8px;">
+            <input type="password" id="newPassword" placeholder="Choose a password (min 4 chars)" style="flex:1">
+            <button class="btn btn-primary" onclick="setAdminPassword()">Set & Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App (hidden until auth) -->
+  <div id="mainApp" style="display:none;">
+    <div class="header">
+      <div class="header-inner">
+        <h1>🔑 Codynest POS — Admin</h1>
+        <div class="header-right">
+          <span class="live-dot" title="Real-time connection"></span>
+          <span style="font-size:12px;opacity:0.8;">Live</span>
+          <button class="btn-outline-light" onclick="changeAdminPassword()">🔑 Change Pass</button>
+      <button class="btn-outline-light" onclick="lockAdmin()">🔒 Lock</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Stats -->
+      <div class="stats" id="stats"></div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('licenses')">📋 Licenses</button>
+        <button class="tab" onclick="switchTab('trials')">📱 Trials</button>
+        <button class="tab" onclick="switchTab('create')">➕ Create</button>
+      </div>
+
+      <!-- Tab: Create -->
+      <div id="panel-create" class="tab-panel">
+        <div class="card">
+          <h2><span class="icon">➕</span> Create New License</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Shop Name *</label>
+              <input type="text" id="shopName" placeholder="Ahmed Store">
+            </div>
+            <div class="form-group">
+              <label>Plan *</label>
+              <select id="plan">
+                <option value="monthly">Monthly — Rs 500/mo</option>
+                <option value="yearly">Yearly — Rs 4,000/yr</option>
+                <option value="lifetime">Lifetime — Rs 10,000</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Max Devices</label>
+              <input type="number" id="maxDevices" value="3" min="1">
+            </div>
+            <div class="form-group">
+              <label>Customer Phone</label>
+              <input type="text" id="customerPhone" placeholder="0315-3507075">
+            </div>
+            <div class="form-group">
+              <label>Customer Email (optional)</label>
+              <input type="email" id="customerEmail" placeholder="ahmed@store.com">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="createLicense()" style="width:100%;justify-content:center;">Generate
+            License Key</button>
+          <div id="newKeyDisplay" style="margin-top:16px;display:none;">
+            <label>New License Key (click to copy)</label>
+            <div class="key-display" id="newKeyText" onclick="copyKey()"></div>
+            <div style="font-size:11px;color:#999;margin-top:4px;">Click to copy · Share this key with the customer
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Licenses -->
+      <div id="panel-licenses" class="tab-panel active">
+        <div class="card">
+          <h2><span class="icon">📋</span> All Licenses</h2>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <input type="text" id="searchInput" placeholder="Search by shop name or key..." oninput="renderLicenses()"
+              style="flex:1;min-width:200px;">
+            <select id="filterPlan" onchange="renderLicenses()" style="width:auto;min-width:120px;">
+              <option value="">All Plans</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+            <select id="filterStatus" onchange="renderLicenses()" style="width:auto;min-width:120px;">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="inactive">Inactive</option>
+              <option value="warning">Expiring Soon</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th class="sortable" onclick="sortBy('shopName')">Shop <span id="sort-shopName"></span></th>
+                  <th>Plan</th>
+                  <th class="sortable" onclick="sortBy('status')">Status <span id="sort-status"></span></th>
+                  <th class="sortable" onclick="sortBy('expiresAt')">Expires <span id="sort-expiresAt"></span></th>
+                  <th>Devices</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="licenseTable"></tbody>
+            </table>
+          </div>
+          <div id="emptyState" class="empty" style="display:none;"><span class="icon">📋</span>No licenses found</div>
+        </div>
+      </div>
+
+      <!-- Tab: Trials -->
+      <div id="panel-trials" class="tab-panel">
+        <div class="card">
+          <h2><span class="icon">📱</span> Trial Devices</h2>
+          <p style="font-size:12px;color:var(--on-surface-var);margin-bottom:12px;">
+            Devices that have used a 14-day free trial. Deleting a record allows that device to start a new trial.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Phone</th>
+                  <th>Device ID</th>
+                  <th>Model</th>
+                  <th class="sortable" onclick="sortTrialsBy('trialStartedAt')">Started <span
+                      id="tsort-trialStartedAt"></span></th>
+                  <th>Last Used</th>
+                  <th>Remaining</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="trialTable"></tbody>
+            </table>
+          </div>
+          <div id="trialEmptyState" class="empty" style="display:none;"><span class="icon">📱</span>No trial devices
+            recorded</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <h3 id="modalTitle">License Details</h3>
+      <div id="modalBody"></div>
+      <div class="modal-actions">
+        <button class="btn btn-success btn-sm" id="renewBtn" onclick="renewLicense()">🔄 Renew</button>
+        <button class="btn btn-primary btn-sm" id="toggleBtn" onclick="toggleActive()">Toggle Active</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteLicense()">🗑️ Delete</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕ Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.0/firebase-app.js";
+    import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.7.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB0EHs3fiytPSPrxAvlcfQ2BsZ4TSpRdRo",
+      authDomain: "my-portfolio-78ae4.firebaseapp.com",
+      projectId: "my-portfolio-78ae4",
+      storageBucket: "my-portfolio-78ae4.firebasestorage.app",
+      messagingSenderId: "21334425002",
+      appId: "1:21334425002:web:b411cc558fc7713e3d7fd3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const licensesRef = collection(db, "licenses");
+    const trialRef = collection(db, "trial_devices");
+
+    let allLicenses = [];
+    let allTrialDevices = [];
+    let selectedKey = null;
+    let currentSort = { field: null, asc: true };
+    let trialSort = { field: null, asc: true };
+
+    // ═══════════════════════════════════════════
+    //  AUTH — Simple client-side password gate
+    // ═══════════════════════════════════════════
+    const AUTH_KEY = 'codynest_admin_auth';
+    const PASS_KEY = 'codynest_admin_pass';
+
+    function updateAuthUI() {
+      const hasPassword = !!localStorage.getItem(PASS_KEY);
+      const setupEl = document.getElementById('setupSection');
+      const loginBtn = document.querySelector('#authGate .btn-primary');
+      const passInput = document.getElementById('adminPassword');
+      
+      if (setupEl) setupEl.style.display = hasPassword ? 'none' : 'block';
+      if (loginBtn) loginBtn.style.display = hasPassword ? '' : 'none';
+      if (passInput) passInput.style.display = hasPassword ? '' : 'none';
+      
+      // Update the subtitle text
+      const subtitle = document.querySelector('#authGate .auth-card > p');
+      if (subtitle) subtitle.textContent = hasPassword ? 'Enter your admin password to continue' : 'Create an admin password to get started';
+    }
+
+    window.attemptLogin = function () {
+      const pass = document.getElementById('adminPassword').value;
+      const stored = localStorage.getItem(PASS_KEY);
+      if (!stored) { showToast('⚠️ No password set yet — create one below'); return; }
+      if (pass === stored) {
+        localStorage.setItem(AUTH_KEY, 'true');
+        showApp();
+      } else {
+        document.getElementById('authError').style.display = 'block';
+        setTimeout(() => document.getElementById('authError').style.display = 'none', 3000);
+      }
+    };
+
+    window.setAdminPassword = function () {
+      const pass = document.getElementById('newPassword').value.trim();
+      if (!pass || pass.length < 4) { showToast('❌ Password must be at least 4 characters'); return; }
+      localStorage.setItem(PASS_KEY, pass);
+      localStorage.setItem(AUTH_KEY, 'true');
+      showToast('✅ Password set & logged in');
+      showApp();
+    };
+
+    window.lockAdmin = function () {
+      localStorage.removeItem(AUTH_KEY);
+      document.getElementById('mainApp').style.display = 'none';
+      document.getElementById('authGate').style.display = 'flex';
+      updateAuthUI();
+    };
+
+    // Change password (only accessible after login)
+    window.changeAdminPassword = function () {
+      const current = prompt('Enter current password:');
+      if (current !== localStorage.getItem(PASS_KEY)) { showToast('❌ Incorrect current password'); return; }
+      const newPass = prompt('Enter new password (min 4 chars):');
+      if (!newPass || newPass.length < 4) { showToast('❌ Password must be at least 4 characters'); return; }
+      localStorage.setItem(PASS_KEY, newPass);
+      showToast('✅ Password changed successfully');
+    };
+
+    function showApp() {
+      document.getElementById('authGate').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      initRealtimeListeners();
+    }
+
+    // Init auth UI
+    updateAuthUI();
+
+    // Auto-login if session valid
+    if (localStorage.getItem(AUTH_KEY) === 'true' && localStorage.getItem(PASS_KEY)) {
+      showApp();
+    }
+
+    // ═══════════════════════════════════════════
+    //  REAL-TIME LISTENERS
+    // ═══════════════════════════════════════════
+    function initRealtimeListeners() {
+      onSnapshot(licensesRef, snap => {
+        allLicenses = [];
+        snap.forEach(d => allLicenses.push({ key: d.id, ...d.data() }));
+        renderStats();
+        renderLicenses();
+      }, err => showToast('❌ Firestore error: ' + err.message));
+
+      onSnapshot(trialRef, snap => {
+        allTrialDevices = [];
+        snap.forEach(d => allTrialDevices.push({ deviceId: d.id, ...d.data() }));
+        renderStats();
+        renderTrialDevices();
+      }, err => showToast('❌ Trial listener error: ' + err.message));
+    }
+
+    // ═══════════════════════════════════════════
+    //  TABS
+    // ═══════════════════════════════════════════
+    window.switchTab = function (tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+    };
+
+    // ═══════════════════════════════════════════
+    //  HELPERS
+    // ═══════════════════════════════════════════
+    function generateKey() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      const seg = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      return `CNPO-${seg()}-${seg()}-${seg()}`;
+    }
+
+    function calculateExpiry(plan) {
+      const now = new Date();
+      if (plan === 'monthly') return new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      if (plan === 'yearly') return new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+      return null;
+    }
+
+    function formatDate(ts) {
+      if (!ts) return 'Lifetime';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function formatDateTime(ts) {
+      if (!ts) return 'Never';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+      return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}, ${h}:${String(d.getMinutes()).padStart(2, '0')} ${ap}`;
+    }
+
+    function daysUntil(ts) {
+      if (!ts) return null;
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+    }
+
+    function getStatus(l) {
+      if (!l.active) return 'inactive';
+      const days = daysUntil(l.expiresAt);
+      if (days !== null && days <= 0) return 'expired';
+      if (days !== null && days <= 7) return 'warning';
+      return 'active';
+    }
+
+    function statusLabel(s) {
+      if (s === 'warning') return 'Expiring';
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function waLink(phone, msg) {
+      return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    }
+
+    const upgradeMsg = (remaining) =>
+      `Hi! 👋 This is a reminder from Codynest POS. Your ${remaining > 0 ? 'trial has ' + remaining + ' days remaining' : 'trial has expired'}. Would you like to upgrade to Premium? Contact us at 0315-3507075.`;
+
+    // ═══════════════════════════════════════════
+    //  STATS
+    // ═══════════════════════════════════════════
+    function renderStats() {
+      const active = allLicenses.filter(l => getStatus(l) === 'active').length;
+      const expiring = allLicenses.filter(l => getStatus(l) === 'warning').length;
+      const expired = allLicenses.filter(l => getStatus(l) === 'expired').length;
+      const inactive = allLicenses.filter(l => getStatus(l) === 'inactive').length;
+      const trials = allTrialDevices.length;
+      const activeTrials = allTrialDevices.filter(t => {
+        const days = t.trialStartedAt ? Math.ceil((new Date() - (t.trialStartedAt.toDate ? t.trialStartedAt.toDate() : new Date(t.trialStartedAt))) / 864e5) : 99;
+        return days < (t.trialDurationDays || 14);
+      }).length;
+      const mrr = allLicenses.filter(l => getStatus(l) === 'active' && l.plan === 'monthly').length * 500;
+      const yrr = allLicenses.filter(l => getStatus(l) === 'active' && l.plan === 'yearly').length * 4000;
+
+      document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-icon">📋</div><div class="stat-num" style="color:var(--primary)">${allLicenses.length}</div><div class="stat-label">Licenses</div></div>
+    <div class="stat"><div class="stat-icon">✅</div><div class="stat-num" style="color:var(--success)">${active}</div><div class="stat-label">Active</div></div>
+    <div class="stat"><div class="stat-icon">⚠️</div><div class="stat-num" style="color:var(--warning)">${expiring}</div><div class="stat-label">Expiring</div></div>
+    <div class="stat"><div class="stat-icon">❌</div><div class="stat-num" style="color:var(--danger)">${expired + inactive}</div><div class="stat-label">Expired / Off</div></div>
+    <div class="stat"><div class="stat-icon">📱</div><div class="stat-num" style="color:#E65100">${activeTrials}/${trials}</div><div class="stat-label">Active/Total Trials</div></div>
+    <div class="stat"><div class="stat-icon">💰</div><div class="stat-num" style="color:var(--success)">Rs ${(mrr + Math.round(yrr / 12)).toLocaleString()}</div><div class="stat-label">Est. MRR</div></div>
+  `;
+    }
+
+    // ═══════════════════════════════════════════
+    //  SORT
+    // ═══════════════════════════════════════════
+    window.sortBy = function (field) {
+      if (currentSort.field === field) currentSort.asc = !currentSort.asc;
+      else { currentSort.field = field; currentSort.asc = true; }
+      document.querySelectorAll('[id^="sort-"]').forEach(e => e.textContent = '');
+      const arrow = document.getElementById('sort-' + field);
+      if (arrow) arrow.textContent = currentSort.asc ? '▲' : '▼';
+      renderLicenses();
+    };
+
+    window.sortTrialsBy = function (field) {
+      if (trialSort.field === field) trialSort.asc = !trialSort.asc;
+      else { trialSort.field = field; trialSort.asc = true; }
+      document.querySelectorAll('[id^="tsort-"]').forEach(e => e.textContent = '');
+      const arrow = document.getElementById('tsort-' + field);
+      if (arrow) arrow.textContent = trialSort.asc ? '▲' : '▼';
+      renderTrialDevices();
+    };
+
+    // ═══════════════════════════════════════════
+    //  RENDER LICENSES
+    // ═══════════════════════════════════════════
+    function renderLicenses() {
+      const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+      const planFilter = document.getElementById('filterPlan')?.value || '';
+      const statusFilter = document.getElementById('filterStatus')?.value || '';
+
+      let filtered = allLicenses.filter(l => {
+        if (search && !(l.shopName || '').toLowerCase().includes(search) && !l.key.toLowerCase().includes(search)) return false;
+        if (planFilter && l.plan !== planFilter) return false;
+        if (statusFilter && getStatus(l) !== statusFilter) return false;
+        return true;
+      });
+
+      // Sort
+      if (currentSort.field) {
+        filtered.sort((a, b) => {
+          let va, vb;
+          if (currentSort.field === 'status') { va = getStatus(a); vb = getStatus(b); }
+          else if (currentSort.field === 'expiresAt') { va = a.expiresAt ? (a.expiresAt.toDate ? a.expiresAt.toDate() : new Date(a.expiresAt)).getTime() : Infinity; vb = b.expiresAt ? (b.expiresAt.toDate ? b.expiresAt.toDate() : new Date(b.expiresAt)).getTime() : Infinity; }
+          else { va = (a[currentSort.field] || '').toString().toLowerCase(); vb = (b[currentSort.field] || '').toString().toLowerCase(); }
+          if (va < vb) return currentSort.asc ? -1 : 1;
+          if (va > vb) return currentSort.asc ? 1 : -1;
+          return 0;
+        });
+      }
+
+      const tbody = document.getElementById('licenseTable');
+      if (!filtered.length) { tbody.innerHTML = ''; document.getElementById('emptyState').style.display = 'block'; return; }
+      document.getElementById('emptyState').style.display = 'none';
+
+      tbody.innerHTML = filtered.map(l => {
+        const status = getStatus(l);
+        const days = daysUntil(l.expiresAt);
+        const devices = l.registeredDevices || [];
+        const phone = l.customerPhone || '-';
+        const email = l.customerEmail || '-';
+        const hasWA = l.customerPhone && l.customerPhone.length > 5;
+        const activatedAt = l.activatedAt ? formatDateTime(l.activatedAt) : '-';
+
+        return `<tr>
+      <td><span class="device-tag" title="${l.key}">${l.key}</span></td>
+      <td style="font-weight:600">${l.shopName || '-'}</td>
+      <td><span class="badge badge-${l.plan || 'free'}">${(l.plan || 'free').charAt(0).toUpperCase() + (l.plan || 'free').slice(1)}</span></td>
+      <td><span class="badge badge-${status}">${statusLabel(status)}</span>${days !== null && days > 0 && status !== 'expired' ? `<div style="font-size:10px;color:var(--on-surface-var);margin-top:2px">${days}d left</div>` : ''}</td>
+      <td>${formatDate(l.expiresAt)}${l.plan === 'lifetime' ? '' : ''}</td>
+      <td>${devices.length}/${l.maxDevices || 3}</td>
+      <td>${hasWA ? `<a href="${waLink(l.customerPhone, 'Hi! This is Codynest POS support. How can we help?')}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;font-size:12px;">${phone} 💬</a>` : phone}</td>
+      <td style="font-size:12px;${email !== '-' ? 'color:var(--info);' : ''}">${email !== '-' ? `<a href="mailto:${email}" style="color:inherit;text-decoration:none;">${email}</a>` : '-'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="showDetail('${l.key}')">👁️</button>
+        ${(() => {
+            if (!hasWA) return '';
+            const msg = `Hi from Codynest POS! Your license (${l.plan}) ${status === 'expired' ? 'has expired' : 'is active'}. Need help?`;
+            return `<button class="btn btn-whatsapp btn-sm" onclick="window.open('${waLink(l.customerPhone, msg)}', '_blank')">💬</button>`;
+          })()}
+      </td>
+    </tr>`;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════
+    //  RENDER TRIAL DEVICES
+    // ═══════════════════════════════════════════
+    function renderTrialDevices() {
+      const tbody = document.getElementById('trialTable');
+      if (!allTrialDevices.length) { tbody.innerHTML = ''; document.getElementById('trialEmptyState').style.display = 'block'; return; }
+      document.getElementById('trialEmptyState').style.display = 'none';
+
+      let sorted = [...allTrialDevices];
+      if (trialSort.field) {
+        sorted.sort((a, b) => {
+          let va = a[trialSort.field], vb = b[trialSort.field];
+          if (va && va.toDate) va = va.toDate().getTime(); else va = new Date(va).getTime();
+          if (vb && vb.toDate) vb = vb.toDate().getTime(); else vb = new Date(vb).getTime();
+          return trialSort.asc ? va - vb : vb - va;
+        });
+      }
+
+      tbody.innerHTML = sorted.map(t => {
+        const startedAt = t.trialStartedAt ? formatDate(t.trialStartedAt) : 'Unknown';
+        const lastUsed = t.lastUsedAt ? formatDateTime(t.lastUsedAt) : 'Never';
+        const phone = t.customerPhone || '-';
+        const daysSince = t.trialStartedAt ? Math.ceil((new Date() - (t.trialStartedAt.toDate ? t.trialStartedAt.toDate() : new Date(t.trialStartedAt))) / 864e5) : 0;
+        const remaining = (t.trialDurationDays || 14) - daysSince;
+        const isExpired = remaining <= 0;
+        const hasWA = t.customerPhone && t.customerPhone.length > 5;
+
+        return `<tr>
+      <td>${hasWA ? `<a href="${waLink(t.customerPhone, upgradeMsg(remaining))}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;font-size:12px;">${phone} 💬</a>` : phone}</td>
+      <td><span class="device-tag">${t.deviceId}</span></td>
+      <td>${t.deviceModel || '-'}</td>
+      <td>${startedAt}</td>
+      <td>${lastUsed}</td>
+      <td><span class="badge ${isExpired ? 'badge-expired' : 'badge-active'}">${isExpired ? 'Expired' : remaining + 'd left'}</span></td>
+      <td style="white-space:nowrap">
+        ${hasWA ? `<button class="btn btn-whatsapp btn-sm" onclick="window.open('${waLink(t.customerPhone, upgradeMsg(remaining))}', '_blank')">💬</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteTrialDevice('${t.deviceId}')">🗑️</button>
+      </td>
+    </tr>`;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════
+    //  CREATE LICENSE
+    // ═══════════════════════════════════════════
+    window.createLicense = async function () {
+      const shopName = document.getElementById('shopName').value.trim();
+      const plan = document.getElementById('plan').value;
+      const maxDevices = parseInt(document.getElementById('maxDevices').value) || 3;
+      const customerPhone = document.getElementById('customerPhone').value.trim();
+      const customerEmail = document.getElementById('customerEmail').value.trim();
+      if (!shopName) { showToast('❌ Shop name is required'); return; }
+
+      const key = generateKey();
+      const expiresAt = calculateExpiry(plan);
+      try {
+        await setDoc(doc(db, "licenses", key), {
+          shopName, active: true, plan, maxDevices,
+          expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
+          registeredDevices: [],
+          customerPhone: customerPhone || '',
+          customerEmail: customerEmail || '',
+          activatedAt: serverTimestamp(),
+        });
+        document.getElementById('newKeyDisplay').style.display = 'block';
+        document.getElementById('newKeyText').textContent = key;
+        document.getElementById('shopName').value = '';
+        document.getElementById('customerPhone').value = '';
+        document.getElementById('customerEmail').value = '';
+        showToast('✅ License created: ' + key);
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    // ═══════════════════════════════════════════
+    //  DETAIL MODAL
+    // ═══════════════════════════════════════════
+    window.showDetail = function (key) {
+      selectedKey = key;
+      const l = allLicenses.find(x => x.key === key);
+      if (!l) return;
+      const status = getStatus(l);
+      const days = daysUntil(l.expiresAt);
+      const devices = l.registeredDevices || [];
+      const hasWA = l.customerPhone && l.customerPhone.length > 5;
+
+      document.getElementById('modalTitle').innerHTML = `🔑 ${l.shopName || key}`;
+      document.getElementById('renewBtn').style.display = l.plan === 'lifetime' ? 'none' : '';
+
+      document.getElementById('modalBody').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <label>License Key</label>
+      <div class="key-display" onclick="navigator.clipboard.writeText('${key}'); showToast('✅ Copied!')">${key}</div>
+    </div>
+    <div class="detail-grid">
+      <div><label>Plan</label><div class="detail-value"><span class="badge badge-${l.plan || 'free'}">${(l.plan || 'free').charAt(0).toUpperCase() + (l.plan || 'free').slice(1)}</span></div></div>
+      <div><label>Status</label><div class="detail-value"><span class="badge badge-${status}">${statusLabel(status)}</span></div></div>
+      <div><label>Shop Name</label><div class="detail-value">${l.shopName || '-'}</div></div>
+      <div><label>Customer Phone</label><div class="detail-value">${hasWA ? `<a href="${waLink(l.customerPhone, 'Hi from Codynest POS!')}" target="_blank" style="color:#25D366;text-decoration:none;">${l.customerPhone} 💬</a>` : (l.customerPhone || '-')}</div></div>
+      <div><label>Customer Email</label><div class="detail-value">${l.customerEmail ? `<a href="mailto:${l.customerEmail}" style="color:var(--info);text-decoration:none;">${l.customerEmail} ✉️</a>` : '-'}</div></div>
+      <div><label>Max Devices</label><div class="detail-value">${l.maxDevices || 3}</div></div>
+      <div><label>Expires</label><div class="detail-value">${formatDate(l.expiresAt)}${days !== null ? ` <span style="font-size:11px;color:${days <= 7 ? 'var(--warning)' : 'var(--on-surface-var)'}">(${days > 0 ? days + 'd left' : 'EXPIRED'})</span>` : ''}</div></div>
+      <div><label>Activated</label><div class="detail-value">${l.activatedAt ? formatDateTime(l.activatedAt) : '-'}</div></div>
+      <div><label>Last Verified</label><div class="detail-value">${l.lastVerified ? formatDateTime(l.lastVerified) : '-'}</div></div>
+    </div>
+    <div><label>Registered Devices (${devices.length}/${l.maxDevices || 3})</label>
+      ${devices.length === 0 ? '<div style="color:#999;font-size:12px;margin-top:4px;">No devices registered</div>' :
+          devices.map(d => {
+            const lastUsed = l.deviceLastUsed && l.deviceLastUsed[d] ? formatDateTime(l.deviceLastUsed[d]) : 'Never';
+            return `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;flex-wrap:wrap;">
+            <span class="device-tag">${d}</span>
+            <span style="font-size:11px;color:var(--on-surface-var);">Last: ${lastUsed}</span>
+            <button class="btn btn-danger btn-sm" onclick="removeDevice('${key}','${d}')">Remove</button>
+          </div>`;
+          }).join('')}
+    </div>
+  `;
+      document.getElementById('detailModal').classList.add('show');
+    };
+
+    window.closeModal = function () {
+      document.getElementById('detailModal').classList.remove('show');
+      selectedKey = null;
+    };
+
+    // ═══════════════════════════════════════════
+    //  ACTIONS
+    // ═══════════════════════════════════════════
+    window.toggleActive = async function () {
+      if (!selectedKey) return;
+      const l = allLicenses.find(x => x.key === selectedKey);
+      if (!l) return;
+      const newActive = !l.active;
+      if (!confirm(`${newActive ? 'Activate' : 'Deactivate'} license for "${l.shopName}"?`)) return;
+      try {
+        await updateDoc(doc(db, "licenses", selectedKey), { active: newActive });
+        showToast(`✅ License ${newActive ? 'activated' : 'deactivated'}`);
+        closeModal();
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.renewLicense = async function () {
+      if (!selectedKey) return;
+      const l = allLicenses.find(x => x.key === selectedKey);
+      if (!l || l.plan === 'lifetime') return;
+      const now = l.expiresAt ? (l.expiresAt.toDate ? l.expiresAt.toDate() : new Date(l.expiresAt)) : new Date();
+      const base = now > new Date() ? now : new Date();
+      let newExpiry;
+      if (l.plan === 'monthly') newExpiry = new Date(base.getFullYear(), base.getMonth() + 1, base.getDate());
+      else if (l.plan === 'yearly') newExpiry = new Date(base.getFullYear() + 1, base.getMonth(), base.getDate());
+      try {
+        await updateDoc(doc(db, "licenses", selectedKey), { expiresAt: Timestamp.fromDate(newExpiry), active: true });
+        showToast(`✅ Renewed until ${newExpiry.toLocaleDateString()}`);
+        closeModal();
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.removeDevice = async function (key, deviceId) {
+      const l = allLicenses.find(x => x.key === key);
+      if (!l) return;
+      const devices = (l.registeredDevices || []).filter(d => d !== deviceId);
+      try {
+        await updateDoc(doc(db, "licenses", key), { registeredDevices: devices });
+        showToast('✅ Device removed');
+        showDetail(key);
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.deleteLicense = async function () {
+      if (!selectedKey) return;
+      if (!confirm(`Delete license ${selectedKey}? This cannot be undone.`)) return;
+      try {
+        await deleteDoc(doc(db, "licenses", selectedKey));
+        showToast('✅ License deleted');
+        closeModal();
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.deleteTrialDevice = async function (deviceId) {
+      if (!confirm(`Delete trial record for ${deviceId}?\nThis allows the device to start a new trial.`)) return;
+      try {
+        await deleteDoc(doc(db, "trial_devices", deviceId));
+        showToast('✅ Trial record deleted');
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.copyKey = function () {
+      const key = document.getElementById('newKeyText').textContent;
+      navigator.clipboard.writeText(key);
+      showToast('✅ License key copied!');
+    };
+
+    // ═══════════════════════════════════════════
+    //  TOAST
+    // ═══════════════════════════════════════════
+    let toastTimer;
+    window.showToast = function (msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    };
+
+    // Close modal on overlay click
+    document.getElementById('detailModal').addEventListener('click', function (e) {
+      if (e.target === this) closeModal();
+    });
+  </script>
+</body>
+
+</html>

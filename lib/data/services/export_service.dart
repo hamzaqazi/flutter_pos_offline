@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:ad_shop_pos/app/utils/backup_io_bridge.dart';
+import 'package:ad_shop_pos/app/utils/web_download_bridge.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/data/models/expense_model.dart';
@@ -15,12 +16,15 @@ import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
-/// Service for exporting data as CSV files and sharing them.
+/// Service for exporting data as CSV/JSON files.
+///
+/// - **Native**: Writes to temp file and shares via share_plus.
+/// - **Web**: Triggers browser download using Blob + anchor download API
+///   (proper file download with correct filename, restorable on import).
 class ExportService {
   /// Export all products as CSV.
   static Future<void> exportProducts() async {
@@ -39,7 +43,7 @@ class ExportService {
       );
     }
 
-    await _shareCsv(buffer.toString(), 'products');
+    await _exportFile(buffer.toString(), 'products', 'csv');
   }
 
   /// Export all sales as CSV.
@@ -65,7 +69,7 @@ class ExportService {
       );
     }
 
-    await _shareCsv(buffer.toString(), 'sales');
+    await _exportFile(buffer.toString(), 'sales', 'csv');
   }
 
   /// Export all expenses as CSV.
@@ -83,12 +87,12 @@ class ExportService {
       );
     }
 
-    await _shareCsv(buffer.toString(), 'expenses');
+    await _exportFile(buffer.toString(), 'expenses', 'csv');
   }
 
   /// Export a full backup as JSON (lossless, restorable format).
-  /// This replaces the old CSV-based full backup with a proper JSON structure
-  /// that preserves all nested data for lossless import.
+  /// On web, this downloads a .json file that can be re-imported via
+  /// "Restore from Backup" (FilePicker reads the file bytes).
   static Future<void> exportFullBackup() async {
     try {
       final productsController = Get.find<ProductsController>();
@@ -105,7 +109,7 @@ class ExportService {
         'app': 'ad_shop_pos',
       };
 
-      // Products — store as list of maps
+      // Products
       backup['products'] = productsController.products
           .map(
             (p) => {
@@ -123,7 +127,7 @@ class ExportService {
           )
           .toList();
 
-      // Sales — store as list of maps (with full item details)
+      // Sales
       backup['sales'] = salesController.sales.map((s) => s.toMap()).toList();
 
       // Expenses
@@ -148,8 +152,8 @@ class ExportService {
       backup['settings'] = settingsController.settings.value.toMap();
 
       // Receipt settings
-      backup['receiptSettings'] = settingsController.receiptSettings.value
-          .toMap();
+      backup['receiptSettings'] =
+          settingsController.receiptSettings.value.toMap();
 
       // Categories
       final catController = Get.find<CategoryController>();
@@ -157,13 +161,25 @@ class ExportService {
           .map((c) => c.toMap())
           .toList();
 
-      // Last invoice number (for sequential numbering persistence)
+      // Last invoice number
       final settingsBox = Hive.box('settings');
       final lastInvoiceNum = settingsBox.get(
         'lastInvoiceNumber',
         defaultValue: 0,
       );
       backup['lastInvoiceNumber'] = lastInvoiceNum;
+
+      // Trial data
+      final trialStart = settingsBox.get('trial_startDate');
+      if (trialStart != null) {
+        backup['trial_startDate'] = trialStart;
+        backup['trial_expired'] =
+            settingsBox.get('trial_expired', defaultValue: false);
+        final trialPhone = settingsBox.get('trial_customerPhone');
+        if (trialPhone != null) {
+          backup['trial_customerPhone'] = trialPhone;
+        }
+      }
 
       // Active cashier
       if (staffController.activeCashierId.value != null) {
@@ -172,22 +188,18 @@ class ExportService {
 
       final jsonStr = const JsonEncoder.withIndent('  ').convert(backup);
 
-      final directory = await getTemporaryDirectory();
       final timestamp = DateTime.now()
           .toIso8601String()
           .replaceAll(':', '-')
           .substring(0, 19);
-      final file = File('${directory.path}/full_backup_$timestamp.json');
-      await file.writeAsString(jsonStr);
+      final filename = 'full_backup_$timestamp.json';
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'Full Backup - $timestamp',
-        text:
-            'Shop POS Full Backup (${productsController.products.length} products, '
-            '${salesController.sales.length} sales, '
-            '${expensesController.expenses.length} expenses)',
-      );
+      await _exportFile(jsonStr, filename.replaceAll('.json', ''), 'json',
+          subject: 'Full Backup - $timestamp',
+          text:
+              'Shop POS Full Backup (${productsController.products.length} products, '
+              '${salesController.sales.length} sales, '
+              '${expensesController.expenses.length} expenses)');
     } catch (e) {
       Get.snackbar(
         "Export failed",
@@ -197,22 +209,46 @@ class ExportService {
     }
   }
 
-  /// Write CSV to a temp file and share.
-  static Future<void> _shareCsv(String csvContent, String prefix) async {
+  /// Export file content: native uses share_plus, web uses browser download.
+  static Future<void> _exportFile(
+    String content,
+    String prefix,
+    String ext, {
+    String? subject,
+    String? text,
+  }) async {
     try {
-      final directory = await getTemporaryDirectory();
       final timestamp = DateTime.now()
           .toIso8601String()
           .replaceAll(':', '-')
           .substring(0, 19);
-      final file = File('${directory.path}/${prefix}_$timestamp.csv');
-      await file.writeAsString(csvContent);
+      final filename = '${prefix}_$timestamp.$ext';
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: '$prefix export - $timestamp',
-        text: 'Shop POS $prefix export',
-      );
+      if (kIsWeb) {
+        // ── Web: trigger proper browser file download ──
+        // Uses Blob + anchor download API for reliable download
+        // with correct filename. The downloaded file can be
+        // re-imported via "Restore from Backup".
+        final mimeType = ext == 'csv' ? 'text/csv' : 'application/json';
+        final success = await downloadFileOnWeb(content, filename, mimeType);
+
+        if (!success) {
+          debugPrint('⚠️ Web download failed');
+          Get.snackbar(
+            "Download failed",
+            "Could not trigger browser download. Try saving via Google Drive instead.",
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      } else {
+        // ── Native: write temp file and share ──
+        final filePath = await writeTempFile(filename, content);
+        await shareNativeFile(
+          filePath,
+          subject: subject ?? '$prefix export - $timestamp',
+          text: text ?? 'Shop POS $prefix export',
+        );
+      }
     } catch (e) {
       Get.snackbar(
         "Export failed",

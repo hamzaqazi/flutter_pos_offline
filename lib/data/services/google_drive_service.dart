@@ -123,15 +123,20 @@ class GoogleDriveService {
             : kGoogleServerClientId,
       );
 
-      GoogleSignIn.instance.authenticationEvents.listen((event) {
-        if (event is GoogleSignInAuthenticationEventSignIn) {
-          _account = event.user;
-          _persistAccount(event.user);
-        } else if (event is GoogleSignInAuthenticationEventSignOut) {
-          _account = null;
-          _clearPersistedAccount();
-        }
-      });
+      GoogleSignIn.instance.authenticationEvents.listen(
+        (event) {
+          if (event is GoogleSignInAuthenticationEventSignIn) {
+            _account = event.user;
+            _persistAccount(event.user);
+          } else if (event is GoogleSignInAuthenticationEventSignOut) {
+            _account = null;
+            _clearPersistedAccount();
+          }
+        },
+        onError: (e) {
+          debugPrint('⚠️ GoogleDrive auth event error: $e');
+        },
+      );
 
       // Silently restore the previous session (fires a sign-in event on success).
       await GoogleSignIn.instance.attemptLightweightAuthentication();

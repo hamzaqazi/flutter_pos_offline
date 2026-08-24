@@ -1,9 +1,11 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/widgets/tooltip_label.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/modules/reports/charts_tab.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 
 import 'reports_controller.dart';
@@ -18,75 +20,78 @@ class ReportsPage extends GetView<ReportsController> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Reports")),
-      body: Column(
-        children: [
-          // ---------- Date range filter ----------
-          Container(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.md,
-              AppSpacing.lg,
-              AppSpacing.sm,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Date range", style: theme.textTheme.titleSmall),
-                const SizedBox(height: AppSpacing.sm),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _dateChip("Today", controller.setToday),
-                      _dateChip("This week", controller.setThisWeek),
-                      _dateChip("This month", controller.setThisMonth),
-                      _dateChip("Last month", controller.setLastMonth),
-                      _dateChip("All time", controller.setAllTime),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-
-          // ---------- Report tabs ----------
-          Expanded(
-            child: DefaultTabController(
-              length: 6,
+      body: PremiumGate(
+        feature: 'Reports & Analytics',
+        child: Column(
+          children: [
+            // ---------- Date range filter ----------
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                AppSpacing.sm,
+              ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TabBar(
-                    isScrollable: true,
-                    labelColor: cs.primary,
-                    unselectedLabelColor: cs.onSurfaceVariant,
-                    indicatorColor: cs.primary,
-                    tabs: const [
-                      Tab(text: "Summary"),
-                      Tab(text: "Charts"),
-                      Tab(text: "Top Products"),
-                      Tab(text: "Categories"),
-                      Tab(text: "Expenses"),
-                      Tab(text: "Inventory"),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(
+                  Text("Date range", style: theme.textTheme.titleSmall),
+                  const SizedBox(height: AppSpacing.sm),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
                       children: [
-                        _SummaryTab(),
-                        ChartsTab(),
-                        _TopProductsTab(),
-                        _CategoriesTab(),
-                        _ExpensesTab(),
-                        _InventoryTab(),
+                        _dateChip("Today", controller.setToday),
+                        _dateChip("This week", controller.setThisWeek),
+                        _dateChip("This month", controller.setThisMonth),
+                        _dateChip("Last month", controller.setLastMonth),
+                        _dateChip("All time", controller.setAllTime),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+            const Divider(height: 1),
+
+            // ---------- Report tabs ----------
+            Expanded(
+              child: DefaultTabController(
+                length: 6,
+                child: Column(
+                  children: [
+                    TabBar(
+                      isScrollable: true,
+                      labelColor: cs.primary,
+                      unselectedLabelColor: cs.onSurfaceVariant,
+                      indicatorColor: cs.primary,
+                      tabs: const [
+                        Tab(text: "Summary"),
+                        Tab(text: "Charts"),
+                        Tab(text: "Top Products"),
+                        Tab(text: "Categories"),
+                        Tab(text: "Expenses"),
+                        Tab(text: "Inventory"),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _SummaryTab(),
+                          ChartsTab(),
+                          _TopProductsTab(),
+                          _CategoriesTab(),
+                          _ExpensesTab(),
+                          _InventoryTab(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -236,7 +241,7 @@ class _SummaryTab extends GetView<ReportsController> {
                     label: "Expenses",
                     tooltip: FinancialTooltips.expenses,
                     value: Formatters.currency(controller.totalExpenses),
-                    color: const Color(0xFFEF4444),
+                    color: AppColors.danger,
                   ),
                 ),
               ],
@@ -259,7 +264,7 @@ class _SummaryTab extends GetView<ReportsController> {
                     icon: Icons.undo_outlined,
                     label: "Return transactions",
                     value: controller.totalReturnTransactions.toString(),
-                    color: const Color(0xFF8B5CF6),
+                    color: AppColors.violet,
                   ),
                 ),
               ],
@@ -715,7 +720,7 @@ class _InventoryTab extends GetView<ReportsController> {
                     value: Formatters.currency(
                       controller.inventoryPotentialProfit,
                     ),
-                    color: const Color(0xFF8B5CF6),
+                    color: AppColors.violet,
                   ),
                 ),
               ],
@@ -960,28 +965,15 @@ class _StatBox extends StatelessWidget {
 }
 
 class _EmptyReport extends StatelessWidget {
-  final String message;
   const _EmptyReport({required this.message});
+  final String message;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.bar_chart_outlined,
-              size: 48,
-              color: theme.colorScheme.primary.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(message, style: theme.textTheme.bodyMedium),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: Icons.bar_chart_outlined,
+      title: message,
+      subtitle: 'Data will appear as you make sales',
     );
   }
 }

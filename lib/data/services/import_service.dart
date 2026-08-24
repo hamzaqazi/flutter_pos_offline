@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:ad_shop_pos/app/utils/backup_io_bridge.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
@@ -10,9 +10,13 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 /// Service for importing data from a JSON backup file.
+///
+/// - **Native**: Reads file from path via dart:io.
+/// - **Web**: Reads file bytes from FilePicker (which works on web).
 class ImportService {
   /// Pick a JSON backup file and return its parsed content.
   /// Returns null if user cancels or file is invalid.
@@ -20,14 +24,40 @@ class ImportService {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.any,
-        // allowedExtensions: ['json'],
         dialogTitle: 'Select Backup File',
+        // On web, we need bytes to be populated
+        withData: kIsWeb,
       );
 
       if (result == null || result.files.isEmpty) return null;
 
-      final file = File(result.files.single.path!);
-      final content = await file.readAsString();
+      String content;
+
+      if (kIsWeb) {
+        // ── Web: read bytes from FilePicker ──
+        final bytes = result.files.single.bytes;
+        if (bytes == null) {
+          Get.snackbar(
+            "Error",
+            "Could not read file data. Please try again.",
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return null;
+        }
+        content = utf8.decode(bytes);
+      } else {
+        // ── Native: read from file path ──
+        final filePath = result.files.single.path;
+        if (filePath == null) {
+          Get.snackbar(
+            "Error",
+            "Could not access file path.",
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return null;
+        }
+        content = await readNativeFile(filePath);
+      }
 
       final data = jsonDecode(content) as Map<String, dynamic>;
 
@@ -170,6 +200,31 @@ class ImportService {
         settingsBox.put('lastInvoiceNumber', data['lastInvoiceNumber']);
       }
 
+      // ── Prevent trial reset exploit ──
+      final settingsBox = Hive.box('settings');
+      final currentTrialStart = settingsBox.get('trial_startDate') as String?;
+      final backupTrialStart = data['trial_startDate'] as String?;
+      if (currentTrialStart != null && backupTrialStart != null) {
+        final currentDate = DateTime.tryParse(currentTrialStart);
+        final backupDate = DateTime.tryParse(backupTrialStart);
+        if (currentDate != null &&
+            backupDate != null &&
+            backupDate.isBefore(currentDate)) {
+          await settingsBox.put('trial_startDate', backupTrialStart);
+          final backupExpired = data['trial_expired'] as bool?;
+          await settingsBox.put('trial_expired', backupExpired ?? true);
+          debugPrint(
+              '🔒 Trial reset exploit blocked — older trial date restored from backup');
+        }
+      } else if (backupTrialStart != null) {
+        await settingsBox.put('trial_startDate', backupTrialStart);
+        await settingsBox.put('trial_expired', data['trial_expired'] ?? false);
+        if (data['trial_customerPhone'] != null) {
+          await settingsBox
+              .put('trial_customerPhone', data['trial_customerPhone']);
+        }
+      }
+
       // Reload all controllers
       await _reloadAllControllers();
 
@@ -196,14 +251,21 @@ class ImportService {
       'license_key',
       'license_shopName',
       'license_expiresAt',
+      'license_plan',
+      'license_lastVerified',
       'license_pin',
       'license_pinEnabled',
       'license_deactivationReason',
+      'trial_startDate',
+      'trial_expired',
+      'trial_customerPhone',
+      'trial_registrationPending',
       'autoBackup_enabled',
       'autoBackup_frequency',
       'autoBackup_lastBackup',
       'autoBackup_maxBackups',
       'autoBackup_keepLast',
+      'web_deviceId',
     ]) {
       final value = settingsBox.get(key);
       if (value != null) {

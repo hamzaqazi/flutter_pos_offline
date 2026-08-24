@@ -19,4 +19,5 @@ abstract class Routes {
   static const scanner = '/scanner';
   static const backupHistory = '/backup-history';
   static const driveBackup = '/drive-backup';
+  static const license = '/license';
 }

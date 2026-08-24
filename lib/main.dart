@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ad_shop_pos/app/routes/app_routes.dart';
+import 'package:ad_shop_pos/app/utils/backup_io_bridge.dart';
 import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:workmanager/workmanager.dart';
 
 import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
@@ -33,12 +33,13 @@ void main() async {
   await Hive.openBox('staff');
   await Hive.openBox('categories');
   await Hive.openBox('held_carts');
+  // Web backups stored in Hive (IndexedDB on web) instead of filesystem
+  await Hive.openBox(AutoBackupService.webBackupBoxName);
 
-  // Initialize Workmanager for auto-backup scheduling
-  try {
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-  } catch (e) {
-    debugPrint('⚠️ Workmanager init failed: $e');
+  // Initialize Workmanager for auto-backup scheduling (native only).
+  // On web, this is a no-op — web uses in-app check on launch instead.
+  if (!kIsWeb) {
+    await initWorkmanager();
   }
 
   // Schedule auto-backup if enabled
@@ -70,8 +71,18 @@ class _PosAppState extends State<PosApp> {
   }
 
   Future<void> _determineStartRoute() async {
-    if (!LicenseService.isActivated) {
-      // Not activated → show activation screen
+    // ── First install: go to activation screen ──
+    // User must choose: Free Trial (with phone verification) or License Key.
+    // No auto-start trial — user must explicitly choose and verify phone.
+    if (LicenseService.isFirstInstall) {
+      // Check Firestore to see if trial card should be shown
+      final eligible = await LicenseService.checkDeviceTrialEligibility();
+      if (eligible == false) {
+        // Device already used a trial (data was cleared) — block repeat trial
+        await LicenseService.markTrialAlreadyUsed();
+        debugPrint('⚠️ Device already used trial — repeat trial blocked');
+      }
+      // Always go to activation screen — user makes the choice
       setState(() {
         _initialRoute = Routes.activation;
         _checking = false;
@@ -79,7 +90,37 @@ class _PosAppState extends State<PosApp> {
       return;
     }
 
-    // Already activated — verify with Firestore (with 8-second timeout)
+    // ── Check if trial just expired ──
+    if (LicenseService.trialJustExpired) {
+      LicenseService.expireTrial();
+      debugPrint('⚠️ Trial expired — downgraded to free tier');
+    }
+
+    // ── Trial active (no license key needed) → go to app ──
+    if (LicenseService.isTrialActive && !LicenseService.isActivated) {
+      setState(() {
+        _initialRoute = LicenseService.isPinEnabled
+            ? Routes.pinLock
+            : Routes.dashboard;
+        _checking = false;
+      });
+      // Auto-backup check
+      if (AutoBackupService.isEnabled) {
+        AutoBackupService.checkAndRunIfNeeded();
+      }
+      return;
+    }
+
+    // ── Not activated (no trial, no license) → activation screen ──
+    if (!LicenseService.isActivated) {
+      setState(() {
+        _initialRoute = Routes.activation;
+        _checking = false;
+      });
+      return;
+    }
+
+    // ── Activated — verify with Firestore (with 8-second timeout) ──
     bool stillValid;
     try {
       stillValid = await LicenseService.verifyActiveLicense().timeout(
@@ -129,7 +170,6 @@ class _PosAppState extends State<PosApp> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon(Icons.storefront, size: 64, color: AppColors.seed),
                 // App logo
                 Image.asset(
                   'lib/assets/images/cn_pos_logo_rm.png',
@@ -139,9 +179,11 @@ class _PosAppState extends State<PosApp> {
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
-                const Text(
-                  'Verifying license...',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                Text(
+                  LicenseService.isFirstInstall
+                      ? 'Setting up your trial...'
+                      : 'Verifying license...',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),

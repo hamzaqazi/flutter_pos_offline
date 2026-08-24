@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
@@ -363,7 +364,7 @@ class BarcodeScannerHelper {
     if (product != null) {
       productsController.selectedCategory.value = 'All';
       productsController.searchQuery.value = product.name;
-      Get.toNamed('/products');
+      ShellController.to.goProducts();
       Get.snackbar(
         "Product found",
         "${product.name} — ${product.category}",

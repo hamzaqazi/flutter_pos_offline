@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_animations.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
@@ -60,7 +61,8 @@ class ProductCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
+      child: TapScale(
+        child: InkWell(
         // Tap out-of-stock → edit (restock), tap in-stock → add to cart
         onTap: outOfStock
             ? () => _showEditDialog(context)
@@ -369,6 +371,7 @@ class ProductCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

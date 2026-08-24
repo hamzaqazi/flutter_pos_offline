@@ -1,5 +1,5 @@
-import 'dart:io';
-
+import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
+import 'package:ad_shop_pos/app/utils/native_file.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
@@ -9,6 +9,9 @@ import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
+import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -24,223 +27,241 @@ class SettingsPage extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Settings")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            // ---------- Shop Information ----------
-            _SectionTile(
-              icon: Icons.storefront,
-              title: "Shop Information",
-              subtitle: "Name, address, phone & currency",
-              color: AppColors.seed,
-              initiallyExpanded: true,
-              children: [
-                Obx(() => _ShopInfoForm(settings: controller.settings.value)),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Categories ----------
-            _SectionTile(
-              icon: Icons.category_outlined,
-              title: "Categories",
-              subtitle: "Manage product categories & colors",
-              color: Color(0xFF8B5CF6),
-              children: [_CategoryManagementSection()],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Tax Settings ----------
-            _SectionTile(
-              icon: Icons.receipt_outlined,
-              title: "Tax Settings",
-              subtitle: "Tax rate & inclusive pricing",
-              color: AppColors.accent,
-              children: [
-                Obx(() => _TaxForm(settings: controller.settings.value)),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Low Stock Alert ----------
-            _SectionTile(
-              icon: Icons.warning_amber_rounded,
-              title: "Low Stock Alert",
-              subtitle: "Alert threshold & notifications",
-              color: AppColors.warning,
-              children: [
-                Obx(
-                  () => _LowStockThresholdForm(
-                    settings: controller.settings.value,
-                  ),
+    // Sections are clustered into labeled groups (General, Receipts &
+    // Printing, Data & Backup, Security & Plan) instead of one flat list of
+    // 11 accordions — improves scannability without touching any logic.
+    final groups = <(String, List<Widget>)>[
+      (
+        'General',
+        [
+          _SectionTile(
+            icon: Icons.storefront,
+            title: "Shop Information",
+            subtitle: "Name, address, phone & currency",
+            color: AppColors.seed,
+            initiallyExpanded: true,
+            children: [
+              Obx(() => _ShopInfoForm(settings: controller.settings.value)),
+            ],
+          ),
+          _SectionTile(
+            icon: Icons.category_outlined,
+            title: "Categories",
+            subtitle: "Manage product categories & colors",
+            color: AppColors.seedDark,
+            children: [_CategoryManagementSection()],
+          ),
+          _SectionTile(
+            icon: Icons.receipt_outlined,
+            title: "Tax Settings",
+            subtitle: "Tax rate & inclusive pricing",
+            color: AppColors.accent,
+            children: [
+              Obx(() => _TaxForm(settings: controller.settings.value)),
+            ],
+          ),
+          _SectionTile(
+            icon: Icons.warning_amber_rounded,
+            title: "Low Stock Alert",
+            subtitle: "Alert threshold & notifications",
+            color: AppColors.warning,
+            children: [
+              Obx(
+                () => _LowStockThresholdForm(
+                  settings: controller.settings.value,
                 ),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- PIN Lock ----------
-            _SectionTile(
-              icon: Icons.lock_outline,
-              title: "App Security",
-              subtitle: "App security & PIN settings",
-              color: const Color(0xFF6366F1),
-              children: [_PinLockSection()],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Receipt Customization ----------
-            _SectionTile(
-              icon: Icons.receipt_long_outlined,
-              title: "Receipt Customization",
-              subtitle: "Paper size, font, visibility & preview",
-              color: AppColors.seed,
-              children: [
-                Obx(
-                  () => _ReceiptCustomizationWithPreview(
-                    receiptSettings: controller.receiptSettings.value,
-                    shopSettings: controller.settings.value,
-                    onChanged: (s) => controller.updateReceiptSettings(s),
-                  ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      (
+        'Receipts & Printing',
+        [
+          _SectionTile(
+            icon: Icons.receipt_long_outlined,
+            title: "Receipt Customization",
+            subtitle: "Paper size, font, visibility & preview",
+            color: AppColors.seed,
+            children: [
+              Obx(
+                () => _ReceiptCustomizationWithPreview(
+                  receiptSettings: controller.receiptSettings.value,
+                  shopSettings: controller.settings.value,
+                  onChanged: (s) => controller.updateReceiptSettings(s),
                 ),
-              ],
+              ),
+            ],
+          ),
+          _SectionTile(
+            icon: Icons.print_outlined,
+            title: "Thermal Printer",
+            subtitle: "Scan, pair & test your printer",
+            color: AppColors.accent,
+            children: [_PrinterSettingsSection()],
+          ),
+        ],
+      ),
+      (
+        'Data & Backup',
+        [
+          _SectionTile(
+            icon: Icons.file_download_outlined,
+            title: "Export & Backup",
+            subtitle: "Download CSV or full JSON backup",
+            color: AppColors.success,
+            children: [
+              AppActionTile(
+                icon: Icons.inventory_2_outlined,
+                title: "Export Products",
+                subtitle: "Download all products as CSV",
+                color: AppColors.seed,
+                onTap: () => ExportService.exportProducts(),
+              ),
+              const Divider(height: 1, indent: 52),
+              AppActionTile(
+                icon: Icons.receipt_long_outlined,
+                title: "Export Sales",
+                subtitle: "Download all sales records as CSV",
+                color: AppColors.success,
+                onTap: () => ExportService.exportSales(),
+              ),
+              const Divider(height: 1, indent: 52),
+              AppActionTile(
+                icon: Icons.account_balance_wallet_outlined,
+                title: "Export Expenses",
+                subtitle: "Download all expenses as CSV",
+                color: AppColors.danger,
+                onTap: () => ExportService.exportExpenses(),
+              ),
+              const Divider(height: 1, indent: 52),
+              AppActionTile(
+                icon: Icons.folder_zip_outlined,
+                title: "Full Backup",
+                subtitle: "Export all data as restorable JSON backup",
+                color: AppColors.accent,
+                onTap: () => ExportService.exportFullBackup(),
+              ),
+            ],
+          ),
+          _SectionTile(
+            icon: Icons.file_upload_outlined,
+            title: "Import & Restore",
+            subtitle: "Restore data from a backup file",
+            color: AppColors.warning,
+            children: [
+              AppActionTile(
+                icon: Icons.restore_outlined,
+                title: "Restore from Backup",
+                subtitle:
+                    "Import data from a previously exported backup file",
+                color: AppColors.warning,
+                onTap: () => _showImportDialog(context),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              AppBanner(
+                type: AppBannerType.danger,
+                icon: Icons.info_outline,
+                title: "Restoring replaces all current data",
+                subtitle: "Export a backup first to keep your data.",
+                margin: EdgeInsets.zero,
+              ),
+            ],
+          ),
+          _SectionTile(
+            icon: Icons.schedule_outlined,
+            title: "Auto Backup",
+            subtitle: "Automatic scheduled backups to local storage",
+            color: AppColors.seed,
+            children: [_AutoBackupSection()],
+          ),
+          _SectionTile(
+            icon: Icons.cloud_outlined,
+            title: "Google Drive Backup",
+            subtitle: "Back up to your own Google Drive account",
+            color: AppColors.seedDark,
+            children: [_DriveBackupSection()],
+          ),
+        ],
+      ),
+      (
+        'Team & Security',
+        [
+          AppActionTile(
+            icon: Icons.groups_outlined,
+            title: "Staff & Cashiers",
+            subtitle: "Manage staff accounts, roles & active cashier",
+            color: AppColors.seed,
+            onTap: () => Get.toNamed('/staff'),
+          ),
+          _SectionTile(
+            icon: Icons.lock_outline,
+            title: "App Security",
+            subtitle: "App security, PIN & your current plan",
+            color: AppColors.seedDark,
+            children: [_PinLockSection()],
+          ),
+        ],
+      ),
+    ];
+
+    // Each group renders as ONE grouped card (rows separated by thin
+    // dividers) instead of a card per row — a monochrome, iOS-Settings-style
+    // list rather than a stack of colorful bordered tiles. The header +
+    // rows still get the stagger-in animation; only the group card and its
+    // internal dividers are static.
+    final theme = Theme.of(context);
+    var index = 0;
+    final children = <Widget>[];
+    for (final (title, sections) in groups) {
+      children.add(
+        AppAnimations.staggerItem(
+          index: index++,
+          child: AppSectionHeader(
+            title: title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
             ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Thermal Printer ----------
-            _SectionTile(
-              icon: Icons.print_outlined,
-              title: "Thermal Printer",
-              subtitle: "Scan, pair & test your printer",
-              color: AppColors.accent,
-              children: [_PrinterSettingsSection()],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Export & Backup ----------
-            _SectionTile(
-              icon: Icons.file_download_outlined,
-              title: "Export & Backup",
-              subtitle: "Download CSV or full JSON backup",
-              color: AppColors.success,
-              children: [
-                _ExportTile(
-                  icon: Icons.inventory_2_outlined,
-                  title: "Export Products",
-                  subtitle: "Download all products as CSV",
-                  color: AppColors.seed,
-                  onTap: () => ExportService.exportProducts(),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ExportTile(
-                  icon: Icons.receipt_long_outlined,
-                  title: "Export Sales",
-                  subtitle: "Download all sales records as CSV",
-                  color: AppColors.success,
-                  onTap: () => ExportService.exportSales(),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ExportTile(
-                  icon: Icons.account_balance_wallet_outlined,
-                  title: "Export Expenses",
-                  subtitle: "Download all expenses as CSV",
-                  color: AppColors.danger,
-                  onTap: () => ExportService.exportExpenses(),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ExportTile(
-                  icon: Icons.folder_zip_outlined,
-                  title: "Full Backup",
-                  subtitle: "Export all data as restorable JSON backup",
-                  color: AppColors.accent,
-                  onTap: () => ExportService.exportFullBackup(),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Import & Restore ----------
-            _SectionTile(
-              icon: Icons.file_upload_outlined,
-              title: "Import & Restore",
-              subtitle: "Restore data from a backup file",
-              color: AppColors.warning,
-              children: [
-                _ImportTile(
-                  icon: Icons.restore_outlined,
-                  title: "Restore from Backup",
-                  subtitle:
-                      "Import data from a previously exported backup file",
-                  color: AppColors.warning,
-                  onTap: () => _showImportDialog(context),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.danger.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    border: Border.all(
-                      color: AppColors.danger.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 16,
-                        color: AppColors.danger,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          "Restoring a backup will replace all current data. Export a backup first to keep your data.",
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.danger),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Auto Backup ----------
-            _SectionTile(
-              icon: Icons.schedule_outlined,
-              title: "Auto Backup",
-              subtitle: "Automatic scheduled backups to local storage",
-              color: const Color(0xFF0EA5E9),
-              children: [_AutoBackupSection()],
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-
-            // ---------- Google Drive Backup ----------
-            _SectionTile(
-              icon: Icons.cloud_outlined,
-              title: "Google Drive Backup",
-              subtitle: "Back up to your own Google Drive account",
-              color: const Color(0xFF16A34A),
-              children: [_DriveBackupSection()],
-            ),
-
-            const SizedBox(height: AppSpacing.xl),
-          ],
+          ),
         ),
+      );
+      children.add(const SizedBox(height: AppSpacing.sm));
+      children.add(
+        Card(
+          clipBehavior: Clip.antiAlias,
+          margin: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (var i = 0; i < sections.length; i++) ...[
+                AppAnimations.staggerItem(index: index++, child: sections[i]),
+                if (i != sections.length - 1)
+                  Divider(
+                    height: 1,
+                    indent: AppSpacing.lg + 20 + AppSpacing.md,
+                  ),
+              ],
+            ],
+          ),
+        ),
+      );
+      children.add(const SizedBox(height: AppSpacing.xl));
+    }
+    children.removeLast();
+
+    return Scaffold(
+      appBar: const AppShellAppBar(
+        title: Text("Settings"),
+        showSettingsAction: false,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.navClearance,
+        ),
+        child: Column(children: children),
       ),
     );
   }
@@ -676,46 +697,37 @@ class _SectionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.zero,
-      child: Theme(
-        // Override expansion tile colors
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            0,
-            AppSpacing.md,
-            AppSpacing.md,
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          title: Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          subtitle: Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          children: children,
+    // Icon carries a restrained accent from the brand palette (not flat
+    // gray) — same bare-row treatment as AppActionTile so both sit in the
+    // same grouped card.
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        tilePadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xs,
         ),
+        childrenPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        leading: Icon(icon, size: 20, color: color),
+        title: Text(
+          title,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        children: children,
       ),
     );
   }
@@ -1009,8 +1021,8 @@ class _ReceiptCustomizationWithPreviewState
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  child: Image.file(
-                    File(_settings.logoPath),
+                  child: Image(
+                    image: createFileImage(_settings.logoPath),
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) =>
                         const Icon(Icons.broken_image_outlined, size: 24),
@@ -2004,142 +2016,6 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
   }
 }
 
-// =================== Export / Import Tiles ===================
-
-class _ExportTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ExportTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.share_outlined, size: 18, color: color),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ImportTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ImportTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.file_open_outlined, size: 18, color: color),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // =================== Import Confirm Dialog ===================
 
 class _ImportConfirmDialog extends StatelessWidget {
@@ -2489,7 +2365,7 @@ class _PinLockSectionState extends State<_PinLockSection> {
           ),
           secondary: Icon(
             isPinEnabled ? Icons.lock : Icons.lock_open,
-            color: isPinEnabled ? const Color(0xFF6366F1) : cs.onSurfaceVariant,
+            color: isPinEnabled ? AppColors.seedDark : cs.onSurfaceVariant,
           ),
         ),
         if (isPinEnabled) ...[
@@ -2507,108 +2383,22 @@ class _PinLockSectionState extends State<_PinLockSection> {
           ),
         ],
         const SizedBox(height: AppSpacing.md),
-        // License info
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.vpn_key_outlined,
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    "License: ${LicenseService.licenseKey}",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.store_outlined,
-                    size: 16,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    "Shop: ${LicenseService.shopName}",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              if (LicenseService.expiresAt != null) ...[
-                const SizedBox(height: 4),
-                Builder(
-                  builder: (_) {
-                    final exp = LicenseService.expiresAt!;
-                    final days = LicenseService.daysUntilExpiry ?? 0;
-                    final isWarning = days <= 30;
-                    final isCritical = days <= 7;
-                    final color = isCritical
-                        ? AppColors.danger
-                        : isWarning
-                        ? AppColors.warning
-                        : AppColors.success;
-                    return Row(
-                      children: [
-                        Icon(Icons.event_outlined, size: 16, color: color),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          "Expires: ${formatDate(exp)} ($days days left)",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-              // Device ID
-              const SizedBox(height: 4),
-              // ---------- Device ID + Support Info ----------
-              FutureBuilder<String>(
-                future: LicenseService.deviceId,
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return const SizedBox.shrink();
-                  final deviceId = snapshot.data!;
-                  return Row(
-                    children: [
-                      Icon(Icons.devices, size: 16, color: cs.onSurfaceVariant),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          // 'Device: ${deviceId.length > 20 ? deviceId.substring(0, 20) : deviceId}...',
-                          'Device ID: $deviceId',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            fontFamily: 'monospace',
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
+        // License & Plan info — tappable card
+        AppActionTile(
+          icon: LicenseService.isPremium
+              ? Icons.workspace_premium_outlined
+              : Icons.lock_outline,
+          color: LicenseService.isPremium ? AppColors.seed : AppColors.warning,
+          title: LicenseService.planDisplayWithEmoji,
+          subtitle: LicenseService.isTrialActive
+              ? '${LicenseService.trialDaysRemaining} days remaining'
+              : (LicenseService.isActivated &&
+                    LicenseService.shopName.isNotEmpty)
+              ? LicenseService.shopName
+              : LicenseService.isFreeTier
+              ? '${LicenseService.freeMaxProducts} products max'
+              : '',
+          onTap: () => Get.toNamed('/license'),
         ),
       ],
     );
@@ -2708,7 +2498,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
           ),
           secondary: Icon(
             isEnabled ? Icons.backup_outlined : Icons.backup_outlined,
-            color: isEnabled ? const Color(0xFF0EA5E9) : cs.onSurfaceVariant,
+            color: isEnabled ? AppColors.seed : cs.onSurfaceVariant,
           ),
         ),
 
@@ -2839,7 +2629,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                 ),
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0EA5E9),
+                backgroundColor: AppColors.seed,
               ),
             ),
           ),
@@ -2861,6 +2651,8 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
   }
 }
 
+// Delegates to _ChoiceChip so all selection chips on this page share one
+// visual language (previously had its own bordered-box styling).
 class _FreqChip extends StatelessWidget {
   final String label;
   final bool selected;
@@ -2874,33 +2666,7 @@ class _FreqChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFF0EA5E9).withValues(alpha: 0.12)
-              : cs.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-            color: selected ? const Color(0xFF0EA5E9) : cs.outlineVariant,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: selected ? const Color(0xFF0EA5E9) : cs.onSurfaceVariant,
-            fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
-          ),
-        ),
-      ),
-    );
+    return _ChoiceChip(label: label, selected: selected, onTap: onTap);
   }
 }
 
@@ -2913,7 +2679,7 @@ class _DriveBackupSection extends StatefulWidget {
 }
 
 class _DriveBackupSectionState extends State<_DriveBackupSection> {
-  static const _driveGreen = Color(0xFF16A34A);
+  static const _driveGreen = AppColors.seed;
   bool _busy = false;
 
   Future<void> _signIn() async {
@@ -2983,8 +2749,9 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
           ? 'Backup uploaded to Google Drive'
           : 'Could not upload backup to Google Drive',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: (ok ? _driveGreen : AppColors.danger)
-          .withValues(alpha: 0.15),
+      backgroundColor: (ok ? _driveGreen : AppColors.danger).withValues(
+        alpha: 0.15,
+      ),
       colorText: ok ? _driveGreen : AppColors.danger,
     );
   }
@@ -3002,7 +2769,9 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
           "Sign in with Google to store backups in your own Google Drive. "
           "The app stays signed in and keeps the ${GoogleDriveService.maxDriveBackups} "
           "most recent backups in Drive — older ones are removed automatically.",
-          style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -3061,14 +2830,16 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
                       if (GoogleDriveService.accountName.isNotEmpty)
                         Text(
                           GoogleDriveService.accountName,
-                          style: theme.textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       Text(
                         GoogleDriveService.accountEmail,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -3076,7 +2847,9 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
                 ),
                 TextButton(
                   onPressed: _signOut,
-                  style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                  ),
                   child: const Text('Sign out'),
                 ),
               ],
@@ -3098,8 +2871,9 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
               GoogleDriveService.isEnabled
                   ? "Each scheduled backup is also uploaded to Drive"
                   : "Backups stay on this device only",
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: cs.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
             ),
             secondary: Icon(Icons.cloud_upload_outlined, color: _driveGreen),
           ),
@@ -3115,13 +2889,17 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
             ),
             child: Row(
               children: [
-                Icon(Icons.cloud_done_outlined,
-                    size: 16, color: cs.onSurfaceVariant),
+                Icon(
+                  Icons.cloud_done_outlined,
+                  size: 16,
+                  color: cs.onSurfaceVariant,
+                ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   "Last Drive backup: ${GoogleDriveService.lastDriveBackupAgo}",
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -3169,6 +2947,313 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Simple upgrade sheet used from Settings license section.
+/// Reuses the same upgrade sheet from PremiumGate.
+class _LicenseUpgradeSheet extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final _keyController = TextEditingController();
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'Upgrade to Premium',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Choose a plan and contact us on WhatsApp',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Plan options
+          Row(
+            children: [
+              Expanded(
+                child: _SettingPlanCard(
+                  title: 'Monthly',
+                  price: 'Rs 500',
+                  period: '/month',
+                  onTap: () => _openWhatsApp(context, 'Monthly'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _SettingPlanCard(
+                  title: 'Yearly',
+                  price: 'Rs 4,000',
+                  period: '/year',
+                  badge: '33% off',
+                  onTap: () => _openWhatsApp(context, 'Yearly'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _SettingPlanCard(
+            title: 'Lifetime',
+            price: 'Rs 10,000',
+            period: ' one-time',
+            badge: 'Best value',
+            highlighted: true,
+            onTap: () => _openWhatsApp(context, 'Lifetime'),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // Contact row — Call + WhatsApp
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: () => Launcher.makeCall('923153507075'),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.call, size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(
+                        '0315-3507075',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              InkWell(
+                onTap: () => _openWhatsApp(context, 'General Inquiry'),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.chat, size: 14, color: Colors.green[700]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'WhatsApp',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // License key entry
+          const Divider(),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Already have a key?',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: _keyController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              hintText: 'XXXX-XXXX-XXXX-XXXX',
+              prefixIcon: const Icon(Icons.vpn_key_outlined, size: 20),
+              filled: true,
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            height: 44,
+            child: FilledButton(
+              onPressed: () async {
+                final key = _keyController.text.trim();
+                if (key.isEmpty) return;
+                final result = await LicenseService.validateLicense(key);
+                if (result.success) {
+                  Navigator.of(context).pop();
+                  Get.snackbar(
+                    'Activated! 🎉',
+                    'Your ${result.plan ?? 'premium'} plan is now active.',
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                } else {
+                  Get.snackbar(
+                    'Activation Failed',
+                    result.message,
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                }
+              },
+              child: const Text('Activate License'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openWhatsApp(BuildContext context, String plan) async {
+    final success = await Launcher.openWhatsApp(
+      '923153507075',
+      'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
+    );
+    if (!success && context.mounted) {
+      Get.snackbar(
+        'Contact Us',
+        'WhatsApp/Call: 0315-3507075',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+}
+
+/// Plan card for the settings upgrade sheet.
+class _SettingPlanCard extends StatelessWidget {
+  const _SettingPlanCard({
+    required this.title,
+    required this.price,
+    required this.period,
+    required this.onTap,
+    this.badge,
+    this.highlighted = false,
+  });
+
+  final String title;
+  final String price;
+  final String period;
+  final VoidCallback onTap;
+  final String? badge;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: highlighted
+              ? cs.primary.withValues(alpha: 0.08)
+              : cs.surfaceContainerHighest.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: highlighted
+                ? cs.primary.withValues(alpha: 0.5)
+                : cs.outlineVariant,
+            width: highlighted ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            if (badge != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.seed.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Text(
+                  badge!,
+                  style: TextStyle(
+                    color: AppColors.seed,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+            ],
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  price,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: highlighted ? cs.primary : null,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    period,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
