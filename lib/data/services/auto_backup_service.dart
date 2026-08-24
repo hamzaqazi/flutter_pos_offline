@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:ad_shop_pos/app/utils/backup_io_bridge.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
@@ -13,15 +13,16 @@ import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:workmanager/workmanager.dart';
 
 /// Service for automatic backup scheduling.
 ///
-/// Saves full JSON backups to the app's local storage on a schedule:
-/// - Daily (every 24 hours)
-/// - Weekly (every 7 days)
-/// - Manual only (no auto backup)
+/// Saves full JSON backups:
+/// - **Native (Android/iOS/desktop)**: To the device's Documents filesystem.
+/// - **Web**: To a dedicated Hive box (`web_backups`) backed by IndexedDB.
+///
+/// Scheduling:
+/// - **Native**: Uses Workmanager for periodic background tasks.
+/// - **Web**: In-app check on launch only (no background tasks on web).
 ///
 /// Keeps up to [maxBackups] backup files, deleting the oldest when limit is reached.
 class AutoBackupService {
@@ -34,6 +35,9 @@ class AutoBackupService {
   static const _keyLastBackup = 'autoBackup_lastBackup';
   static const _keyMaxBackups = 'autoBackup_maxBackups';
   static const _keyKeepLast = 'autoBackup_keepLast';
+
+  /// Hive box name for web backups (stored in IndexedDB on web).
+  static const webBackupBoxName = 'web_backups';
 
   static final _settingsBox = Hive.box(_box);
 
@@ -103,53 +107,43 @@ class AutoBackupService {
   // ─── Scheduling ──────────────────────────────────────────────
 
   /// Schedule (or reschedule) the auto-backup task.
+  /// On web, this is a no-op (web uses in-app check on launch only).
   static Future<void> scheduleAutoBackup() async {
     if (!isEnabled || frequency == 'manual') {
       await cancelAutoBackup();
       return;
     }
 
+    if (kIsWeb) {
+      debugPrint('✅ Web: auto-backup will use in-app check on launch');
+      return;
+    }
+
+    // Native: use Workmanager for periodic background task.
     final duration = frequency == 'daily'
         ? const Duration(hours: 24)
         : const Duration(days: 7);
 
-    try {
-      await Workmanager().registerPeriodicTask(
-        'autoBackup',
-        'autoBackupTask',
-        frequency: duration,
-        constraints: Constraints(networkType: NetworkType.notRequired),
-        existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
-        backoffPolicy: BackoffPolicy.linear,
-        backoffPolicyDelay: const Duration(minutes: 30),
-      );
-      debugPrint('✅ Auto-backup scheduled: $frequency');
-    } catch (e) {
-      debugPrint('⚠️ Workmanager scheduling failed: $e');
-      // Fallback: will use in-app check on launch instead
-    }
+    await registerPeriodicBackupTask(duration);
   }
 
   /// Cancel the auto-backup task.
+  /// On web, this is a no-op.
   static Future<void> cancelAutoBackup() async {
-    try {
-      await Workmanager().cancelByUniqueName('autoBackup');
-      debugPrint('🛑 Auto-backup cancelled');
-    } catch (e) {
-      debugPrint('⚠️ Workmanager cancel failed: $e');
-    }
+    if (kIsWeb) return;
+    await cancelPeriodicBackupTask();
   }
 
   // ─── In-App Check ────────────────────────────────────────────
 
   /// Check if a backup is due and run one if needed.
   /// Call this on app start and periodically while the app is open.
+  /// Works on both web and native.
   static Future<bool> checkAndRunIfNeeded() async {
     if (!isEnabled || frequency == 'manual') return false;
 
     final lastDate = lastBackupDate;
     if (lastDate == null) {
-      // Never backed up — run now
       return await performAutoBackup();
     }
 
@@ -168,7 +162,9 @@ class AutoBackupService {
 
   // ─── Backup Execution ────────────────────────────────────────
 
-  /// Perform an automatic backup to local storage.
+  /// Perform an automatic backup.
+  /// - **Web**: Saves to Hive box `web_backups` (IndexedDB).
+  /// - **Native**: Saves to filesystem directory.
   /// Returns true if successful.
   static Future<bool> performAutoBackup() async {
     try {
@@ -177,35 +173,31 @@ class AutoBackupService {
       final backupData = await _collectBackupData();
       final jsonStr = const JsonEncoder.withIndent('  ').convert(backupData);
 
-      // Save to app documents directory (persistent, not temp)
-      // final dir = await getApplicationDocumentsDirectory();
-      final dir = await getExternalStorageDirectory();
-      // final backupDir = Directory('${dir.path}/backups');
-      // final backupDir = Directory('${dir!.path}/backups');
-      final backupDir = Directory(
-        '/storage/emulated/0/Documents/Codynest POS/Backups',
-      );
-      if (!await backupDir.exists()) {
-        await backupDir.create(recursive: true);
-      }
-
       final timestamp = DateTime.now()
           .toIso8601String()
           .replaceAll(':', '-')
           .replaceAll('.', '-')
           .substring(0, 22);
-      final file = File('${backupDir.path}/auto_backup_$timestamp.json');
-      await file.writeAsString(jsonStr);
+      final filename = 'auto_backup_$timestamp.json';
+
+      if (kIsWeb) {
+        // ── Web: save to Hive box (persisted in IndexedDB) ──
+        final box = Hive.box(webBackupBoxName);
+        await box.put(filename, jsonStr);
+        debugPrint('✅ Auto-backup saved to web storage: $filename');
+      } else {
+        // ── Native: save to filesystem ──
+        await writeBackupFile(filename, jsonStr);
+        debugPrint('✅ Auto-backup saved to filesystem: $filename');
+      }
 
       // Update last backup time
       await _settingsBox.put(_keyLastBackup, DateTime.now().toIso8601String());
 
       // Prune old backups
-      await _pruneOldBackups(backupDir);
+      await _pruneOldBackups();
 
-      debugPrint('✅ Auto-backup saved: ${file.path}');
-
-      // Also upload to Google Drive if the user opted in and is signed in.
+      // Also upload to Google Drive if opted in and signed in.
       if (GoogleDriveService.isEnabled && GoogleDriveService.isSignedIn) {
         final uploaded = await GoogleDriveService.uploadBackup(jsonStr);
         debugPrint(uploaded
@@ -333,58 +325,74 @@ class AutoBackupService {
 
   // ─── Backup Management ───────────────────────────────────────
 
-  /// Delete old backups beyond the keep limit.
-  static Future<void> _pruneOldBackups(Directory backupDir) async {
+  /// Prune old backups beyond the keep limit.
+  static Future<void> _pruneOldBackups() async {
     final limit = keepLast;
-    final files = <File>[];
 
-    await for (final entity in backupDir.list()) {
-      if (entity is File && entity.path.contains('auto_backup_')) {
-        files.add(entity);
-      }
-    }
+    if (kIsWeb) {
+      final box = Hive.box(webBackupBoxName);
+      final keys = box.keys
+          .where((k) => k.toString().startsWith('auto_backup_'))
+          .toList();
 
-    // Sort by modification time, newest first
-    files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+      // Sort newest first (lexicographic on timestamp part)
+      keys.sort((a, b) {
+        final ta = a
+            .toString()
+            .replaceAll('auto_backup_', '')
+            .replaceAll('.json', '');
+        final tb = b
+            .toString()
+            .replaceAll('auto_backup_', '')
+            .replaceAll('.json', '');
+        return tb.compareTo(ta);
+      });
 
-    // Delete oldest files beyond the limit
-    if (files.length > limit) {
-      for (var i = limit; i < files.length; i++) {
-        try {
-          await files[i].delete();
-          debugPrint('🗑️ Deleted old backup: ${files[i].path}');
-        } catch (e) {
-          debugPrint('⚠️ Failed to delete backup: $e');
+      if (keys.length > limit) {
+        for (var i = limit; i < keys.length; i++) {
+          await box.delete(keys[i]);
+          debugPrint('🗑️ Deleted old web backup: ${keys[i]}');
         }
       }
+    } else {
+      await pruneNativeBackups(limit);
     }
   }
 
   /// List all auto-backup files with metadata.
   static Future<List<BackupFileInfo>> listBackups() async {
-    // final dir = await getApplicationDocumentsDirectory();
-    // final backupDir = Directory('${dir.path}/backups');
-    final backupDir = Directory(
-      '/storage/emulated/0/Documents/Codynest POS/Backups',
-    );
-    if (!await backupDir.exists()) return [];
+    if (kIsWeb) {
+      return _listWebBackups();
+    } else {
+      return _listNativeBackups();
+    }
+  }
+
+  /// List web backups from Hive box.
+  static Future<List<BackupFileInfo>> _listWebBackups() async {
+    final box = Hive.box(webBackupBoxName);
+    final keys = box.keys
+        .where((k) => k.toString().startsWith('auto_backup_'))
+        .toList();
 
     final files = <BackupFileInfo>[];
 
-    await for (final entity in backupDir.list()) {
-      if (entity is File && entity.path.contains('auto_backup_')) {
-        final stat = await entity.stat();
-        final sizeKB = (stat.size / 1024).round();
-        final filename = entity.path.split('/').last;
-        files.add(
-          BackupFileInfo(
-            file: entity,
-            filename: filename,
-            date: stat.modified,
-            sizeKB: sizeKB,
-          ),
-        );
-      }
+    for (final key in keys) {
+      final filename = key.toString();
+      final content = box.get(key) as String?;
+      if (content == null) continue;
+
+      final sizeKB = (content.length / 1024).round();
+      final date = _parseTimestampFromFilename(filename) ?? DateTime.now();
+
+      files.add(
+        BackupFileInfo(
+          filename: filename,
+          date: date,
+          sizeKB: sizeKB,
+          storageKey: filename,
+        ),
+      );
     }
 
     // Sort newest first
@@ -392,17 +400,68 @@ class AutoBackupService {
     return files;
   }
 
-  /// Delete a specific backup file.
+  /// List native backup files from filesystem.
+  static Future<List<BackupFileInfo>> _listNativeBackups() async {
+    try {
+      final rawFiles = await listNativeBackupFiles();
+      return rawFiles.map((f) {
+        return BackupFileInfo(
+          filename: f['filename'] as String,
+          date: DateTime.fromMillisecondsSinceEpoch(f['modified'] as int),
+          sizeKB: f['sizeKB'] as int,
+          nativeFilePath: f['path'] as String,
+        );
+      }).toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+    } catch (e) {
+      debugPrint('⚠️ List native backups failed: $e');
+      return [];
+    }
+  }
+
+  /// Parse DateTime from auto_backup filename.
+  /// Format: auto_backup_2024-01-15T10-30-00-123.json
+  static DateTime? _parseTimestampFromFilename(String filename) {
+    try {
+      final tsPart = filename
+          .replaceAll('auto_backup_', '')
+          .replaceAll('.json', '');
+      final parts =
+          tsPart.split(RegExp(r'[^0-9]')).where((s) => s.isNotEmpty).toList();
+      if (parts.length >= 6) {
+        return DateTime(
+          int.parse(parts[0]),
+          int.parse(parts[1]),
+          int.parse(parts[2]),
+          int.parse(parts[3]),
+          int.parse(parts[4]),
+          int.parse(parts[5]),
+          parts.length > 6
+              ? int.parse(parts[6].padRight(3, '0').substring(0, 3)) * 1000
+              : 0,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Delete a specific backup.
   static Future<void> deleteBackup(BackupFileInfo info) async {
-    await info.file.delete();
+    if (kIsWeb) {
+      final box = Hive.box(webBackupBoxName);
+      await box.delete(info.storageKey ?? info.filename);
+    } else if (info.nativeFilePath != null) {
+      await deleteNativeFile(info.nativeFilePath!);
+    }
   }
 
   /// Delete all auto-backup files.
   static Future<void> deleteAllBackups() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final backupDir = Directory('${dir.path}/backups');
-    if (await backupDir.exists()) {
-      await backupDir.delete(recursive: true);
+    if (kIsWeb) {
+      final box = Hive.box(webBackupBoxName);
+      await box.clear();
+    } else {
+      await deleteBackupDir();
     }
     await _settingsBox.delete(_keyLastBackup);
   }
@@ -413,15 +472,25 @@ class AutoBackupService {
     return backups.fold<int>(0, (sum, b) => sum + b.sizeKB);
   }
 
-  /// Read a backup file and return its parsed JSON content.
-  static Future<Map<String, dynamic>?> readBackupFile(File file) async {
+  /// Read a backup and return its parsed JSON content.
+  static Future<Map<String, dynamic>?> readBackupFile(
+      BackupFileInfo info) async {
     try {
-      final content = await file.readAsString();
+      String? content;
+
+      if (kIsWeb) {
+        final box = Hive.box(webBackupBoxName);
+        content = box.get(info.storageKey ?? info.filename) as String?;
+      } else if (info.nativeFilePath != null) {
+        content = await readNativeFile(info.nativeFilePath!);
+      }
+
+      if (content == null) return null;
       final data = jsonDecode(content) as Map<String, dynamic>;
       if (data['app'] != 'ad_shop_pos') return null;
       return data;
     } catch (e) {
-      debugPrint('⚠️ Failed to read backup file: $e');
+      debugPrint('⚠️ Failed to read backup: $e');
       return null;
     }
   }
@@ -431,8 +500,8 @@ class AutoBackupService {
     return await performAutoBackup();
   }
 
-  /// Upload a fresh backup of the current data straight to Google Drive.
-  /// Requires the user to be signed in. Returns true on success.
+  /// Upload a fresh backup to Google Drive.
+  /// Works on both web and native (GoogleDriveService is web-safe).
   static Future<bool> uploadToDriveNow() async {
     try {
       final backupData = await _collectBackupData();
@@ -443,20 +512,40 @@ class AutoBackupService {
       return false;
     }
   }
+
+  /// Create a fresh backup JSON string (for download/share).
+  static Future<String?> createBackupJson() async {
+    try {
+      final backupData = await _collectBackupData();
+      return const JsonEncoder.withIndent('  ').convert(backupData);
+    } catch (e) {
+      debugPrint('🔥 Create backup JSON failed: $e');
+      return null;
+    }
+  }
 }
 
-/// Info about a backup file on disk.
+/// Info about a backup file.
+///
+/// On **native**: [nativeFilePath] is set (filesystem path), [storageKey] is null.
+/// On **web**: [storageKey] is set (Hive box key), [nativeFilePath] is null.
 class BackupFileInfo {
-  final File file;
   final String filename;
   final DateTime date;
   final int sizeKB;
 
+  /// Native filesystem path (null on web).
+  final String? nativeFilePath;
+
+  /// Web Hive box key (null on native).
+  final String? storageKey;
+
   const BackupFileInfo({
-    required this.file,
     required this.filename,
     required this.date,
     required this.sizeKB,
+    this.nativeFilePath,
+    this.storageKey,
   });
 
   String get formattedDate {
@@ -466,32 +555,5 @@ class BackupFileInfo {
   String get formattedSize {
     if (sizeKB < 1024) return '$sizeKB KB';
     return '${(sizeKB / 1024).toStringAsFixed(1)} MB';
-  }
-}
-
-/// Top-level callback for Workmanager background task.
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    if (task == 'autoBackupTask') {
-      return await _backgroundBackup();
-    }
-    return true;
-  });
-}
-
-/// Perform backup in background isolate.
-/// Note: Hive + GetX aren't available in background isolates, so
-/// the primary backup mechanism is the in-app check on launch.
-Future<bool> _backgroundBackup() async {
-  try {
-    debugPrint('🔄 Background auto-backup starting...');
-    // In background isolate, we can't use Hive/GetX easily.
-    // The in-app check on every launch is the primary mechanism.
-    // Workmanager ensures a backup runs even if the app isn't opened daily.
-    return true;
-  } catch (e) {
-    debugPrint('🔥 Background backup failed: $e');
-    return false;
   }
 }

@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
+import 'package:ad_shop_pos/app/utils/native_file.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
@@ -1022,8 +1021,8 @@ class _ReceiptCustomizationWithPreviewState
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  child: Image.file(
-                    File(_settings.logoPath),
+                  child: Image(
+                    image: createFileImage(_settings.logoPath),
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) =>
                         const Icon(Icons.broken_image_outlined, size: 24),

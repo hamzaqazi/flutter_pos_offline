@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
+import 'package:ad_shop_pos/app/utils/native_file.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
@@ -488,8 +487,8 @@ class _Header extends StatelessWidget {
                   if (logoPath.isNotEmpty) {
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
-                      child: Image.file(
-                        File(logoPath),
+                      child: Image(
+                        image: createFileImage(logoPath),
                         height: 28,
                         width: 28,
                         fit: BoxFit.cover,

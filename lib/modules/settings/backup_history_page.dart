@@ -97,7 +97,7 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
       ),
     );
 
-    final data = await AutoBackupService.readBackupFile(info.file);
+    final data = await AutoBackupService.readBackupFile(info);
     if (!mounted) return;
     Navigator.of(context).pop();
 

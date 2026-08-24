@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ad_shop_pos/app/routes/app_routes.dart';
+import 'package:ad_shop_pos/app/utils/backup_io_bridge.dart';
 import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:workmanager/workmanager.dart';
 
 import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
@@ -33,12 +33,13 @@ void main() async {
   await Hive.openBox('staff');
   await Hive.openBox('categories');
   await Hive.openBox('held_carts');
+  // Web backups stored in Hive (IndexedDB on web) instead of filesystem
+  await Hive.openBox(AutoBackupService.webBackupBoxName);
 
-  // Initialize Workmanager for auto-backup scheduling
-  try {
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-  } catch (e) {
-    debugPrint('⚠️ Workmanager init failed: $e');
+  // Initialize Workmanager for auto-backup scheduling (native only).
+  // On web, this is a no-op — web uses in-app check on launch instead.
+  if (!kIsWeb) {
+    await initWorkmanager();
   }
 
   // Schedule auto-backup if enabled
@@ -169,7 +170,6 @@ class _PosAppState extends State<PosApp> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icon(Icons.storefront, size: 64, color: AppColors.seed),
                 // App logo
                 Image.asset(
                   'lib/assets/images/cn_pos_logo_rm.png',

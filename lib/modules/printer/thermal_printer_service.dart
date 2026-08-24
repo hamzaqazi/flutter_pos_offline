@@ -1,6 +1,7 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'dart:typed_data';
 import 'dart:math';
+import 'package:ad_shop_pos/app/utils/native_file.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
@@ -178,9 +179,9 @@ class ThermalPrinterService {
     final cur = shopSettings.currencySymbol;
 
     // --- Logo ---
-    if (receiptSettings.showLogo && receiptSettings.hasLogo) {
+    if (receiptSettings.showLogo && receiptSettings.hasLogo && !kIsWeb) {
       try {
-        final file = File(receiptSettings.logoPath);
+        final file = createFile(receiptSettings.logoPath);
         if (await file.exists()) {
           final imageBytes = await file.readAsBytes();
           final decoded = img.decodeImage(imageBytes);
