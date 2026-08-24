@@ -682,12 +682,15 @@
         onclick="attemptLogin()">Unlock</button>
       <div id="authError" style="color:var(--danger);font-size:12px;margin-top:8px;display:none;">Incorrect password
       </div>
-      <p style="font-size:11px;color:#aaa;margin-top:16px;">🔒 Client-side gate — set your password below</p>
-      <div class="form-group" style="margin-top:8px;">
-        <label>Set new admin password</label>
-        <div style="display:flex;gap:8px;">
-          <input type="password" id="newPassword" placeholder="New password" style="flex:1">
-          <button class="btn btn-outline" onclick="setAdminPassword()">Set</button>
+      <!-- First-time setup: only shown if no password exists yet -->
+      <div id="setupSection" style="margin-top:16px;display:none;">
+        <p style="font-size:11px;color:#aaa;margin-bottom:8px;">🔒 First-time setup — create your admin password</p>
+        <div class="form-group">
+          <label>Set admin password</label>
+          <div style="display:flex;gap:8px;">
+            <input type="password" id="newPassword" placeholder="Choose a password (min 4 chars)" style="flex:1">
+            <button class="btn btn-primary" onclick="setAdminPassword()">Set & Enter</button>
+          </div>
         </div>
       </div>
     </div>
@@ -701,7 +704,8 @@
         <div class="header-right">
           <span class="live-dot" title="Real-time connection"></span>
           <span style="font-size:12px;opacity:0.8;">Live</span>
-          <button class="btn-outline-light" onclick="lockAdmin()">🔒 Lock</button>
+          <button class="btn-outline-light" onclick="changeAdminPassword()">🔑 Change Pass</button>
+      <button class="btn-outline-light" onclick="lockAdmin()">🔒 Lock</button>
         </div>
       </div>
     </div>
@@ -876,10 +880,25 @@
     const AUTH_KEY = 'codynest_admin_auth';
     const PASS_KEY = 'codynest_admin_pass';
 
+    function updateAuthUI() {
+      const hasPassword = !!localStorage.getItem(PASS_KEY);
+      const setupEl = document.getElementById('setupSection');
+      const loginBtn = document.querySelector('#authGate .btn-primary');
+      const passInput = document.getElementById('adminPassword');
+      
+      if (setupEl) setupEl.style.display = hasPassword ? 'none' : 'block';
+      if (loginBtn) loginBtn.style.display = hasPassword ? '' : 'none';
+      if (passInput) passInput.style.display = hasPassword ? '' : 'none';
+      
+      // Update the subtitle text
+      const subtitle = document.querySelector('#authGate .auth-card > p');
+      if (subtitle) subtitle.textContent = hasPassword ? 'Enter your admin password to continue' : 'Create an admin password to get started';
+    }
+
     window.attemptLogin = function () {
       const pass = document.getElementById('adminPassword').value;
       const stored = localStorage.getItem(PASS_KEY);
-      if (!stored) { showToast('⚠️ Set a password first (use the field below)'); return; }
+      if (!stored) { showToast('⚠️ No password set yet — create one below'); return; }
       if (pass === stored) {
         localStorage.setItem(AUTH_KEY, 'true');
         showApp();
@@ -902,6 +921,17 @@
       localStorage.removeItem(AUTH_KEY);
       document.getElementById('mainApp').style.display = 'none';
       document.getElementById('authGate').style.display = 'flex';
+      updateAuthUI();
+    };
+
+    // Change password (only accessible after login)
+    window.changeAdminPassword = function () {
+      const current = prompt('Enter current password:');
+      if (current !== localStorage.getItem(PASS_KEY)) { showToast('❌ Incorrect current password'); return; }
+      const newPass = prompt('Enter new password (min 4 chars):');
+      if (!newPass || newPass.length < 4) { showToast('❌ Password must be at least 4 characters'); return; }
+      localStorage.setItem(PASS_KEY, newPass);
+      showToast('✅ Password changed successfully');
     };
 
     function showApp() {
@@ -909,6 +939,9 @@
       document.getElementById('mainApp').style.display = 'block';
       initRealtimeListeners();
     }
+
+    // Init auth UI
+    updateAuthUI();
 
     // Auto-login if session valid
     if (localStorage.getItem(AUTH_KEY) === 'true' && localStorage.getItem(PASS_KEY)) {
