@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:ad_shop_pos/app/utils/backup_io_bridge.dart';
+import 'package:ad_shop_pos/app/utils/web_download_bridge.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/data/models/expense_model.dart';
@@ -18,12 +19,12 @@ import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Service for exporting data as CSV/JSON files.
 ///
 /// - **Native**: Writes to temp file and shares via share_plus.
-/// - **Web**: Triggers browser download using data URI + url_launcher.
+/// - **Web**: Triggers browser download using Blob + anchor download API
+///   (proper file download with correct filename, restorable on import).
 class ExportService {
   /// Export all products as CSV.
   static Future<void> exportProducts() async {
@@ -90,6 +91,8 @@ class ExportService {
   }
 
   /// Export a full backup as JSON (lossless, restorable format).
+  /// On web, this downloads a .json file that can be re-imported via
+  /// "Restore from Backup" (FilePicker reads the file bytes).
   static Future<void> exportFullBackup() async {
     try {
       final productsController = Get.find<ProductsController>();
@@ -222,8 +225,21 @@ class ExportService {
       final filename = '${prefix}_$timestamp.$ext';
 
       if (kIsWeb) {
-        // ── Web: trigger browser download ──
-        await _downloadFileWeb(content, filename, ext);
+        // ── Web: trigger proper browser file download ──
+        // Uses Blob + anchor download API for reliable download
+        // with correct filename. The downloaded file can be
+        // re-imported via "Restore from Backup".
+        final mimeType = ext == 'csv' ? 'text/csv' : 'application/json';
+        final success = await downloadFileOnWeb(content, filename, mimeType);
+
+        if (!success) {
+          debugPrint('⚠️ Web download failed');
+          Get.snackbar(
+            "Download failed",
+            "Could not trigger browser download. Try saving via Google Drive instead.",
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
       } else {
         // ── Native: write temp file and share ──
         final filePath = await writeTempFile(filename, content);
@@ -237,41 +253,6 @@ class ExportService {
       Get.snackbar(
         "Export failed",
         "Could not export data: $e",
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }
-  }
-
-  /// Trigger a browser download on web using a data URI.
-  static Future<void> _downloadFileWeb(
-    String content,
-    String filename,
-    String ext,
-  ) async {
-    try {
-      final mimeType = ext == 'csv'
-          ? 'text/csv'
-          : 'application/json';
-      final encoded = Uri.encodeComponent(content);
-      final uri = 'data:$mimeType;charset=utf-8,$encoded';
-
-      // On web, launchUrl with a data URI triggers a download.
-      // The browser will prompt the user to save the file.
-      final launched = await launchUrl(Uri.parse(uri));
-
-      if (!launched) {
-        debugPrint('⚠️ Web download: could not launch data URI');
-        Get.snackbar(
-          "Download failed",
-          "Could not trigger browser download. Try saving via Google Drive instead.",
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      debugPrint('⚠️ Web download failed: $e');
-      Get.snackbar(
-        "Download failed",
-        "Could not download file: $e",
         snackPosition: SnackPosition.BOTTOM,
       );
     }

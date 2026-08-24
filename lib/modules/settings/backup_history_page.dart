@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/utils/web_download_bridge.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -244,6 +247,32 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
     }
   }
 
+  /// Download a backup file on web (browser download).
+  Future<void> _downloadBackup(BackupFileInfo info) async {
+    try {
+      final data = await AutoBackupService.readBackupFile(info);
+      if (data == null) {
+        Get.snackbar('Error', 'Could not read backup', snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+      final jsonStr = const JsonEncoder.withIndent('  ').convert(data);
+      final success = await downloadFileOnWeb(jsonStr, info.filename, 'application/json');
+      if (success) {
+        Get.snackbar(
+          'Downloaded',
+          'Backup saved as ${info.filename}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppColors.success.withValues(alpha: 0.15),
+          colorText: AppColors.success,
+        );
+      } else {
+        Get.snackbar('Failed', 'Could not download backup file', snackPosition: SnackPosition.BOTTOM);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Download failed: $e', snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -370,6 +399,7 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
                           isLatest: index == 0,
                           onRestore: () => _confirmRestore(backup),
                           onDelete: () => _confirmDelete(backup),
+                          onDownload: kIsWeb ? () => _downloadBackup(backup) : null,
                         );
                       }, childCount: _backups.length),
                     ),
@@ -428,12 +458,14 @@ class _BackupTile extends StatelessWidget {
   final bool isLatest;
   final VoidCallback onRestore;
   final VoidCallback onDelete;
+  final VoidCallback? onDownload;
 
   const _BackupTile({
     required this.info,
     required this.isLatest,
     required this.onRestore,
     required this.onDelete,
+    this.onDownload,
   });
 
   @override
@@ -539,6 +571,24 @@ class _BackupTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
+                if (onDownload != null) ...[
+                  SizedBox(
+                    width: 120,
+                    height: 38,
+                    child: OutlinedButton.icon(
+                      onPressed: onDownload,
+                      icon: const Icon(Icons.download_outlined, size: 16),
+                      label: const Text('Download'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.seed,
+                        side: BorderSide(
+                          color: AppColors.seed.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
                 SizedBox(
                   width: 120,
                   height: 38,
