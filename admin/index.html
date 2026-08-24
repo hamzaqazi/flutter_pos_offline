@@ -748,6 +748,10 @@
               <label>Customer Phone</label>
               <input type="text" id="customerPhone" placeholder="0315-3507075">
             </div>
+            <div class="form-group">
+              <label>Customer Email (optional)</label>
+              <input type="email" id="customerEmail" placeholder="ahmed@store.com">
+            </div>
           </div>
           <button class="btn btn-primary" onclick="createLicense()" style="width:100%;justify-content:center;">Generate
             License Key</button>
@@ -792,6 +796,7 @@
                   <th class="sortable" onclick="sortBy('expiresAt')">Expires <span id="sort-expiresAt"></span></th>
                   <th>Devices</th>
                   <th>Phone</th>
+                  <th>Email</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -1118,6 +1123,7 @@
         const days = daysUntil(l.expiresAt);
         const devices = l.registeredDevices || [];
         const phone = l.customerPhone || '-';
+        const email = l.customerEmail || '-';
         const hasWA = l.customerPhone && l.customerPhone.length > 5;
         const activatedAt = l.activatedAt ? formatDateTime(l.activatedAt) : '-';
 
@@ -1129,6 +1135,7 @@
       <td>${formatDate(l.expiresAt)}${l.plan === 'lifetime' ? '' : ''}</td>
       <td>${devices.length}/${l.maxDevices || 3}</td>
       <td>${hasWA ? `<a href="${waLink(l.customerPhone, 'Hi! This is Codynest POS support. How can we help?')}" target="_blank" style="color:#25D366;font-weight:600;text-decoration:none;font-size:12px;">${phone} 💬</a>` : phone}</td>
+      <td style="font-size:12px;${email !== '-' ? 'color:var(--info);' : ''}">${email !== '-' ? `<a href="mailto:${email}" style="color:inherit;text-decoration:none;">${email}</a>` : '-'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="showDetail('${l.key}')">👁️</button>
         ${(() => {
@@ -1191,6 +1198,7 @@
       const plan = document.getElementById('plan').value;
       const maxDevices = parseInt(document.getElementById('maxDevices').value) || 3;
       const customerPhone = document.getElementById('customerPhone').value.trim();
+      const customerEmail = document.getElementById('customerEmail').value.trim();
       if (!shopName) { showToast('❌ Shop name is required'); return; }
 
       const key = generateKey();
@@ -1201,12 +1209,14 @@
           expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
           registeredDevices: [],
           customerPhone: customerPhone || '',
+          customerEmail: customerEmail || '',
           activatedAt: serverTimestamp(),
         });
         document.getElementById('newKeyDisplay').style.display = 'block';
         document.getElementById('newKeyText').textContent = key;
         document.getElementById('shopName').value = '';
         document.getElementById('customerPhone').value = '';
+        document.getElementById('customerEmail').value = '';
         showToast('✅ License created: ' + key);
       } catch (e) { showToast('❌ Error: ' + e.message); }
     };
@@ -1236,6 +1246,7 @@
       <div><label>Status</label><div class="detail-value"><span class="badge badge-${status}">${statusLabel(status)}</span></div></div>
       <div><label>Shop Name</label><div class="detail-value">${l.shopName || '-'}</div></div>
       <div><label>Customer Phone</label><div class="detail-value">${hasWA ? `<a href="${waLink(l.customerPhone, 'Hi from Codynest POS!')}" target="_blank" style="color:#25D366;text-decoration:none;">${l.customerPhone} 💬</a>` : (l.customerPhone || '-')}</div></div>
+      <div><label>Customer Email</label><div class="detail-value">${l.customerEmail ? `<a href="mailto:${l.customerEmail}" style="color:var(--info);text-decoration:none;">${l.customerEmail} ✉️</a>` : '-'}</div></div>
       <div><label>Max Devices</label><div class="detail-value">${l.maxDevices || 3}</div></div>
       <div><label>Expires</label><div class="detail-value">${formatDate(l.expiresAt)}${days !== null ? ` <span style="font-size:11px;color:${days <= 7 ? 'var(--warning)' : 'var(--on-surface-var)'}">(${days > 0 ? days + 'd left' : 'EXPIRED'})</span>` : ''}</div></div>
       <div><label>Activated</label><div class="detail-value">${l.activatedAt ? formatDateTime(l.activatedAt) : '-'}</div></div>
