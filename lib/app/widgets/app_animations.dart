@@ -18,52 +18,47 @@ class AppAnimations {
     Duration delay = Duration.zero,
     double begin = 0.0,
   }) {
-    return _DelayAnimation(
-      delay: delay,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: begin, end: 1.0),
-        duration: duration,
-        curve: Curves.easeOut,
-        builder: (context, value, child) {
-          return Opacity(opacity: value, child: child);
-        },
-        child: child,
-      ),
+    final fade = TweenAnimationBuilder<double>(
+      tween: Tween(begin: begin, end: 1.0),
+      duration: duration,
+      curve: Curves.easeOut,
+      builder: (context, value, ch) {
+        return Opacity(opacity: value, child: ch);
+      },
+      child: child,
     );
+
+    if (delay == Duration.zero) return fade;
+    return _DelayAnimation(delay: delay, child: fade);
   }
 
   // ── Slide Up ──
 
-  /// Slide-up animation with fade.
+  /// Slide-up animation with fade (single-pass tween to avoid nested builder overhead).
   static Widget slideUp({
     required Widget child,
     Duration duration = AppDuration.normal,
     Duration delay = Duration.zero,
-    double offsetY = 24.0,
+    double offsetY = 20.0,
   }) {
-    return _DelayAnimation(
-      delay: delay,
-      child: TweenAnimationBuilder<Offset>(
-        tween: Tween(begin: Offset(0, offsetY), end: Offset.zero),
-        duration: duration,
-        curve: Curves.easeOutCubic,
-        builder: (context, offset, child) {
-          return Transform.translate(
-            offset: offset,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: duration,
-              curve: Curves.easeOut,
-              builder: (context, opacity, child) {
-                return Opacity(opacity: opacity, child: child);
-              },
-              child: child,
-            ),
-          );
-        },
-        child: child,
-      ),
+    final animated = TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+      builder: (context, progress, ch) {
+        return Transform.translate(
+          offset: Offset(0, offsetY * (1.0 - progress)),
+          child: Opacity(
+            opacity: progress.clamp(0.0, 1.0),
+            child: ch,
+          ),
+        );
+      },
+      child: child,
     );
+
+    if (delay == Duration.zero) return animated;
+    return _DelayAnimation(delay: delay, child: animated);
   }
 
   // ── Scale In ──
@@ -75,39 +70,41 @@ class AppAnimations {
     Duration delay = Duration.zero,
     double beginScale = 0.9,
   }) {
-    return _DelayAnimation(
-      delay: delay,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: beginScale, end: 1.0),
-        duration: duration,
-        curve: Curves.easeOutBack,
-        builder: (context, scale, child) {
-          return Transform.scale(scale: scale, child: child);
-        },
-        child: TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: duration,
-          curve: Curves.easeOut,
-          builder: (context, opacity, child) {
-            return Opacity(opacity: opacity, child: child);
-          },
-          child: child,
-        ),
-      ),
+    final animated = TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: duration,
+      curve: Curves.easeOutBack,
+      builder: (context, progress, ch) {
+        final scale = beginScale + (1.0 - beginScale) * progress;
+        return Transform.scale(
+          scale: scale,
+          child: Opacity(
+            opacity: progress.clamp(0.0, 1.0),
+            child: ch,
+          ),
+        );
+      },
+      child: child,
     );
+
+    if (delay == Duration.zero) return animated;
+    return _DelayAnimation(delay: delay, child: animated);
   }
 
   // ── Stagger ──
 
-  /// Stagger animation for list items — each item gets a delay based on its index.
-  /// Use in a list of items to create a cascading entrance effect.
+  /// Stagger animation for list items — capped to the first few items
+  /// so that scrolled/lazy items don't delay, collapse layout, or stutter.
   static Widget staggerItem({
     required int index,
     required Widget child,
-    Duration staggerDuration = const Duration(milliseconds: 60),
+    Duration staggerDuration = const Duration(milliseconds: 35),
     Duration itemDuration = AppDuration.normal,
   }) {
-    return slideUp(
+    // Only animate the first 6 items on initial screen load.
+    // Subsequent items render directly without delay to prevent scrolling jank.
+    if (index > 6) return child;
+    return fadeIn(
       child: child,
       duration: itemDuration,
       delay: staggerDuration * index,
@@ -116,10 +113,10 @@ class AppAnimations {
 
   // ── Stagger Grid ──
 
-  /// Wrap a list of widgets with stagger animation.
+  /// Wrap a list of widgets with stagger animation (first 6 items only).
   static List<Widget> staggerList({
     required List<Widget> children,
-    Duration staggerDuration = const Duration(milliseconds: 60),
+    Duration staggerDuration = const Duration(milliseconds: 35),
     Duration itemDuration = AppDuration.normal,
   }) {
     return children.asMap().entries.map((entry) {
@@ -136,7 +133,6 @@ class AppAnimations {
 // ── Page Transitions ──
 
 /// Fade-through page transition for non-tab routes.
-/// Usage: GetPage(customTransition: AppPageTransition(), transition: Transition.fadeIn)
 Widget fadeThroughTransition(Widget child, Animation<double> animation) {
   return FadeTransition(
     opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
@@ -182,6 +178,7 @@ Widget sharedAxisTransition(Widget child, Animation<double> animation) {
 
 // ── Delay wrapper ──
 
+/// Delay wrapper that maintains intrinsic size so layout geometry doesn't collapse.
 class _DelayAnimation extends StatefulWidget {
   const _DelayAnimation({required this.delay, required this.child});
 
@@ -209,8 +206,13 @@ class _DelayAnimationState extends State<_DelayAnimation> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_visible) return const SizedBox.shrink();
-    return widget.child;
+    return Visibility(
+      visible: _visible,
+      maintainSize: true,
+      maintainAnimation: true,
+      maintainState: true,
+      child: widget.child,
+    );
   }
 }
 
@@ -219,7 +221,6 @@ class _DelayAnimationState extends State<_DelayAnimation> {
 // ═══════════════════════════════════════════════════════════════
 
 /// A tap-scale wrapper — scales down slightly on press and springs back.
-/// Use for cards, tiles, and interactive elements that need tactile feedback.
 class TapScale extends StatefulWidget {
   const TapScale({
     super.key,
@@ -263,9 +264,17 @@ class _TapScaleState extends State<TapScale>
     super.dispose();
   }
 
-  void _onTapDown(TapDownDetails _) => _controller.forward();
-  void _onTapUp(TapUpDetails _) => _controller.reverse();
-  void _onTapCancel() => _controller.reverse();
+  void _onTapDown(TapDownDetails _) {
+    if (mounted) _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails _) {
+    if (mounted) _controller.reverse();
+  }
+
+  void _onTapCancel() {
+    if (mounted) _controller.reverse();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +288,6 @@ class _TapScaleState extends State<TapScale>
 }
 
 /// An animated container that fades in its child with a subtle slide.
-/// Use for cards and tiles appearing in lists.
 class AnimatedEntry extends ImplicitlyAnimatedWidget {
   const AnimatedEntry({
     super.key,

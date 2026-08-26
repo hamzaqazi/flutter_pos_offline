@@ -78,7 +78,7 @@ class ReturnsPage extends GetView<ReturnsController> {
                       const SizedBox(height: AppSpacing.md),
                   itemBuilder: (_, index) {
                     final ret = returnsList[index];
-                    return AppAnimations.staggerItem(index: index, child: _ReturnCard(returnRecord: ret));
+                    return _ReturnCard(returnRecord: ret);
                   },
                 ),
               ),
@@ -100,10 +100,10 @@ class _ReturnCard extends StatelessWidget {
     final cs = theme.colorScheme;
     final controller = Get.find<ReturnsController>();
 
-    return TapScale(
+    return RepaintBoundary(
       child: Card(
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,7 +278,6 @@ class _ReturnCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
       ),
     );
   }

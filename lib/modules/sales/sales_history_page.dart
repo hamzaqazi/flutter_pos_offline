@@ -337,12 +337,10 @@ class SalesHistoryPage extends GetView<SalesController> {
                   );
                   final saleNetProfit = sale.profit - saleProfitReversed;
 
-                  return AppAnimations.staggerItem(
-                    index: index,
-                    child: TapScale(
-                      child: Card(
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
+                  return RepaintBoundary(
+                    child: Card(
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
                           onTap: () {
                             Get.to(
                               () => InvoicePreviewPage(
@@ -686,8 +684,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                           ),
                         ),
                       ),
-                    ),
-                  );
+                    );
                 },
               ),
             ),

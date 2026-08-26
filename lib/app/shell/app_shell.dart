@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
@@ -73,11 +71,13 @@ class AppShell extends StatelessWidget {
             SettingsPage(),
           ],
         ),
-        bottomNavigationBar: _FloatingNavBar(
-          selectedIndex: index,
-          destinations: _destinations,
-          raisedIndex: _raisedIndex,
-          onSelect: shellCtrl.switchTab,
+        bottomNavigationBar: RepaintBoundary(
+          child: _FloatingNavBar(
+            selectedIndex: index,
+            destinations: _destinations,
+            raisedIndex: _raisedIndex,
+            onSelect: shellCtrl.switchTab,
+          ),
         ),
       );
     });
@@ -111,7 +111,7 @@ class _FloatingNavBar extends StatelessWidget {
     // Frosted-glass pill — translucent so the blurred content shows through,
     // like iOS's tab bar material.
     final barColor = (isDark ? AppColors.cardDark : Colors.white).withValues(
-      alpha: 0.72,
+      alpha: 0.88,
     );
 
     return SizedBox(
@@ -119,13 +119,13 @@ class _FloatingNavBar extends StatelessWidget {
       child: Stack(
         alignment: Alignment.bottomCenter,
         children: [
-          // Graduated blur behind the bar — strongest at the true bottom
-          // edge, fading to nothing above the pill instead of a hard edge.
+          // Smooth gradient scrim behind the bar — fades content gracefully
+          // before the pill with zero GPU blur passes for high-frame-rate scrolling.
           Positioned.fill(
-            child: _EdgeBlur(
+            child: _EdgeScrim(
               height: _blurHeight,
               scrimColor: (isDark ? Colors.black : Colors.white).withValues(
-                alpha: isDark ? 0.35 : 0.25,
+                alpha: isDark ? 0.75 : 0.65,
               ),
             ),
           ),
@@ -146,32 +146,41 @@ class _FloatingNavBar extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: barColor,
                         borderRadius: BorderRadius.circular(_barHeight / 2),
+                        border: Border.all(
+                          color: (isDark ? Colors.white : Colors.black).withValues(
+                            alpha: 0.06,
+                          ),
+                          width: 0.5,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(
-                              alpha: isDark ? 0.4 : 0.1,
+                              alpha: isDark ? 0.4 : 0.08,
                             ),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
-                      child: Row(
-                        children: List.generate(destinations.length, (i) {
-                          if (i == raisedIndex) {
-                            // Reserve the slot; the actual button is the
-                            // Positioned circle drawn on top of the pill.
-                            return const Expanded(child: SizedBox.shrink());
-                          }
-                          return Expanded(
-                            child: _NavItem(
-                              destination: destinations[i],
-                              selected: selectedIndex == i,
-                              showLowStockBadge: i == 1,
-                              onTap: () => onSelect(i),
-                            ),
-                          );
-                        }),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(_barHeight / 2),
+                        child: Row(
+                          children: List.generate(destinations.length, (i) {
+                            if (i == raisedIndex) {
+                              // Reserve the slot; the actual button is the
+                              // Positioned circle drawn on top of the pill.
+                              return const Expanded(child: SizedBox.shrink());
+                            }
+                            return Expanded(
+                              child: _NavItem(
+                                destination: destinations[i],
+                                selected: selectedIndex == i,
+                                showLowStockBadge: i == 1,
+                                onTap: () => onSelect(i),
+                              ),
+                            );
+                          }),
+                        ),
                       ),
                     ),
 
@@ -196,81 +205,36 @@ class _FloatingNavBar extends StatelessWidget {
   }
 }
 
-/// Graduated backdrop blur — stacks several thin, increasingly short
-/// [BackdropFilter] layers (anchored to the bottom) instead of one flat
-/// blur, so the effect ramps smoothly from full strength at the bottom
-/// edge down to nothing, rather than ending in a visible hard edge.
-class _EdgeBlur extends StatelessWidget {
-  const _EdgeBlur({
+/// Smooth gradient scrim behind the floating bar.
+/// Strongest at the bottom edge and ramps smoothly to zero above the bar,
+/// with zero backdrop blur passes to maintain 60/120fps scrolling.
+class _EdgeScrim extends StatelessWidget {
+  const _EdgeScrim({
     required this.height,
-    this.sigma = 1.2,
-    this.layers = 14,
     this.scrimColor,
-  }) : assert(layers > 0, 'Needs at least one layer to blur anything');
+  });
 
-  /// How far up from the bottom the blur reaches.
   final double height;
-
-  /// Blur applied by a *single* layer. The strongest row (bottom edge)
-  /// receives roughly `sigma * layers`, so raise [layers] for a smoother
-  /// gradient and [sigma] for a stronger one.
-  ///
-  /// Keep it small. Every layer ends on a hard clip, and the outermost one
-  /// ends at the very top of the effect — where the blur necessarily drops
-  /// from `sigma` to zero in one step. That step is the horizontal line you
-  /// see if this is set too high; at 1-2 it is imperceptible. Reach for
-  /// [layers] to make the blur stronger, not for this.
-  final double sigma;
-
-  /// Number of stacked filters, and therefore the number of steps in the
-  /// ramp. The blur at a given row is `sigma * (layers covering that row)`,
-  /// so more layers means smaller increments between them. Each one is a
-  /// separate backdrop read, which is the cost.
-  final int layers;
-
-  /// Optional wash over the blur, for legibility against busy content.
-  /// `null` leaves the blur alone.
   final Color? scrimColor;
 
   @override
   Widget build(BuildContext context) {
+    if (scrimColor == null) return const SizedBox.shrink();
     return IgnorePointer(
       child: SizedBox(
         height: height,
         width: double.infinity,
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            for (int i = 0; i < layers; i++)
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                // Each layer is shorter than the last and anchored to the
-                // bottom, so blur accumulates towards the bottom edge and
-                // thins out towards the top of the strip.
-                height: height * (1 - i / layers),
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-                    child: const SizedBox.expand(),
-                  ),
-                ),
-              ),
-            if (scrimColor != null)
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: <Color>[
-                      scrimColor!,
-                      scrimColor!.withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-          ],
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+              colors: <Color>[
+                scrimColor!,
+                scrimColor!.withValues(alpha: 0.0),
+              ],
+            ),
+          ),
         ),
       ),
     );

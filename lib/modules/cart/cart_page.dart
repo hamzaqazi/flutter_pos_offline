@@ -100,13 +100,10 @@ class CartPage extends GetView<CartController> {
                           const SizedBox(height: AppSpacing.md),
                       itemBuilder: (_, index) {
                         final item = controller.cartItems[index];
-                        return AppAnimations.staggerItem(
-                          index: index,
-                          child: _CartTile(
-                            item: item,
-                            onIncrease: () => controller.increaseQuantity(index),
-                            onDecrease: () => controller.decreaseQuantity(index),
-                          ),
+                        return _CartTile(
+                          item: item,
+                          onIncrease: () => controller.increaseQuantity(index),
+                          onDecrease: () => controller.decreaseQuantity(index),
                         );
                       },
                     ),
@@ -788,9 +785,9 @@ class _CartTile extends StatelessWidget {
     final accent = AppColors.forCategory(item.product.category);
     final hasDiscount = item.product.discount > 0;
 
-    return TapScale(
+    return RepaintBoundary(
       child: Card(
-      child: Padding(
+        child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
@@ -912,7 +909,6 @@ class _CartTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
       ),
     );
   }

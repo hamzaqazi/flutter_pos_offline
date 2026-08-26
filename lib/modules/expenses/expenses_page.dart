@@ -79,10 +79,8 @@ class ExpensesPage extends GetView<ExpensesController> {
                       const SizedBox(height: AppSpacing.sm),
                   itemBuilder: (_, index) {
                     final expense = sorted[index];
-                    return AppAnimations.staggerItem(
-                      index: index,
-                      child: _ExpenseTile(
-                        expense: expense,
+                    return _ExpenseTile(
+                      expense: expense,
                       onDelete: () {
                         Get.dialog(
                           AlertDialog(
@@ -109,7 +107,6 @@ class ExpensesPage extends GetView<ExpensesController> {
                           ),
                         );
                       },
-                    ),
                     );
                   },
                 ),
@@ -303,9 +300,9 @@ class _ExpenseTile extends StatelessWidget {
     final cs = theme.colorScheme;
     final color = _colorForCategory(expense.category);
 
-    return TapScale(
+    return RepaintBoundary(
       child: Card(
-      child: Padding(
+        child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
@@ -394,7 +391,6 @@ class _ExpenseTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
       ),
     );
   }

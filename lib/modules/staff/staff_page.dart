@@ -151,7 +151,7 @@ class StaffPage extends GetView<StaffController> {
                   final member = controller.staff[index];
                   final isActive =
                       controller.activeCashierId.value == member.id;
-                  return AppAnimations.staggerItem(index: index, child: _StaffTile(member: member, isActive: isActive));
+                  return _StaffTile(member: member, isActive: isActive);
                 },
               );
             }),
@@ -298,7 +298,7 @@ class _StaffTile extends StatelessWidget {
     final cs = theme.colorScheme;
     final controller = Get.find<StaffController>();
 
-    return TapScale(
+    return RepaintBoundary(
       child: Card(
       clipBehavior: Clip.antiAlias,
       color: isActive ? AppColors.seed.withValues(alpha: 0.08) : null,
@@ -440,7 +440,6 @@ class _StaffTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
       ),
     );
   }

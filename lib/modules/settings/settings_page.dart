@@ -212,18 +212,13 @@ class SettingsPage extends GetView<SettingsController> {
     // rows still get the stagger-in animation; only the group card and its
     // internal dividers are static.
     final theme = Theme.of(context);
-    var index = 0;
-    final children = <Widget>[];
     for (final (title, sections) in groups) {
       children.add(
-        AppAnimations.staggerItem(
-          index: index++,
-          child: AppSectionHeader(
-            title: title,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
+        AppSectionHeader(
+          title: title,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w600,
           ),
         ),
       );
@@ -235,7 +230,7 @@ class SettingsPage extends GetView<SettingsController> {
           child: Column(
             children: [
               for (var i = 0; i < sections.length; i++) ...[
-                AppAnimations.staggerItem(index: index++, child: sections[i]),
+                sections[i],
                 if (i != sections.length - 1)
                   Divider(
                     height: 1,
@@ -701,34 +696,36 @@ class _SectionTile extends StatelessWidget {
     // Icon carries a restrained accent from the brand palette (not flat
     // gray) — same bare-row treatment as AppActionTile so both sit in the
     // same grouped card.
-    return Theme(
-      data: theme.copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        initiallyExpanded: initiallyExpanded,
-        tilePadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.xs,
-        ),
-        childrenPadding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
-        leading: Icon(icon, size: 20, color: color),
-        title: Text(
-          title,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+    return RepaintBoundary(
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.xs,
           ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.lg,
           ),
+          leading: Icon(icon, size: 20, color: color),
+          title: Text(
+            title,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          children: children,
         ),
-        children: children,
       ),
     );
   }
