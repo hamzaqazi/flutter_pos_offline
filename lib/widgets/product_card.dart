@@ -62,313 +62,321 @@ class ProductCard extends StatelessWidget {
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-        // Tap out-of-stock → edit (restock), tap in-stock → add to cart
-        onTap: outOfStock
-            ? () => _showEditDialog(context)
-            : () {
-                cartController.addToCart(product);
-                Get.snackbar(
-                  "Added to cart",
-                  product.name,
-                  snackPosition: SnackPosition.BOTTOM,
-                  margin: const EdgeInsets.all(AppSpacing.md),
-                  duration: const Duration(milliseconds: 1200),
-                  backgroundColor: cs.inverseSurface,
-                  colorText: cs.onInverseSurface,
-                  icon: Icon(Icons.check_circle, color: cs.onInverseSurface),
-                );
-              },
-        // Long-press any card → edit
-        onLongPress: () => _showEditDialog(context),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ---------- Image / icon area ----------
-            Expanded(
-              child: Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          accent.withValues(alpha: 0.18),
-                          accent.withValues(alpha: 0.06),
-                        ],
-                      ),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        _iconForCategory(product.category),
-                        size: 40,
-                        color: accent,
-                      ),
-                    ),
-                  ),
-                  // Category badge
-                  Positioned(
-                    top: AppSpacing.sm,
-                    left: AppSpacing.sm,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 3,
-                      ),
+          // Tap out-of-stock → edit (restock), tap in-stock → add to cart
+          onTap: outOfStock
+              ? () => _showEditDialog(context)
+              : () {
+                  cartController.addToCart(product);
+                  Get.snackbar(
+                    "Added to cart",
+                    product.name,
+                    snackPosition: SnackPosition.BOTTOM,
+                    margin: const EdgeInsets.all(AppSpacing.md),
+                    duration: const Duration(milliseconds: 1200),
+                    backgroundColor: cs.inverseSurface,
+                    colorText: cs.onInverseSurface,
+                    icon: Icon(Icons.check_circle, color: cs.onInverseSurface),
+                  );
+                },
+          // Long-press any card → edit
+          onLongPress: () => _showEditDialog(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ---------- Image / icon area ----------
+              Expanded(
+                child: Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
                       decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            accent.withValues(alpha: 0.18),
+                            accent.withValues(alpha: 0.06),
+                          ],
+                        ),
                       ),
-                      child: Text(
-                        product.category,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                      child: Center(
+                        child: Icon(
+                          _iconForCategory(product.category),
+                          size: 40,
+                          color: accent,
                         ),
                       ),
                     ),
-                  ),
-                  // Discount badge
-                  if (hasDiscount)
+                    // Category badge
                     Positioned(
                       top: AppSpacing.sm,
-                      right: AppSpacing.sm,
+                      left: AppSpacing.sm,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.sm,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.danger,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          color: accent,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                         child: Text(
-                          "-${product.discount.toStringAsFixed(0)}%",
+                          product.category,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
-                  // SKU badge
-                  if (product.hasSku)
-                    Positioned(
-                      top: AppSpacing.sm,
-                      right: hasDiscount ? 60 : AppSpacing.sm,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.tag,
-                              color: Colors.white70,
-                              size: 10,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              product.sku,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'monospace',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  // Barcode badge (shown below SKU badge if both exist)
-                  if (product.hasBarcode)
-                    Positioned(
-                      top: product.hasSku ? 28 : AppSpacing.sm,
-                      right: hasDiscount ? 60 : AppSpacing.sm,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.85),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.qr_code,
-                              color: Colors.white70,
-                              size: 10,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              product.barcode.length > 8
-                                  ? '${product.barcode.substring(0, 4)}...${product.barcode.substring(product.barcode.length - 4)}'
-                                  : product.barcode,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 8,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'monospace',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  // Add-to-cart button (only when in stock)
-                  if (!outOfStock)
-                    Positioned(
-                      bottom: AppSpacing.sm,
-                      right: AppSpacing.sm,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: cs.primary,
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: Icon(
-                          Icons.add,
-                          size: 18,
-                          color: cs.onPrimary,
-                        ),
-                      ),
-                    ),
-                  // Edit button — always visible, above out-of-stock overlay
-                  Positioned(
-                    bottom: AppSpacing.sm,
-                    left: AppSpacing.sm,
-                    child: GestureDetector(
-                      onTap: () => _showEditDialog(context),
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: cs.surface.withValues(alpha: 0.9),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
-                          border: Border.all(
-                            color: cs.outlineVariant,
-                            width: 0.5,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.edit_outlined,
-                          size: 16,
-                          color: cs.onSurface,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Out-of-stock overlay — IgnorePointer so edit button still works
-                  if (outOfStock)
-                    IgnorePointer(
-                      child: Container(
-                        color: cs.surface.withValues(alpha: 0.55),
-                        alignment: Alignment.center,
+                    // Discount badge
+                    if (hasDiscount)
+                      Positioned(
+                        top: AppSpacing.sm,
+                        right: AppSpacing.sm,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.xs,
+                            horizontal: AppSpacing.sm,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.danger,
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
-                          child: const Text(
-                            "Out of stock",
-                            style: TextStyle(
+                          child: Text(
+                            "-${product.discount.toStringAsFixed(0)}%",
+                            style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-
-            // ---------- Details ----------
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (product.hasBrand) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      product.brand,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: accent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (hasDiscount) ...[
+                    // SKU badge
+                    if (product.hasSku)
+                      Positioned(
+                        top: AppSpacing.sm,
+                        right: hasDiscount ? 60 : AppSpacing.sm,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.tag,
+                                color: Colors.white70,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 2),
                               Text(
-                                Formatters.currency(product.price),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  decoration: TextDecoration.lineThrough,
-                                  color: cs.onSurfaceVariant,
+                                product.sku,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'monospace',
                                 ),
                               ),
-                              const SizedBox(height: 1),
                             ],
-                            Text(
-                              Formatters.currency(product.discountedPrice),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: cs.primary,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                      _StockChip(
-                        stock: product.stock,
-                        low: lowStock,
-                        out: outOfStock,
+                    // Barcode badge (shown below SKU badge if both exist)
+                    if (product.hasBarcode)
+                      Positioned(
+                        top: product.hasSku ? 28 : AppSpacing.sm,
+                        right: hasDiscount ? 60 : AppSpacing.sm,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.qr_code,
+                                color: Colors.white70,
+                                size: 10,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                product.barcode.length > 8
+                                    ? '${product.barcode.substring(0, 4)}...${product.barcode.substring(product.barcode.length - 4)}'
+                                    : product.barcode,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Add-to-cart button (only when in stock)
+                    if (!outOfStock)
+                      Positioned(
+                        bottom: AppSpacing.sm,
+                        right: AppSpacing.sm,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: cs.primary,
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
+                          ),
+                          child: Icon(Icons.add, size: 18, color: cs.onPrimary),
+                        ),
+                      ),
+                    // Edit button — always visible, above out-of-stock overlay
+                    Positioned(
+                      bottom: AppSpacing.sm,
+                      left: AppSpacing.sm,
+                      child: GestureDetector(
+                        onTap: () => _showEditDialog(context),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: cs.surface.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
+                            border: Border.all(
+                              color: cs.outlineVariant,
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.edit_outlined,
+                            size: 16,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Out-of-stock overlay — IgnorePointer so edit button still works
+                    if (outOfStock)
+                      IgnorePointer(
+                        child: Container(
+                          color: cs.surface.withValues(alpha: 0.55),
+                          alignment: Alignment.center,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger,
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
+                            ),
+                            child: const Text(
+                              "Out of stock",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // ---------- Details ----------
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (product.hasBrand) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        product.brand,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: accent,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (hasDiscount) ...[
+                                Text(
+                                  Formatters.currency(product.price),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    decoration: TextDecoration.lineThrough,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                              ],
+                              Text(
+                                Formatters.currency(product.discountedPrice),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _StockChip(
+                          stock: product.stock,
+                          low: lowStock,
+                          out: outOfStock,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -379,14 +387,18 @@ class ProductCard extends StatelessWidget {
     final brandController = TextEditingController(text: product.brand);
     final skuController = TextEditingController(text: product.sku);
     final barcodeController = TextEditingController(text: product.barcode);
-    final priceController =
-        TextEditingController(text: product.price.toStringAsFixed(0));
-    final purchasePriceController =
-        TextEditingController(text: product.purchasePrice.toStringAsFixed(0));
-    final discountController =
-        TextEditingController(text: product.discount.toStringAsFixed(0));
-    final stockController =
-        TextEditingController(text: product.stock.toString());
+    final priceController = TextEditingController(
+      text: product.price.toStringAsFixed(0),
+    );
+    final purchasePriceController = TextEditingController(
+      text: product.purchasePrice.toStringAsFixed(0),
+    );
+    final discountController = TextEditingController(
+      text: product.discount.toStringAsFixed(0),
+    );
+    final stockController = TextEditingController(
+      text: product.stock.toString(),
+    );
     String selectedCategory = product.category;
 
     final controller = Get.find<ProductsController>();
@@ -410,10 +422,12 @@ class ProductCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusSm),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
                           child: Icon(
                             Icons.edit_outlined,
@@ -421,8 +435,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
-                        Text("Edit Product",
-                            style: theme.textTheme.titleLarge),
+                        Text("Edit Product", style: theme.textTheme.titleLarge),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
@@ -462,7 +475,9 @@ class ProductCard extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                         IconButton.outlined(
                           onPressed: () {
-                            skuController.text = controller.generateSku(selectedCategory);
+                            skuController.text = controller.generateSku(
+                              selectedCategory,
+                            );
                             setState(() {});
                           },
                           icon: const Icon(Icons.autorenew, size: 20),
@@ -489,7 +504,8 @@ class ProductCard extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                         IconButton.outlined(
                           onPressed: () async {
-                            final result = await BarcodeScannerHelper.scanAndLookupRaw();
+                            final result =
+                                await BarcodeScannerHelper.scanAndLookupRaw();
                             if (result != null && result.isNotEmpty) {
                               setState(() => barcodeController.text = result);
                             }
@@ -560,12 +576,13 @@ class ProductCard extends StatelessWidget {
                         labelText: "Category",
                         prefixIcon: Icon(Icons.category_outlined),
                       ),
-                      items: Get.find<CategoryController>()
-                          .categoryNames
-                          .map((name) => DropdownMenuItem(
-                                value: name,
-                                child: Text(name),
-                              ))
+                      items: Get.find<CategoryController>().categoryNames
+                          .map(
+                            (name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(name),
+                            ),
+                          )
                           .toList(),
                       onChanged: (value) =>
                           setState(() => selectedCategory = value!),
@@ -581,7 +598,10 @@ class ProductCard extends StatelessWidget {
                               builder: (ctx) => AlertDialog(
                                 title: const Row(
                                   children: [
-                                    Icon(Icons.warning_amber_rounded, color: AppColors.danger),
+                                    Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: AppColors.danger,
+                                    ),
                                     SizedBox(width: AppSpacing.sm),
                                     Text("Delete Product"),
                                   ],
@@ -591,11 +611,13 @@ class ProductCard extends StatelessWidget {
                                 ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
                                     child: const Text("Cancel"),
                                   ),
                                   FilledButton(
-                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AppColors.danger,
                                     ),
@@ -611,7 +633,9 @@ class ProductCard extends StatelessWidget {
                                 "Deleted",
                                 "\"${product.name}\" has been removed",
                                 snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: AppColors.danger.withValues(alpha: 0.15),
+                                backgroundColor: AppColors.danger.withValues(
+                                  alpha: 0.15,
+                                ),
                                 colorText: AppColors.danger,
                               );
                             }
@@ -643,8 +667,7 @@ class ProductCard extends StatelessWidget {
                               }
 
                               final discountVal =
-                                  double.tryParse(discountController.text) ??
-                                      0;
+                                  double.tryParse(discountController.text) ?? 0;
                               if (discountVal < 0 || discountVal > 100) {
                                 Get.snackbar(
                                   "Invalid discount",
@@ -659,15 +682,17 @@ class ProductCard extends StatelessWidget {
                                   name: nameController.text,
                                   brand: brandController.text,
                                   category: selectedCategory,
-                                  price: double.tryParse(
-                                          priceController.text) ??
+                                  price:
+                                      double.tryParse(priceController.text) ??
                                       product.price,
-                                  purchasePrice: double.tryParse(
-                                          purchasePriceController.text) ??
+                                  purchasePrice:
+                                      double.tryParse(
+                                        purchasePriceController.text,
+                                      ) ??
                                       0,
                                   discount: discountVal,
-                                  stock: int.tryParse(
-                                          stockController.text) ??
+                                  stock:
+                                      int.tryParse(stockController.text) ??
                                       product.stock,
                                   sku: skuController.text.trim(),
                                   barcode: barcodeController.text.trim(),
@@ -692,11 +717,7 @@ class ProductCard extends StatelessWidget {
 }
 
 class _StockChip extends StatelessWidget {
-  const _StockChip({
-    required this.stock,
-    required this.low,
-    required this.out,
-  });
+  const _StockChip({required this.stock, required this.low, required this.out});
 
   final int stock;
   final bool low;
@@ -707,10 +728,13 @@ class _StockChip extends StatelessWidget {
     final Color color = out
         ? AppColors.danger
         : low
-            ? AppColors.warning
-            : AppColors.success;
+        ? AppColors.warning
+        : AppColors.success;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 2,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),

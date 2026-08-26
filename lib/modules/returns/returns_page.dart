@@ -104,148 +104,156 @@ class _ReturnCard extends StatelessWidget {
       child: Card(
         clipBehavior: Clip.antiAlias,
         child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row
-            Row(
-              children: [
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: const Icon(
+                      Icons.assignment_return,
+                      color: AppColors.warning,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Refund ${Formatters.currency(returnRecord.refundAmount)}",
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          Formatters.dateTime(returnRecord.date),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _confirmDelete(context, controller),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 20,
+                      color: AppColors.danger.withValues(alpha: 0.6),
+                    ),
+                    tooltip: "Delete return record",
+                  ),
+                ],
+              ),
+
+              // Reason
+              if (returnRecord.reason.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.12),
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
-                  child: const Icon(
-                    Icons.assignment_return,
-                    color: AppColors.warning,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
+                      Icon(Icons.notes, size: 14, color: cs.onSurfaceVariant),
+                      const SizedBox(width: AppSpacing.xs),
                       Text(
-                        "Refund ${Formatters.currency(returnRecord.refundAmount)}",
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        Formatters.dateTime(returnRecord.date),
+                        returnRecord.reason,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () => _confirmDelete(context, controller),
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: AppColors.danger.withValues(alpha: 0.6),
-                  ),
-                  tooltip: "Delete return record",
-                ),
               ],
-            ),
 
-            // Reason
-            if (returnRecord.reason.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              const Divider(height: 1),
               const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.notes, size: 14, color: cs.onSurfaceVariant),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      returnRecord.reason,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontStyle: FontStyle.italic,
+
+              // Items
+              ...returnRecord.items.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            const SizedBox(height: AppSpacing.md),
-            const Divider(height: 1),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Items
-            ...returnRecord.items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.name,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                        ),
+                        child: Text(
+                          "×${item.returnQty}",
+                          style: const TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Text(
+                        Formatters.currency(item.totalRefund),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusSm,
-                        ),
-                      ),
-                      child: Text(
-                        "×${item.returnQty}",
-                        style: const TextStyle(
-                          color: AppColors.warning,
-                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      Formatters.currency(item.totalRefund),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // Invoice reference
-            const SizedBox(height: AppSpacing.sm),
-            Builder(
-              builder: (_) {
-                String saleRef;
-                try {
-                  final salesCtrl = Get.find<SalesController>();
-                  final sale = salesCtrl.sales.firstWhereOrNull(
-                    (s) => s.id == returnRecord.saleId,
-                  );
-                  if (sale != null && sale.hasInvoiceNumber) {
-                    saleRef = sale.invoiceNumber;
-                  } else {
+              // Invoice reference
+              const SizedBox(height: AppSpacing.sm),
+              Builder(
+                builder: (_) {
+                  String saleRef;
+                  try {
+                    final salesCtrl = Get.find<SalesController>();
+                    final sale = salesCtrl.sales.firstWhereOrNull(
+                      (s) => s.id == returnRecord.saleId,
+                    );
+                    if (sale != null && sale.hasInvoiceNumber) {
+                      saleRef = sale.invoiceNumber;
+                    } else {
+                      final shortId = returnRecord.saleId.length > 8
+                          ? returnRecord.saleId.substring(
+                              returnRecord.saleId.length - 8,
+                            )
+                          : returnRecord.saleId;
+                      saleRef = "Sale #$shortId";
+                    }
+                  } catch (_) {
                     final shortId = returnRecord.saleId.length > 8
                         ? returnRecord.saleId.substring(
                             returnRecord.saleId.length - 8,
@@ -253,30 +261,23 @@ class _ReturnCard extends StatelessWidget {
                         : returnRecord.saleId;
                     saleRef = "Sale #$shortId";
                   }
-                } catch (_) {
-                  final shortId = returnRecord.saleId.length > 8
-                      ? returnRecord.saleId.substring(
-                          returnRecord.saleId.length - 8,
-                        )
-                      : returnRecord.saleId;
-                  saleRef = "Sale #$shortId";
-                }
-                return Row(
-                  children: [
-                    Icon(Icons.link, size: 12, color: cs.onSurfaceVariant),
-                    const SizedBox(width: 4),
-                    Text(
-                      saleRef,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                        fontSize: 10,
+                  return Row(
+                    children: [
+                      Icon(Icons.link, size: 12, color: cs.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Text(
+                        saleRef,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

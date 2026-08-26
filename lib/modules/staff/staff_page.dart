@@ -41,8 +41,11 @@ class StaffPage extends GetView<StaffController> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded,
-                        color: AppColors.warning, size: 24),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.warning,
+                      size: 24,
+                    ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
@@ -120,9 +123,7 @@ class StaffPage extends GetView<StaffController> {
                   ),
                   TextButton(
                     onPressed: () => controller.clearActiveCashier(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: Colors.white),
                     child: const Text("Clock out"),
                   ),
                 ],
@@ -160,132 +161,128 @@ class StaffPage extends GetView<StaffController> {
       ),
     );
   }
-
 }
 
 void _showAddEditDialog(StaffController controller, [StaffModel? existing]) {
   final isEdit = existing != null;
-    final nameController = TextEditingController(text: existing?.name ?? '');
-    final phoneController = TextEditingController(text: existing?.phone ?? '');
-    String selectedRole = existing?.role ?? 'Cashier';
+  final nameController = TextEditingController(text: existing?.name ?? '');
+  final phoneController = TextEditingController(text: existing?.phone ?? '');
+  String selectedRole = existing?.role ?? 'Cashier';
 
-    Get.dialog(
-      Dialog(
-        insetPadding: const EdgeInsets.all(AppSpacing.lg),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.seed.withValues(alpha: 0.12),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
-                      ),
-                      child: Icon(
-                        isEdit
-                            ? Icons.edit_outlined
-                            : Icons.person_add_outlined,
-                        color: AppColors.seed,
-                      ),
+  Get.dialog(
+    Dialog(
+      insetPadding: const EdgeInsets.all(AppSpacing.lg),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.seed.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Text(
-                      isEdit ? "Edit Staff" : "Add Staff",
-                      style: Get.textTheme.titleLarge,
+                    child: Icon(
+                      isEdit ? Icons.edit_outlined : Icons.person_add_outlined,
+                      color: AppColors.seed,
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                TextField(
-                  controller: nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: "Full name *",
-                    prefixIcon: Icon(Icons.person_outline),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                DropdownButtonFormField<String>(
-                  value: selectedRole,
-                  decoration: const InputDecoration(
-                    labelText: "Role",
-                    prefixIcon: Icon(Icons.badge_outlined),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    isEdit ? "Edit Staff" : "Add Staff",
+                    style: Get.textTheme.titleLarge,
                   ),
-                  items: StaffPage._roles
-                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                      .toList(),
-                  onChanged: (v) => selectedRole = v ?? 'Cashier',
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              TextField(
+                controller: nameController,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(
+                  labelText: "Full name *",
+                  prefixIcon: Icon(Icons.person_outline),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: "Phone number",
-                    prefixIcon: Icon(Icons.phone_outlined),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              DropdownButtonFormField<String>(
+                value: selectedRole,
+                decoration: const InputDecoration(
+                  labelText: "Role",
+                  prefixIcon: Icon(Icons.badge_outlined),
+                ),
+                items: StaffPage._roles
+                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                    .toList(),
+                onChanged: (v) => selectedRole = v ?? 'Cashier',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: "Phone number",
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(Get.overlayContext!).pop(),
+                      child: const Text("Cancel"),
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(Get.overlayContext!).pop(),
-                        child: const Text("Cancel"),
-                      ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        if (nameController.text.trim().isEmpty) {
+                          Get.snackbar(
+                            "Missing info",
+                            "Staff name is required",
+                            snackPosition: SnackPosition.BOTTOM,
+                          );
+                          return;
+                        }
+                        if (isEdit) {
+                          controller.updateStaff(
+                            existing!.copyWith(
+                              name: nameController.text.trim(),
+                              role: selectedRole,
+                              phone: phoneController.text.trim(),
+                            ),
+                          );
+                        } else {
+                          controller.addStaff(
+                            StaffModel(
+                              id: UniqueKey().toString(),
+                              name: nameController.text.trim(),
+                              role: selectedRole,
+                              phone: phoneController.text.trim(),
+                            ),
+                          );
+                        }
+                        Navigator.of(Get.overlayContext!).pop();
+                      },
+                      child: const Text("Save"),
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          if (nameController.text.trim().isEmpty) {
-                            Get.snackbar(
-                              "Missing info",
-                              "Staff name is required",
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                            return;
-                          }
-                          if (isEdit) {
-                            controller.updateStaff(
-                              existing!.copyWith(
-                                name: nameController.text.trim(),
-                                role: selectedRole,
-                                phone: phoneController.text.trim(),
-                              ),
-                            );
-                          } else {
-                            controller.addStaff(
-                              StaffModel(
-                                id: UniqueKey().toString(),
-                                name: nameController.text.trim(),
-                                role: selectedRole,
-                                phone: phoneController.text.trim(),
-                              ),
-                            );
-                          }
-                          Navigator.of(Get.overlayContext!).pop();
-                        },
-                        child: const Text("Save"),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
 class _StaffTile extends StatelessWidget {
   final StaffModel member;
@@ -300,145 +297,159 @@ class _StaffTile extends StatelessWidget {
 
     return RepaintBoundary(
       child: Card(
-      clipBehavior: Clip.antiAlias,
-      color: isActive ? AppColors.seed.withValues(alpha: 0.08) : null,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.seed.withValues(alpha: 0.2)
-                    : cs.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  member.name.isNotEmpty ? member.name[0].toUpperCase() : '?',
-                  style: TextStyle(
-                    color: isActive ? AppColors.seed : cs.onSurfaceVariant,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+        clipBehavior: Clip.antiAlias,
+        color: isActive ? AppColors.seed.withValues(alpha: 0.08) : null,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? AppColors.seed.withValues(alpha: 0.2)
+                      : cs.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    member.name.isNotEmpty ? member.name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: isActive ? AppColors.seed : cs.onSurfaceVariant,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    member.name,
-                    style: theme.textTheme.bodyLarge?.copyWith(
+              const SizedBox(width: AppSpacing.md),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      member.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _roleColor(
+                              member.role,
+                            ).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
+                          ),
+                          child: Text(
+                            member.role,
+                            style: TextStyle(
+                              color: _roleColor(member.role),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (member.hasPhone) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            member.phone,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Actions
+              if (isActive)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.seed,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                  child: const Text(
+                    "Active",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: _roleColor(member.role)
-                              .withValues(alpha: 0.12),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
+                )
+              else
+                IconButton.outlined(
+                  onPressed: () => controller.setActiveCashier(member.id),
+                  icon: const Icon(Icons.login_outlined, size: 18),
+                  color: AppColors.seed,
+                  tooltip: "Set as active cashier",
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    _showAddEditDialog(controller, member);
+                  } else if (value == 'delete') {
+                    Get.dialog(
+                      AlertDialog(
+                        title: const Text("Delete Staff"),
+                        content: Text(
+                          "Delete ${member.name}? Their sales records will remain.",
                         ),
-                        child: Text(
-                          member.role,
-                          style: TextStyle(
-                            color: _roleColor(member.role),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                        actions: [
+                          TextButton(
+                            onPressed: Get.back,
+                            child: const Text("Cancel"),
                           ),
-                        ),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.danger,
+                            ),
+                            onPressed: () {
+                              controller.deleteStaff(member.id);
+                              Get.back();
+                            },
+                            child: const Text("Delete"),
+                          ),
+                        ],
                       ),
-                      if (member.hasPhone) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          member.phone,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ],
+                    );
+                  }
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'edit', child: Text("Edit")),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      "Delete",
+                      style: TextStyle(color: AppColors.danger),
+                    ),
                   ),
                 ],
               ),
-            ),
-            // Actions
-            if (isActive)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-                decoration: BoxDecoration(
-                  color: AppColors.seed,
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: const Text(
-                  "Active",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              )
-            else
-              IconButton.outlined(
-                onPressed: () => controller.setActiveCashier(member.id),
-                icon: const Icon(Icons.login_outlined, size: 18),
-                color: AppColors.seed,
-                tooltip: "Set as active cashier",
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                constraints:
-                    const BoxConstraints(minWidth: 36, minHeight: 36),
-              ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'edit') {
-                  _showAddEditDialog(controller, member);
-                } else if (value == 'delete') {
-                  Get.dialog(
-                    AlertDialog(
-                      title: const Text("Delete Staff"),
-                      content: Text(
-                          "Delete ${member.name}? Their sales records will remain."),
-                      actions: [
-                        TextButton(
-                            onPressed: Get.back, child: const Text("Cancel")),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.danger),
-                          onPressed: () {
-                            controller.deleteStaff(member.id);
-                            Get.back();
-                          },
-                          child: const Text("Delete"),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(value: 'edit', child: Text("Edit")),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text("Delete",
-                      style: TextStyle(color: AppColors.danger)),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

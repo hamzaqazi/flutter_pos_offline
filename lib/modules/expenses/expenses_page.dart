@@ -303,93 +303,94 @@ class _ExpenseTile extends StatelessWidget {
     return RepaintBoundary(
       child: Card(
         child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Icon(
-                _iconForCategory(expense.category),
-                color: color,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    expense.description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusSm,
-                          ),
-                        ),
-                        child: Text(
-                          expense.category,
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        Formatters.dateTime(expense.date),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              Formatters.currency(expense.amount),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.danger,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            InkWell(
-              onTap: onDelete,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xs),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
                 child: Icon(
-                  Icons.delete_outline,
-                  size: 18,
-                  color: cs.onSurfaceVariant,
+                  _iconForCategory(expense.category),
+                  color: color,
+                  size: 22,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      expense.description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
+                          ),
+                          child: Text(
+                            expense.category,
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          Formatters.dateTime(expense.date),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                Formatters.currency(expense.amount),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              InkWell(
+                onTap: onDelete,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xs),
+                  child: Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

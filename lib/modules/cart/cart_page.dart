@@ -788,126 +788,129 @@ class _CartTile extends StatelessWidget {
     return RepaintBoundary(
       child: Card(
         child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(Icons.shopping_bag_outlined, color: accent),
               ),
-              child: Icon(Icons.shopping_bag_outlined, color: accent),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.product.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  if (hasDiscount) ...[
-                    Row(
-                      children: [
-                        Text(
-                          Formatters.currency(item.product.price),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            decoration: TextDecoration.lineThrough,
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.danger.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusSm,
-                            ),
-                          ),
-                          child: Text(
-                            "-${item.product.discount.toStringAsFixed(0)}%",
-                            style: const TextStyle(
-                              color: AppColors.danger,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      "${Formatters.currency(item.product.discountedPrice)} each",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ] else ...[
-                    Text(
-                      "${Formatters.currency(item.product.price)} each",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(
-                    Formatters.currency(item.total),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Quantity stepper
-            Container(
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _StepBtn(
-                    icon: item.quantity > 1
-                        ? Icons.remove
-                        : Icons.delete_outline,
-                    onTap: onDecrease,
-                    color: item.quantity > 1 ? cs.onSurface : AppColors.danger,
-                  ),
-                  SizedBox(
-                    width: 28,
-                    child: Text(
-                      "${item.quantity}",
-                      textAlign: TextAlign.center,
+                      item.product.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                  _StepBtn(
-                    icon: Icons.add,
-                    onTap: onIncrease,
-                    color: cs.primary,
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    if (hasDiscount) ...[
+                      Row(
+                        children: [
+                          Text(
+                            Formatters.currency(item.product.price),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              decoration: TextDecoration.lineThrough,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.danger.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
+                            ),
+                            child: Text(
+                              "-${item.product.discount.toStringAsFixed(0)}%",
+                              style: const TextStyle(
+                                color: AppColors.danger,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "${Formatters.currency(item.product.discountedPrice)} each",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ] else ...[
+                      Text(
+                        "${Formatters.currency(item.product.price)} each",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Text(
+                      Formatters.currency(item.total),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              // Quantity stepper
+              Container(
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _StepBtn(
+                      icon: item.quantity > 1
+                          ? Icons.remove
+                          : Icons.delete_outline,
+                      onTap: onDecrease,
+                      color: item.quantity > 1
+                          ? cs.onSurface
+                          : AppColors.danger,
+                    ),
+                    SizedBox(
+                      width: 28,
+                      child: Text(
+                        "${item.quantity}",
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    _StepBtn(
+                      icon: Icons.add,
+                      onTap: onIncrease,
+                      color: cs.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
