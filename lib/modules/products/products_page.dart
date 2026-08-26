@@ -142,31 +142,52 @@ class ProductsPage extends GetView<ProductsController> {
 
             // ---------- Grid ----------
             Expanded(
-              child: Obx(() {
-                final items = controller.filteredProducts;
-                if (items.isEmpty) {
-                  return _EmptyState(
-                    hasProducts: controller.products.isNotEmpty,
+              child: RefreshIndicator(
+                onRefresh: controller.refreshProducts,
+                color: cs.primary,
+                child: Obx(() {
+                  final items = controller.filteredProducts;
+                  if (items.isEmpty) {
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
+                            child: Center(
+                              child: _EmptyState(
+                                hasProducts: controller.products.isNotEmpty,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }
+                  return GridView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                      // Floating nav clearance + room for the FAB above it
+                      AppSpacing.navClearance + AppSpacing.huge,
+                    ),
+                    itemCount: items.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.65,
+                      crossAxisSpacing: AppSpacing.md,
+                      mainAxisSpacing: AppSpacing.md,
+                    ),
+                    itemBuilder: (_, index) =>
+                        ProductCard(product: items[index]),
                   );
-                }
-                return GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                    // Floating nav clearance + room for the FAB above it
-                    AppSpacing.navClearance + AppSpacing.huge,
-                  ),
-                  itemCount: items.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.65,
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
-                  ),
-                  itemBuilder: (_, index) => ProductCard(product: items[index]),
-                );
-              }),
+                }),
+              ),
             ),
           ],
         ),

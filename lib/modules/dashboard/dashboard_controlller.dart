@@ -43,6 +43,15 @@ class DashboardController extends GetxController {
     _recalcSales();
   }
 
+  Future<void> refreshData() async {
+    productsController.loadProducts();
+    salesController.loadSales();
+    returnsController.loadReturns();
+    expensesController.loadExpenses();
+    _recalcProducts();
+    _recalcSales();
+  }
+
   void _recalcProducts() {
     totalProducts.value = productsController.products.length;
     final threshold = SettingsService.getSettings().lowStockThreshold;

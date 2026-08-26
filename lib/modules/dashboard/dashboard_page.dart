@@ -26,54 +26,59 @@ class DashboardPage extends GetView<DashboardController> {
       appBar: const AppShellAppBar(title: Text('Dashboard')),
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            // ── Clean header ──
-            SliverToBoxAdapter(child: _Header(cs: cs)),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                AppSpacing.navClearance,
+        child: RefreshIndicator(
+          onRefresh: controller.refreshData,
+          color: cs.primary,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // ── Clean header ──
+              SliverToBoxAdapter(child: _Header(cs: cs)),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.navClearance,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // ── Banners ──
+                    _buildBanners(context),
+
+                    // ── Today's Summary ──
+                    AppSectionHeader(
+                      title: "Today's Summary",
+                      subtitle: 'Your sales performance for today',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Obx(() => _buildTodaySummary(theme, cs)),
+                    const SizedBox(height: AppSpacing.xxl),
+
+                    // ── All-Time Overview ──
+                    AppSectionHeader(
+                      title: 'All-Time Overview',
+                      subtitle: 'Total business performance since you started',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Obx(() => _buildAllTimeGrid(theme, cs)),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Quick Actions ──
+                    AppSectionHeader(title: 'Quick Actions'),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildQuickActions(theme, cs),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // ── Notifications ──
+                    AppSectionHeader(title: 'Notifications'),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNotifications(theme, cs),
+                  ]),
+                ),
               ),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // ── Banners ──
-                  _buildBanners(context),
-
-                  // ── Today's Summary ──
-                  AppSectionHeader(
-                    title: "Today's Summary",
-                    subtitle: 'Your sales performance for today',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Obx(() => _buildTodaySummary(theme, cs)),
-                  const SizedBox(height: AppSpacing.xxl),
-
-                  // ── All-Time Overview ──
-                  AppSectionHeader(
-                    title: 'All-Time Overview',
-                    subtitle: 'Total business performance since you started',
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Obx(() => _buildAllTimeGrid(theme, cs)),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // ── Quick Actions ──
-                  AppSectionHeader(title: 'Quick Actions'),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildQuickActions(theme, cs),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // ── Notifications ──
-                  AppSectionHeader(title: 'Notifications'),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildNotifications(theme, cs),
-                ]),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

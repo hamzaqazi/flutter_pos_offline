@@ -39,6 +39,13 @@ class ProductsController extends GetxController {
     );
   }
 
+  Future<void> refreshProducts() async {
+    loadProducts();
+    try {
+      Get.find<CategoryController>().loadCategories();
+    } catch (_) {}
+  }
+
   void addProduct(ProductModel product) {
     // Check product limit for free tier
     if (!LicenseService.isPremium && products.length >= LicenseService.maxProducts) {
