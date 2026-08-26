@@ -212,6 +212,7 @@ class SettingsPage extends GetView<SettingsController> {
     // rows still get the stagger-in animation; only the group card and its
     // internal dividers are static.
     final theme = Theme.of(context);
+    final children = <Widget>[];
     for (final (title, sections) in groups) {
       children.add(
         AppSectionHeader(
