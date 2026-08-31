@@ -30,9 +30,12 @@ class SalesHistoryPage extends GetView<SalesController> {
           return _EmptySales();
         }
 
-        // Filtered sales
-        final sales = controller.filteredSales;
-        final returnsCtrl = Get.find<ReturnsController>();
+        return Column(
+          children: [
+            // ---------- Summary banner (reactive) ----------
+            Obx(() {
+              final sales = controller.filteredSales;
+              final returnsCtrl = Get.find<ReturnsController>();
 
         // Calculate refunds for filtered sales
         final saleIds = sales.map((s) => s.id).toSet();
@@ -61,10 +64,7 @@ class SalesHistoryPage extends GetView<SalesController> {
           (sum, s) => sum + s.discount,
         );
 
-        return Column(
-          children: [
-            // ---------- Summary banner ----------
-            AppAnimations.slideUp(
+              return AppAnimations.slideUp(
               child: Container(
                 margin: const EdgeInsets.all(AppSpacing.lg),
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -174,11 +174,13 @@ class SalesHistoryPage extends GetView<SalesController> {
                   ],
                 ),
               ),
-            ),
+            );
+            }),
             // ---------- Search bar ----------
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: TextField(
+                controller: controller.searchCtrl,
                 decoration: InputDecoration(
                   hintText: "Search by invoice no, customer or item...",
                   prefixIcon: const Icon(Icons.search, size: 20),
@@ -196,7 +198,10 @@ class SalesHistoryPage extends GetView<SalesController> {
                       return const SizedBox.shrink();
                     return IconButton(
                       icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () => controller.searchQuery.value = '',
+                      onPressed: () {
+                        controller.searchCtrl.clear();
+                        controller.searchQuery.value = '';
+                      },
                     );
                   }),
                 ),
@@ -273,6 +278,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                   controller.dateFilter.value != 'All' ||
                   controller.searchQuery.value.isNotEmpty;
               if (!hasFilter) return const SizedBox.shrink();
+              final count = controller.filteredSales.length;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: Row(
@@ -284,7 +290,7 @@ class SalesHistoryPage extends GetView<SalesController> {
                     ),
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      "${sales.length} result${sales.length == 1 ? '' : 's'}",
+                      "$count result${count == 1 ? '' : 's'}",
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -307,7 +313,9 @@ class SalesHistoryPage extends GetView<SalesController> {
             }),
 
             Expanded(
-              child: ListView.separated(
+              child: Obx(() {
+                final sales = controller.filteredSales;
+                return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   0,
@@ -686,7 +694,8 @@ class SalesHistoryPage extends GetView<SalesController> {
                       ),
                     );
                 },
-              ),
+              );
+              }),
             ),
           ],
         );

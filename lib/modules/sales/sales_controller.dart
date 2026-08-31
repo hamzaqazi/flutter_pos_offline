@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
@@ -15,6 +16,11 @@ class SalesController extends GetxController {
 
   // Search & filter state
   final searchQuery = ''.obs;
+
+  /// Owns the search field's text so clearing filters also clears the
+  /// visible text (a TextField without a controller can't be reset).
+  final searchCtrl = TextEditingController();
+
   final dateFilter =
       'All'.obs; // 'All', 'Today', 'This Week', 'This Month', 'Custom'
   DateTime? customStartDate;
@@ -323,9 +329,16 @@ class SalesController extends GetxController {
   }
 
   void clearFilters() {
+    searchCtrl.clear();
     searchQuery.value = '';
     dateFilter.value = 'All';
     customStartDate = null;
     customEndDate = null;
+  }
+
+  @override
+  void onClose() {
+    searchCtrl.dispose();
+    super.onClose();
   }
 }
