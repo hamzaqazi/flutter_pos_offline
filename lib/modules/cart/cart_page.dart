@@ -595,27 +595,51 @@ class CartPage extends GetView<CartController> {
                       final customersController =
                           Get.find<CustomersController>();
                       final customers = customersController.customers;
-                      return DropdownButtonFormField<String>(
-                        value: selectedCustomerId,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: "Customer (optional)",
-                          prefixIcon: Icon(Icons.person_outline),
-                        ),
-                        items: [
-                          const DropdownMenuItem<String>(
-                            value: null,
-                            child: Text("Walk-in customer"),
-                          ),
-                          ...customers.map(
-                            (c) => DropdownMenuItem(
-                              value: c.id,
-                              child: Text(c.name),
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: selectedCustomerId,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: "Customer (optional)",
+                                prefixIcon: Icon(Icons.person_outline),
+                              ),
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text("Walk-in customer"),
+                                ),
+                                ...customers.map(
+                                  (c) => DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(c.name),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) =>
+                                  setState(() => selectedCustomerId = value),
                             ),
                           ),
+                          const SizedBox(width: AppSpacing.sm),
+                          IconButton.outlined(
+                            onPressed: () async {
+                              final created = await _quickAddCustomerDialog(
+                                context,
+                              );
+                              if (created != null) {
+                                setState(
+                                  () => selectedCustomerId = created.id,
+                                );
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.person_add_alt_1_outlined,
+                              size: 20,
+                            ),
+                            tooltip: "Add new customer",
+                          ),
                         ],
-                        onChanged: (value) =>
-                            setState(() => selectedCustomerId = value),
                       );
                     }),
 
@@ -734,6 +758,97 @@ class CartPage extends GetView<CartController> {
         ),
       ),
     );
+  }
+
+  /// Minimal "quick add customer" dialog for the checkout flow — just name
+  /// (required) and phone (optional). Saves via [CustomersController] and
+  /// returns the new customer so the caller can auto-select them.
+  Future<CustomerModel?> _quickAddCustomerDialog(BuildContext context) async {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    final created = await showDialog<CustomerModel>(
+      context: context,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.person_add_alt_1_outlined,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              const Text("New Customer"),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: "Name",
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: "Phone (optional)",
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text("Cancel"),
+            ),
+            FilledButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isEmpty) {
+                  Get.snackbar(
+                    "Missing name",
+                    "Please enter the customer's name",
+                    snackPosition: SnackPosition.BOTTOM,
+                  );
+                  return;
+                }
+                Navigator.of(ctx).pop(
+                  CustomerModel(
+                    id: UniqueKey().toString(),
+                    name: name,
+                    phone: phoneController.text.trim(),
+                  ),
+                );
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (created != null) {
+      Get.find<CustomersController>().addCustomer(created);
+      Get.snackbar(
+        "Customer added",
+        "${created.name} selected for this sale",
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success.withValues(alpha: 0.15),
+        colorText: AppColors.success,
+        duration: const Duration(seconds: 2),
+      );
+    }
+    return created;
   }
 
   Widget _quickChip(
