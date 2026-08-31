@@ -5,6 +5,7 @@ import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
+import 'package:ad_shop_pos/widgets/product_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
@@ -220,6 +221,7 @@ class ProductsPage extends GetView<ProductsController> {
     final purchasePriceController = TextEditingController();
     final discountController = TextEditingController();
     final stockController = TextEditingController();
+    String? imagePath;
     String selectedCategory =
         Get.find<CategoryController>().categoryNames.firstOrNull ?? "General";
 
@@ -266,6 +268,11 @@ class ProductsPage extends GetView<ProductsController> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
+                    ProductImagePicker(
+                      imagePath: imagePath,
+                      onChanged: (path) => setState(() => imagePath = path),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     TextField(
                       controller: nameController,
                       textCapitalization: TextCapitalization.words,
@@ -466,6 +473,7 @@ class ProductsPage extends GetView<ProductsController> {
                                   discount: discountVal,
                                   stock:
                                       int.tryParse(stockController.text) ?? 0,
+                                  image: imagePath,
                                   sku: skuController.text.trim(),
                                   barcode: barcodeController.text.trim(),
                                 ),

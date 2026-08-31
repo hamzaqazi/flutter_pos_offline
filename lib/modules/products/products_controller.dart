@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../data/models/product_model.dart';
 import '../../data/services/category_service.dart';
 import '../../data/services/hive_service.dart';
+import '../../data/services/product_image_service.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/license_service.dart';
 
@@ -32,6 +33,7 @@ class ProductsController extends GetxController {
           purchasePrice: (e['purchasePrice'] ?? 0).toDouble(),
           discount: (e['discount'] ?? 0).toDouble(),
           stock: e['stock'],
+          image: e['image'],
           sku: e['sku'] ?? '',
           barcode: e['barcode'] ?? '',
         ),
@@ -84,6 +86,11 @@ class ProductsController extends GetxController {
   }
 
   void deleteProduct(String id) {
+    // Clean up the stored product photo (if any) before removing the record.
+    final index = products.indexWhere((e) => e.id == id);
+    if (index != -1) {
+      ProductImageService.deleteImage(products[index].image);
+    }
     products.removeWhere((e) => e.id == id);
     HiveService.productBox.delete(id);
   }
@@ -143,6 +150,7 @@ class ProductsController extends GetxController {
     'purchasePrice': p.purchasePrice,
     'discount': p.discount,
     'stock': p.stock,
+    'image': p.image,
     'sku': p.sku,
     'barcode': p.barcode,
   };

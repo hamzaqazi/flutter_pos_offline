@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
+import 'package:ad_shop_pos/widgets/product_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -99,13 +102,29 @@ class ProductCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      child: Center(
-                        child: Icon(
-                          _iconForCategory(product.category),
-                          size: 40,
-                          color: accent,
-                        ),
-                      ),
+                      child: product.hasImage
+                          ? Image.file(
+                              File(product.image!),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              // Decode at a small size — keeps grid scrolling smooth.
+                              cacheWidth: 480,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Icon(
+                                  _iconForCategory(product.category),
+                                  size: 40,
+                                  color: accent,
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Icon(
+                                _iconForCategory(product.category),
+                                size: 40,
+                                color: accent,
+                              ),
+                            ),
                     ),
                     // Category badge
                     Positioned(
@@ -400,6 +419,7 @@ class ProductCard extends StatelessWidget {
       text: product.stock.toString(),
     );
     String selectedCategory = product.category;
+    String? imagePath = product.image;
 
     final controller = Get.find<ProductsController>();
 
@@ -439,6 +459,11 @@ class ProductCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
+                    ProductImagePicker(
+                      imagePath: imagePath,
+                      onChanged: (path) => setState(() => imagePath = path),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     TextField(
                       controller: nameController,
                       textCapitalization: TextCapitalization.words,
@@ -678,25 +703,29 @@ class ProductCard extends StatelessWidget {
                               }
 
                               controller.updateProduct(
-                                product.copyWith(
-                                  name: nameController.text,
-                                  brand: brandController.text,
-                                  category: selectedCategory,
-                                  price:
-                                      double.tryParse(priceController.text) ??
-                                      product.price,
-                                  purchasePrice:
-                                      double.tryParse(
-                                        purchasePriceController.text,
-                                      ) ??
-                                      0,
-                                  discount: discountVal,
-                                  stock:
-                                      int.tryParse(stockController.text) ??
-                                      product.stock,
-                                  sku: skuController.text.trim(),
-                                  barcode: barcodeController.text.trim(),
-                                ),
+                                product
+                                    .copyWith(
+                                      name: nameController.text,
+                                      brand: brandController.text,
+                                      category: selectedCategory,
+                                      price:
+                                          double.tryParse(
+                                            priceController.text,
+                                          ) ??
+                                          product.price,
+                                      purchasePrice:
+                                          double.tryParse(
+                                            purchasePriceController.text,
+                                          ) ??
+                                          0,
+                                      discount: discountVal,
+                                      stock:
+                                          int.tryParse(stockController.text) ??
+                                          product.stock,
+                                      sku: skuController.text.trim(),
+                                      barcode: barcodeController.text.trim(),
+                                    )
+                                    .withImage(imagePath),
                               );
                               Get.back();
                             },

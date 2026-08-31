@@ -43,6 +43,27 @@ class ProductModel {
   /// Whether this product has a barcode set (real-world barcode for scanning).
   bool get hasBarcode => barcode.isNotEmpty;
 
+  /// Whether this product has a photo set.
+  bool get hasImage => image != null && image!.isNotEmpty;
+
+  /// Returns a copy with [image] explicitly set (allows clearing to null,
+  /// which [copyWith] cannot do).
+  ProductModel withImage(String? image) {
+    return ProductModel(
+      id: id,
+      name: name,
+      brand: brand,
+      category: category,
+      price: price,
+      purchasePrice: purchasePrice,
+      discount: discount,
+      stock: stock,
+      image: image,
+      sku: sku,
+      barcode: barcode,
+    );
+  }
+
   ProductModel copyWith({
     String? id,
     String? name,
