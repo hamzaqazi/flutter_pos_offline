@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
@@ -66,7 +68,21 @@ class InvoicePreviewPage extends StatelessWidget {
   }
 
   Future<void> _printInvoice() async {
-    final pdfBytes = await InvoicePdfService.generateInvoice(
+    final pdfBytes = await _generatePdfBytes();
+    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
+  }
+
+  /// Share the receipt as a PDF file via the native share sheet
+  /// (WhatsApp, email, Bluetooth, etc.).
+  Future<void> _shareInvoice() async {
+    final pdfBytes = await _generatePdfBytes();
+    final safeInv = invoiceNumber.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '-');
+    final filename = safeInv.isNotEmpty ? 'receipt_$safeInv.pdf' : 'receipt.pdf';
+    await Printing.sharePdf(bytes: pdfBytes, filename: filename);
+  }
+
+  Future<Uint8List> _generatePdfBytes() {
+    return InvoicePdfService.generateInvoice(
       items: items,
       subtotal: subtotal,
       checkoutDiscount: checkoutDiscount,
@@ -81,7 +97,6 @@ class InvoicePreviewPage extends StatelessWidget {
       cashierName: _cashierName,
       invoiceNumber: invoiceNumber,
     );
-    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   }
 
   @override
@@ -397,7 +412,13 @@ class InvoicePreviewPage extends StatelessWidget {
                             onPressed: _printInvoice,
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: _shareInvoice,
+                          icon: const Icon(Icons.share_outlined, size: 20),
+                          tooltip: "Share receipt as PDF",
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Obx(() {
                             final settings = Get.find<SettingsController>();
@@ -447,6 +468,12 @@ class InvoicePreviewPage extends StatelessWidget {
                             label: const Text("PDF"),
                             onPressed: _printInvoice,
                           ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: _shareInvoice,
+                          icon: const Icon(Icons.share_outlined, size: 20),
+                          tooltip: "Share receipt as PDF",
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Obx(() {
