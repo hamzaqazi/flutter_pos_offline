@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -379,6 +380,31 @@ class GoogleDriveService {
       return data;
     } catch (e) {
       debugPrint('⚠️ GoogleDrive download failed: $e');
+      return null;
+    }
+  }
+
+  /// Download a backup's raw bytes by Drive file ID (for saving the file
+  /// to the user's device). Unlike [downloadBackup], this does not parse
+  /// or validate the JSON — it returns the file exactly as stored.
+  static Future<Uint8List?> downloadBackupBytes(String fileId) async {
+    final api = await _driveApi();
+    if (api == null) return null;
+    try {
+      final media =
+          await api.files.get(
+                fileId,
+                downloadOptions: drive.DownloadOptions.fullMedia,
+              )
+              as drive.Media;
+
+      final builder = BytesBuilder(copy: false);
+      await for (final chunk in media.stream) {
+        builder.add(chunk);
+      }
+      return builder.takeBytes();
+    } catch (e) {
+      debugPrint('⚠️ GoogleDrive raw download failed: $e');
       return null;
     }
   }

@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
@@ -67,6 +68,52 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
         ],
       ),
     );
+  }
+
+  /// Download the backup file from Drive and let the user save it anywhere
+  /// on their device via the system file-save dialog (SAF on Android).
+  Future<void> _downloadToDevice(DriveBackupInfo info) async {
+    _showBlockingLoader('Downloading backup...');
+    final bytes = await GoogleDriveService.downloadBackupBytes(info.id);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+
+    if (bytes == null) {
+      Get.snackbar(
+        'Error',
+        'Could not download this cloud backup',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    try {
+      // Opens the system "save file" dialog — the user picks the folder
+      // (Downloads, SD card, etc.). Returns null if they cancel.
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save backup file',
+        fileName: info.name,
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        bytes: bytes,
+      );
+      if (path == null) return; // user cancelled
+
+      Get.snackbar(
+        'Saved!',
+        'Backup (${info.formattedSize}) saved to your device',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.success.withValues(alpha: 0.15),
+        colorText: AppColors.success,
+        duration: const Duration(seconds: 3),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Could not save the file: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
   Future<void> _confirmRestore(DriveBackupInfo info) async {
@@ -241,6 +288,7 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
                         info: backup,
                         isLatest: index == 0,
                         onRestore: () => _confirmRestore(backup),
+                        onDownload: () => _downloadToDevice(backup),
                         onDelete: () => _confirmDelete(backup),
                       );
                     },
@@ -255,12 +303,14 @@ class _DriveBackupTile extends StatelessWidget {
   final DriveBackupInfo info;
   final bool isLatest;
   final VoidCallback onRestore;
+  final VoidCallback onDownload;
   final VoidCallback onDelete;
 
   const _DriveBackupTile({
     required this.info,
     required this.isLatest,
     required this.onRestore,
+    required this.onDownload,
     required this.onDelete,
   });
 
@@ -345,7 +395,23 @@ class _DriveBackupTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 SizedBox(
-                  width: 120,
+                  width: 38,
+                  height: 38,
+                  child: IconButton.outlined(
+                    onPressed: onDownload,
+                    icon: const Icon(Icons.download_outlined, size: 18),
+                    tooltip: 'Save to device',
+                    style: IconButton.styleFrom(
+                      foregroundColor: AppColors.seed,
+                      side: BorderSide(
+                          color: AppColors.seed.withValues(alpha: 0.5)),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                SizedBox(
+                  width: 110,
                   height: 38,
                   child: OutlinedButton.icon(
                     onPressed: onRestore,
@@ -360,7 +426,7 @@ class _DriveBackupTile extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 SizedBox(
-                  width: 120,
+                  width: 110,
                   height: 38,
                   child: OutlinedButton.icon(
                     onPressed: onDelete,
