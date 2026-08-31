@@ -150,27 +150,34 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
             Text(
               'Backup from ${info.formattedDate} (${info.formattedSize})',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             ...[
-              ('Products', summary.productCount),
-              ('Sales', summary.saleCount),
-              ('Expenses', summary.expenseCount),
-              ('Returns', summary.returnCount),
-              ('Customers', summary.customerCount),
-              ('Staff', summary.staffCount),
-            ].where((e) => e.$2 > 0).map(
+                  ('Products', summary.productCount),
+                  ('Sales', summary.saleCount),
+                  ('Expenses', summary.expenseCount),
+                  ('Returns', summary.returnCount),
+                  ('Customers', summary.customerCount),
+                  ('Staff', summary.staffCount),
+                ]
+                .where((e) => e.$2 > 0)
+                .map(
                   (e) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle_outline,
-                            size: 14, color: AppColors.success),
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 14,
+                          color: AppColors.success,
+                        ),
                         const SizedBox(width: AppSpacing.sm),
-                        Text('${e.$1}: ${e.$2}',
-                            style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          '${e.$1}: ${e.$2}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
@@ -181,21 +188,24 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
               decoration: BoxDecoration(
                 color: AppColors.danger.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                border:
-                    Border.all(color: AppColors.danger.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.danger.withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
-                      size: 16, color: AppColors.danger),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: AppColors.danger,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       'This will replace ALL current data!',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: AppColors.danger),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: AppColors.danger),
                     ),
                   ),
                 ],
@@ -274,26 +284,26 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
       body: PremiumGate(
         feature: 'Google Drive Backup',
         child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _backups.isEmpty
-              ? _EmptyState(onRefresh: _loadBackups)
-              : RefreshIndicator(
-                  onRefresh: _loadBackups,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    itemCount: _backups.length,
-                    itemBuilder: (context, index) {
-                      final backup = _backups[index];
-                      return _DriveBackupTile(
-                        info: backup,
-                        isLatest: index == 0,
-                        onRestore: () => _confirmRestore(backup),
-                        onDownload: () => _downloadToDevice(backup),
-                        onDelete: () => _confirmDelete(backup),
-                      );
-                    },
-                  ),
+            ? const Center(child: CircularProgressIndicator())
+            : _backups.isEmpty
+            ? _EmptyState(onRefresh: _loadBackups)
+            : RefreshIndicator(
+                onRefresh: _loadBackups,
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  itemCount: _backups.length,
+                  itemBuilder: (context, index) {
+                    final backup = _backups[index];
+                    return _DriveBackupTile(
+                      info: backup,
+                      isLatest: index == 0,
+                      onRestore: () => _confirmRestore(backup),
+                      onDownload: () => _downloadToDevice(backup),
+                      onDelete: () => _confirmDelete(backup),
+                    );
+                  },
                 ),
+              ),
       ),
     );
   }
@@ -351,17 +361,21 @@ class _DriveBackupTile extends StatelessWidget {
                         children: [
                           Text(
                             info.formattedDate,
-                            style: theme.textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           if (isLatest) ...[
                             const SizedBox(width: AppSpacing.sm),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color:
-                                    AppColors.success.withValues(alpha: 0.12),
+                                color: AppColors.success.withValues(
+                                  alpha: 0.12,
+                                ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -404,14 +418,15 @@ class _DriveBackupTile extends StatelessWidget {
                     style: IconButton.styleFrom(
                       foregroundColor: AppColors.seed,
                       side: BorderSide(
-                          color: AppColors.seed.withValues(alpha: 0.5)),
+                        color: AppColors.seed.withValues(alpha: 0.5),
+                      ),
                       padding: EdgeInsets.zero,
                     ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 SizedBox(
-                  width: 110,
+                  width: 120,
                   height: 38,
                   child: OutlinedButton.icon(
                     onPressed: onRestore,
@@ -420,13 +435,14 @@ class _DriveBackupTile extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.warning,
                       side: BorderSide(
-                          color: AppColors.warning.withValues(alpha: 0.5)),
+                        color: AppColors.warning.withValues(alpha: 0.5),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 SizedBox(
-                  width: 110,
+                  width: 120,
                   height: 38,
                   child: OutlinedButton.icon(
                     onPressed: onDelete,
@@ -435,7 +451,8 @@ class _DriveBackupTile extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.danger,
                       side: BorderSide(
-                          color: AppColors.danger.withValues(alpha: 0.5)),
+                        color: AppColors.danger.withValues(alpha: 0.5),
+                      ),
                     ),
                   ),
                 ),
