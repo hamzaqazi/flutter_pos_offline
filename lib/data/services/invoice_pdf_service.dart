@@ -20,7 +20,9 @@ class InvoicePdfService {
   // ── Palette (mirrors AppColors) ──
   static const _emerald = PdfColor.fromInt(0xFF10B981); // AppColors.seed
   static const _emeraldDark = PdfColor.fromInt(0xFF064E3B); // AppColors.accent
-  static const _emeraldBg = PdfColor.fromInt(0xFFECFDF5); // AppColors.successLight
+  static const _emeraldBg = PdfColor.fromInt(
+    0xFFECFDF5,
+  ); // AppColors.successLight
   static const _red = PdfColor.fromInt(0xFFDC2626); // AppColors.danger
   static const _grey = PdfColor.fromInt(0xFF6B7280); // secondary text
   static const _lineGrey = PdfColor.fromInt(0xFFD1D5DB); // dividers
@@ -336,6 +338,41 @@ class InvoicePdfService {
                   ),
                 ),
               ],
+
+              // ═══════════ Powered by Codynest ═══════════
+              _dashedDivider(),
+
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 4),
+                child: pw.Column(
+                  children: [
+                    pw.Text(
+                      'Powered by Codynest.com',
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        fontSize: 8,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+
+                    pw.SizedBox(height: 2),
+
+                    pw.Text(
+                      'Support & WhatsApp:',
+                      textAlign: pw.TextAlign.center,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+
+                    pw.SizedBox(height: 1),
+
+                    pw.Text(
+                      '0315-3507075 / 0345-3333316',
+                      textAlign: pw.TextAlign.center,
+                      style: const pw.TextStyle(fontSize: 7),
+                    ),
+                  ],
+                ),
+              ),
             ],
           );
         },
@@ -394,10 +431,7 @@ class InvoicePdfService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(
-            label,
-            style: const pw.TextStyle(fontSize: 8, color: _grey),
-          ),
+          pw.Text(label, style: const pw.TextStyle(fontSize: 8, color: _grey)),
           pw.Text(
             value,
             style: pw.TextStyle(
