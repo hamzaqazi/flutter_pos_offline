@@ -11,6 +11,7 @@ import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -487,7 +488,7 @@ class _Header extends StatelessWidget {
                 child: Obx(() {
                   final settings = Get.find<SettingsController>();
                   final logoPath = settings.receiptSettings.value.logoPath;
-                  if (logoPath.isNotEmpty) {
+                  if (logoPath.isNotEmpty && !kIsWeb) {
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                       child: Image.file(
@@ -517,7 +518,7 @@ class _Header extends StatelessWidget {
                   final settings = Get.find<SettingsController>();
                   return Text(
                     settings.shopName,
-                    style: theme.textTheme.titleLarge?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),

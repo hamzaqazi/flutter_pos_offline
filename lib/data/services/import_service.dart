@@ -17,20 +17,84 @@ import 'package:hive/hive.dart';
 class ImportService {
   /// Pick a JSON backup file and return its parsed content.
   /// Returns null if user cancels or file is invalid.
+  // static Future<Map<String, dynamic>?> pickBackupFile() async {
+  //   try {
+  //     final result = await FilePicker.platform.pickFiles(
+  //       type: FileType.any,
+  //       // allowedExtensions: ['json'],
+  //       dialogTitle: 'Select Backup File',
+  //     );
+
+  //     if (result == null || result.files.isEmpty) return null;
+
+  //     final file = File(result.files.single.path!);
+  //     final content = await file.readAsString();
+
+  //     final data = jsonDecode(content) as Map<String, dynamic>;
+
+  //     // Validate it's a valid backup
+  //     if (data['app'] != 'ad_shop_pos') {
+  //       Get.snackbar(
+  //         "Invalid file",
+  //         "This is not a valid Shop POS backup file",
+  //         snackPosition: SnackPosition.BOTTOM,
+  //       );
+  //       return null;
+  //     }
+
+  //     return data;
+  //   } catch (e) {
+  //     Get.snackbar(
+  //       "Error",
+  //       "Failed to read backup file: $e",
+  //       snackPosition: SnackPosition.BOTTOM,
+  //     );
+  //     return null;
+  //   }
+  // }
+
   static Future<Map<String, dynamic>?> pickBackupFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
-        // allowedExtensions: ['json'],
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+        withData: true,
         dialogTitle: 'Select Backup File',
       );
 
-      if (result == null || result.files.isEmpty) return null;
+      if (result == null || result.files.isEmpty) {
+        return null;
+      }
 
-      final file = File(result.files.single.path!);
-      final content = await file.readAsString();
+      final platformFile = result.files.single;
 
-      final data = jsonDecode(content) as Map<String, dynamic>;
+      // Read file using bytes.
+      // This works on Flutter Web as well as mobile/desktop.
+      final bytes = platformFile.bytes;
+
+      if (bytes == null) {
+        Get.snackbar(
+          "Error",
+          "Unable to read the selected backup file.",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return null;
+      }
+
+      final content = utf8.decode(bytes);
+
+      final decoded = jsonDecode(content);
+
+      if (decoded is! Map<String, dynamic>) {
+        Get.snackbar(
+          "Invalid file",
+          "The selected file is not a valid JSON backup.",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return null;
+      }
+
+      final data = decoded;
 
       // Validate it's a valid backup
       if (data['app'] != 'ad_shop_pos') {
@@ -49,6 +113,7 @@ class ImportService {
         "Failed to read backup file: $e",
         snackPosition: SnackPosition.BOTTOM,
       );
+
       return null;
     }
   }
@@ -182,20 +247,26 @@ class ImportService {
       if (currentTrialStart != null && backupTrialStart != null) {
         final currentDate = DateTime.tryParse(currentTrialStart);
         final backupDate = DateTime.tryParse(backupTrialStart);
-        if (currentDate != null && backupDate != null
-            && backupDate.isBefore(currentDate)) {
+        if (currentDate != null &&
+            backupDate != null &&
+            backupDate.isBefore(currentDate)) {
           // Backup trial is older (expired) — use it instead of fresh one
           await settingsBox.put('trial_startDate', backupTrialStart);
           final backupExpired = data['trial_expired'] as bool?;
           await settingsBox.put('trial_expired', backupExpired ?? true);
-          debugPrint('🔒 Trial reset exploit blocked — older trial date restored from backup');
+          debugPrint(
+            '🔒 Trial reset exploit blocked — older trial date restored from backup',
+          );
         }
       } else if (backupTrialStart != null) {
         // Backup has trial data but current doesn't — restore from backup
         await settingsBox.put('trial_startDate', backupTrialStart);
         await settingsBox.put('trial_expired', data['trial_expired'] ?? false);
         if (data['trial_customerPhone'] != null) {
-          await settingsBox.put('trial_customerPhone', data['trial_customerPhone']);
+          await settingsBox.put(
+            'trial_customerPhone',
+            data['trial_customerPhone'],
+          );
         }
       }
 

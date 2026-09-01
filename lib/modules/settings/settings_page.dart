@@ -14,6 +14,7 @@ import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:get/get.dart';
@@ -68,9 +69,8 @@ class SettingsPage extends GetView<SettingsController> {
             color: AppColors.warning,
             children: [
               Obx(
-                () => _LowStockThresholdForm(
-                  settings: controller.settings.value,
-                ),
+                () =>
+                    _LowStockThresholdForm(settings: controller.settings.value),
               ),
             ],
           ),
@@ -154,8 +154,7 @@ class SettingsPage extends GetView<SettingsController> {
               AppActionTile(
                 icon: Icons.restore_outlined,
                 title: "Restore from Backup",
-                subtitle:
-                    "Import data from a previously exported backup file",
+                subtitle: "Import data from a previously exported backup file",
                 color: AppColors.warning,
                 onTap: () => _showImportDialog(context),
               ),
@@ -1018,15 +1017,19 @@ class _ReceiptCustomizationWithPreviewState
                     color: AppColors.seed.withValues(alpha: 0.3),
                   ),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  child: Image.file(
-                    File(_settings.logoPath),
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.broken_image_outlined, size: 24),
-                  ),
-                ),
+                child: kIsWeb
+                    ? const SizedBox.shrink()
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
+                        child: Image.file(
+                          File(_settings.logoPath),
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) =>
+                              const Icon(Icons.broken_image_outlined, size: 24),
+                        ),
+                      ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -2627,9 +2630,7 @@ class _AutoBackupSectionState extends State<_AutoBackupSection> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.seed,
-              ),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.seed),
             ),
           ),
 
