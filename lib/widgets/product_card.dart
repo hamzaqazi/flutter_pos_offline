@@ -69,7 +69,7 @@ class ProductCard extends StatelessWidget {
           onTap: outOfStock
               ? () => _showEditDialog(context)
               : () {
-                  cartController.addToCart(product);
+                  if (!cartController.addToCart(product)) return;
                   Get.snackbar(
                     "Added to cart",
                     product.name,

@@ -338,7 +338,7 @@ class BarcodeScannerHelper {
           colorText: Colors.white,
         );
       } else {
-        cartController.addToCart(product);
+        if (!cartController.addToCart(product)) return;
         Get.snackbar(
           "Added to cart",
           "${product.name}",
