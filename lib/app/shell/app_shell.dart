@@ -148,9 +148,8 @@ class _FloatingNavBar extends StatelessWidget {
                         color: barColor,
                         borderRadius: BorderRadius.circular(_barHeight / 2),
                         border: Border.all(
-                          color: (isDark ? Colors.white : Colors.black).withValues(
-                            alpha: 0.06,
-                          ),
+                          color: (isDark ? Colors.white : Colors.black)
+                              .withValues(alpha: 0.06),
                           width: 0.5,
                         ),
                         boxShadow: [
@@ -210,10 +209,7 @@ class _FloatingNavBar extends StatelessWidget {
 /// Strongest at the bottom edge and ramps smoothly to zero above the bar,
 /// with zero backdrop blur passes to maintain 60/120fps scrolling.
 class _EdgeScrim extends StatelessWidget {
-  const _EdgeScrim({
-    required this.height,
-    this.scrimColor,
-  });
+  const _EdgeScrim({required this.height, this.scrimColor});
 
   final double height;
   final Color? scrimColor;
@@ -230,10 +226,7 @@ class _EdgeScrim extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
-              colors: <Color>[
-                scrimColor!,
-                scrimColor!.withValues(alpha: 0.0),
-              ],
+              colors: <Color>[scrimColor!, scrimColor!.withValues(alpha: 0.0)],
             ),
           ),
         ),
