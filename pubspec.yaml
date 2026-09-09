@@ -39,6 +39,7 @@ dependencies:
   googleapis: ^16.0.0
   googleapis_auth: ^2.3.3
   http: ^1.6.0
+  lottie: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +66,7 @@ flutter:
   # Assets
   assets:
     - lib/assets/images/
+    - lib/assets/animations/
 
 # Flutter Launcher Icons configuration
 flutter_launcher_icons:

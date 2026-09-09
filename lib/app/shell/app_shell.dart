@@ -9,6 +9,7 @@ import 'package:ad_shop_pos/modules/sales/sales_history_page.dart';
 import 'package:ad_shop_pos/modules/settings/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 
 /// Main navigation shell — hosts all 5 tab pages in an [IndexedStack].
 ///
@@ -288,6 +289,9 @@ class _NavItem extends StatelessWidget {
 }
 
 /// The raised circular nav item — bigger, filled, floats above the pill.
+///
+/// Its icon is the looping [AppLottie.cart] animation instead of a static
+/// glyph. If the animation can't be loaded it falls back to the cart icon.
 class _RaisedNavItem extends StatelessWidget {
   const _RaisedNavItem({
     required this.destination,
@@ -326,10 +330,17 @@ class _RaisedNavItem extends StatelessWidget {
                 ),
               ],
             ),
-            child: Icon(
-              selected ? destination.activeIcon : destination.icon,
-              color: Colors.white,
-              size: 26,
+            child: Lottie.asset(
+              AppLottie.cart,
+              width: 36,
+              height: 36,
+              fit: BoxFit.contain,
+              // Falls back to the plain cart icon if the animation is missing.
+              errorBuilder: (context, error, stackTrace) => Icon(
+                selected ? destination.activeIcon : destination.icon,
+                color: Colors.white,
+                size: 26,
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -369,6 +380,12 @@ class _LowStockBadge extends StatelessWidget {
       return child;
     }
   }
+}
+
+/// Bundled Lottie animations.
+abstract final class AppLottie {
+  /// Looping "loading cart" animation shown inside the raised middle nav button.
+  static const cart = 'lib/assets/animations/cart_loading.json';
 }
 
 /// Navigation destination data.
