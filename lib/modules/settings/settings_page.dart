@@ -13,6 +13,7 @@ import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -200,6 +201,32 @@ class SettingsPage extends GetView<SettingsController> {
             subtitle: "App security, PIN & your current plan",
             color: AppColors.seedDark,
             children: [_PinLockSection()],
+          ),
+        ],
+      ),
+      (
+        'About & Legal',
+        [
+          AppActionTile(
+            icon: Icons.privacy_tip_outlined,
+            title: "Privacy Policy",
+            subtitle: "How your shop data is stored & protected",
+            color: AppColors.seed,
+            onTap: () => Launcher.launch(
+              Uri.parse('https://codynest.com/privacy-policy'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          const Divider(height: 1, indent: 52),
+          AppActionTile(
+            icon: Icons.support_agent_outlined,
+            title: "Support & WhatsApp",
+            subtitle: "0315-3507075 / 0345-3333316",
+            color: AppColors.success,
+            onTap: () => Launcher.openWhatsApp(
+              '923153507075',
+              'Hi, I need help with Codynest POS',
+            ),
           ),
         ],
       ),
@@ -1722,10 +1749,12 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
     setState(() => _scanning = true);
 
     // Request necessary permissions before scanning
+    // No location permission: BLUETOOTH_SCAN is declared with
+    // neverForLocation, and requesting location here would trigger extra
+    // Google Play policy review for no functional benefit.
     final statuses = await [
       Permission.bluetoothConnect,
       Permission.bluetoothScan,
-      Permission.location,
     ].request();
 
     final allGranted = statuses.values.every((s) => s.isGranted);
@@ -1735,7 +1764,7 @@ class _PrinterSettingsSectionState extends State<_PrinterSettingsSection> {
         setState(() => _scanning = false);
         Get.snackbar(
           "Permission Required",
-          "Please grant Bluetooth and Location permissions to scan for printers",
+          "Please grant Bluetooth permissions to scan for printers",
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 4),
           backgroundColor: AppColors.warning.withValues(alpha: 0.15),

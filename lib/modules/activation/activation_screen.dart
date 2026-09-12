@@ -84,14 +84,15 @@ class _ActivationScreenState extends State<ActivationScreen> {
   }
 
   // ── Phone validation ──
-  /// Validate Pakistani phone number format.
-  /// Accepts: 03XX-XXXXXXX, 03XXXXXXXXXX, or 923XXXXXXXXXX
-  bool _isValidPakistaniPhone(String phone) {
+  /// Validate phone number format.
+  ///
+  /// Pakistani formats (03XX-XXXXXXX, 923XXXXXXXXXX) are accepted, but any
+  /// other international number is accepted too — the app is distributed on
+  /// Google Play, so reviewers and shop owners outside Pakistan must be able
+  /// to start the trial without being blocked by a country-specific rule.
+  bool _isValidPhone(String phone) {
     final digits = phone.replaceAll(RegExp(r'[^\d]'), '');
-    // 03XX-XXXXXXX (11 digits local) or 923XXXXXXXXXX (12 digits with country code)
-    if (digits.length == 11 && digits.startsWith('03')) return true;
-    if (digits.length == 12 && digits.startsWith('923')) return true;
-    return false;
+    return digits.length >= 8 && digits.length <= 15;
   }
 
   /// Convert phone to international format (923XXXXXXXXXX) for WhatsApp.
@@ -108,10 +109,9 @@ class _ActivationScreenState extends State<ActivationScreen> {
       setState(() => _phoneError = 'Please enter your phone number');
       return;
     }
-    if (!_isValidPakistaniPhone(phone)) {
+    if (!_isValidPhone(phone)) {
       setState(
-        () =>
-            _phoneError = 'Enter a valid Pakistani number (e.g. 0315-3507075)',
+        () => _phoneError = 'Enter a valid phone number (e.g. 0315-3507075)',
       );
       return;
     }

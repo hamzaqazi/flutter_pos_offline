@@ -168,6 +168,34 @@ class AutoBackupService {
 
   // ─── Backup Execution ────────────────────────────────────────
 
+  /// Legacy folder used before scoped storage (Android 10 and older devices).
+  /// Kept only so previously written backups can still be listed/restored.
+  static final Directory _legacyBackupDir = Directory(
+    '/storage/emulated/0/Documents/Codynest POS/Backups',
+  );
+
+  /// Folder where auto-backup JSON files are written.
+  ///
+  /// Android 11+ (API 30) blocks direct writes to shared folders such as
+  /// /storage/emulated/0/Documents, so we use the app-specific external
+  /// directory instead: it needs no storage permission and works on every
+  /// supported Android version.
+  static Future<Directory?> _backupDirectory() async {
+    if (kIsWeb) return null;
+    try {
+      final base = await getExternalStorageDirectory();
+      if (base == null) return null;
+      final dir = Directory('${base.path}/Codynest POS Backups');
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      return dir;
+    } catch (e) {
+      debugPrint('⚠️ Auto-backup folder unavailable: $e');
+      return null;
+    }
+  }
+
   /// Perform an automatic backup to local storage.
   /// Returns true if successful.
   static Future<bool> performAutoBackup() async {
@@ -177,16 +205,10 @@ class AutoBackupService {
       final backupData = await _collectBackupData();
       final jsonStr = const JsonEncoder.withIndent('  ').convert(backupData);
 
-      // Save to app documents directory (persistent, not temp)
-      // final dir = await getApplicationDocumentsDirectory();
-      final dir = await getExternalStorageDirectory();
-      // final backupDir = Directory('${dir.path}/backups');
-      // final backupDir = Directory('${dir!.path}/backups');
-      final backupDir = Directory(
-        '/storage/emulated/0/Documents/Codynest POS/Backups',
-      );
-      if (!await backupDir.exists()) {
-        await backupDir.create(recursive: true);
+      final backupDir = await _backupDirectory();
+      if (backupDir == null) {
+        debugPrint('⚠️ Auto-backup skipped: no writable folder');
+        return false;
       }
 
       final timestamp = DateTime.now()
@@ -362,29 +384,35 @@ class AutoBackupService {
 
   /// List all auto-backup files with metadata.
   static Future<List<BackupFileInfo>> listBackups() async {
-    // final dir = await getApplicationDocumentsDirectory();
-    // final backupDir = Directory('${dir.path}/backups');
-    final backupDir = Directory(
-      '/storage/emulated/0/Documents/Codynest POS/Backups',
-    );
-    if (!await backupDir.exists()) return [];
-
     final files = <BackupFileInfo>[];
 
-    await for (final entity in backupDir.list()) {
-      if (entity is File && entity.path.contains('auto_backup_')) {
-        final stat = await entity.stat();
-        final sizeKB = (stat.size / 1024).round();
-        final filename = entity.path.split('/').last;
-        files.add(
-          BackupFileInfo(
-            file: entity,
-            filename: filename,
-            date: stat.modified,
-            sizeKB: sizeKB,
-          ),
-        );
+    Future<void> collectFrom(Directory dir) async {
+      if (!await dir.exists()) return;
+      await for (final entity in dir.list()) {
+        if (entity is File && entity.path.contains('auto_backup_')) {
+          final stat = await entity.stat();
+          final sizeKB = (stat.size / 1024).round();
+          final filename = entity.path.split('/').last;
+          files.add(
+            BackupFileInfo(
+              file: entity,
+              filename: filename,
+              date: stat.modified,
+              sizeKB: sizeKB,
+            ),
+          );
+        }
       }
+    }
+
+    final backupDir = await _backupDirectory();
+    if (backupDir != null) await collectFrom(backupDir);
+
+    // Include backups written by older versions (shared Documents folder).
+    try {
+      await collectFrom(_legacyBackupDir);
+    } catch (e) {
+      debugPrint('⚠️ Legacy backup folder unreadable: $e');
     }
 
     // Sort newest first
@@ -399,9 +427,8 @@ class AutoBackupService {
 
   /// Delete all auto-backup files.
   static Future<void> deleteAllBackups() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final backupDir = Directory('${dir.path}/backups');
-    if (await backupDir.exists()) {
+    final backupDir = await _backupDirectory();
+    if (backupDir != null && await backupDir.exists()) {
       await backupDir.delete(recursive: true);
     }
     await _settingsBox.delete(_keyLastBackup);

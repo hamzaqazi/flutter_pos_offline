@@ -1,4 +1,4 @@
-package com.example.ad_shop_pos
+package com.codynest.pos
 
 import io.flutter.embedding.android.FlutterActivity
 
