@@ -1,9 +1,0 @@
-# Copy this file to android/key.properties and fill in your own values.
-# Generate the keystore once with:
-#   keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA \
-#     -keysize 2048 -validity 10000 -alias upload
-# NEVER commit key.properties or the .jks file.
-storeFile=/absolute/path/to/upload-keystore.jks
-storePassword=CHANGE_ME
-keyAlias=upload
-keyPassword=CHANGE_ME
