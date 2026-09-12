@@ -18,6 +18,22 @@ val keystoreProperties = java.util.Properties().apply {
 }
 val hasUploadKeystore = keystorePropertiesFile.exists()
 
+// Finds codynest-upload.jks wherever it was dropped: android/, android/app/,
+// the repo root, or the user home directory.
+val releaseStoreFile: File? = run {
+    val value = keystoreProperties["storeFile"] as String?
+    val candidates = mutableListOf<File>()
+    if (!value.isNullOrBlank() && !value.startsWith("CHANGE_ME")) {
+        candidates += file(value)                 // relative to android/app
+        candidates += rootProject.file(value)     // relative to android/
+        candidates += File(value)                 // absolute or CWD-relative
+    }
+    candidates += rootProject.file("codynest-upload.jks")
+    candidates += rootProject.file("app/codynest-upload.jks")
+    candidates += File(System.getProperty("user.home"), "codynest-upload.jks")
+    candidates.firstOrNull { it.exists() }
+}
+
 android {
     namespace = "com.codynest.pos"
     // Play requires new apps to target Android 16 (API 36) since 31 Aug 2026.
@@ -47,10 +63,32 @@ android {
     signingConfigs {
         create("release") {
             if (hasUploadKeystore) {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
-                storePassword = keystoreProperties["storePassword"] as String
+                val resolved = releaseStoreFile
+                if (resolved == null) {
+                    throw org.gradle.api.GradleException(
+                        "Upload keystore not found. Put codynest-upload.jks in android/ " +
+                            "(or your home folder) and set storeFile in android/key.properties."
+                    )
+                }
+                val storePw = keystoreProperties["storePassword"] as String?
+                val keyAliasValue = keystoreProperties["keyAlias"] as String?
+                val keyPw = keystoreProperties["keyPassword"] as String?
+                listOf(
+                    "storePassword" to storePw,
+                    "keyAlias" to keyAliasValue,
+                    "keyPassword" to keyPw,
+                ).forEach { (name, value) ->
+                    if (value.isNullOrBlank() || value == "CHANGE_ME") {
+                        throw org.gradle.api.GradleException(
+                            "Set $name in android/key.properties " +
+                                "(template: android/key.properties.example)."
+                        )
+                    }
+                }
+                storeFile = resolved
+                storePassword = storePw
+                keyAlias = keyAliasValue
+                keyPassword = keyPw
             }
         }
     }
@@ -62,7 +100,7 @@ android {
             } else {
                 // Fail fast: a debug-signed bundle is rejected by Google Play.
                 if (gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }) {
-                    throw GradleException(
+                    throw org.gradle.api.GradleException(
                         "Missing android/key.properties — create your upload keystore first " +
                             "(see docs/PLAY_STORE_RELEASE_GUIDE.md section 1.2)."
                     )

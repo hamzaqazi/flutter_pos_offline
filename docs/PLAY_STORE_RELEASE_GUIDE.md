@@ -66,13 +66,17 @@ Play rejects debug-signed bundles, and a debug key can't be used for updates.
 keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
 
-Create `android/key.properties`:
+Create `android/key.properties` (this exact file — it is git-ignored, so only
+the committed template `android/key.properties.example` travels with the repo):
 ```properties
-storeFile=/absolute/path/to/upload-keystore.jks
-storePassword=********
+storeFile=codynest-upload.jks
+storePassword=YOUR_STORE_PASSWORD
 keyAlias=upload
-keyPassword=********
+keyPassword=YOUR_KEY_PASSWORD
 ```
+`storeFile` may be a bare filename or an absolute path — the build looks for the
+keystore in `android/app/`, `android/`, the repo root and your home folder, so
+`codynest-upload.jks` works no matter where you dropped it.
 
 Add to `android/app/build.gradle.kts` (above `android { }`):
 ```kotlin
