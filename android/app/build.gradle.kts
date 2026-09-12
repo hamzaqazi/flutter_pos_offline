@@ -10,29 +10,38 @@ plugins {
 
 // Release signing config. Create android/key.properties (see docs/PLAY_STORE_RELEASE_GUIDE.md)
 // before running `flutter build appbundle`; it is NOT committed to git.
+//
+// NOTE: no java.util.Properties here — Gradle's Kotlin script JVM does not
+// import java.* packages by default, which breaks the standard Flutter snippet.
+// Plain "key=value" parsing keeps the file format identical.
 val keystorePropertiesFile = rootProject.file("key.properties")
-val keystoreProperties = java.util.Properties().apply {
+val keystoreProperties: Map<String, String> =
     if (keystorePropertiesFile.exists()) {
-        load(keystorePropertiesFile.inputStream())
+        keystorePropertiesFile
+            .readLines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains("=") }
+            .associate { line ->
+                val idx = line.indexOf('=')
+                line.substring(0, idx).trim() to line.substring(idx + 1).trim()
+            }
+    } else {
+        emptyMap()
     }
-}
 val hasUploadKeystore = keystorePropertiesFile.exists()
 
 // Finds codynest-upload.jks wherever it was dropped: android/, android/app/,
-// the repo root, or the user home directory.
-val releaseStoreFile: File? = run {
-    val value = keystoreProperties["storeFile"] as String?
-    val candidates = mutableListOf<File>()
-    if (!value.isNullOrBlank() && !value.startsWith("CHANGE_ME")) {
-        candidates += file(value)                 // relative to android/app
-        candidates += rootProject.file(value)     // relative to android/
-        candidates += File(value)                 // absolute or CWD-relative
+// the repo root, or the user's home directory. Paths are resolved against the
+// android/ project (rootProject), and absolute paths work too.
+val releaseStoreFile = buildList {
+    val configured = keystoreProperties["storeFile"]
+    if (!configured.isNullOrBlank() && !configured.startsWith("CHANGE_ME")) {
+        add(configured)
     }
-    candidates += rootProject.file("codynest-upload.jks")
-    candidates += rootProject.file("app/codynest-upload.jks")
-    candidates += File(System.getProperty("user.home"), "codynest-upload.jks")
-    candidates.firstOrNull { it.exists() }
-}
+    add("codynest-upload.jks")
+    add("app/codynest-upload.jks")
+    add(System.getProperty("user.home") + "/codynest-upload.jks")
+}.map { rootProject.file(it) }.firstOrNull { it.exists() }
 
 android {
     namespace = "com.codynest.pos"
@@ -70,24 +79,24 @@ android {
                             "(or your home folder) and set storeFile in android/key.properties."
                     )
                 }
-                val storePw = keystoreProperties["storePassword"] as String?
-                val keyAliasValue = keystoreProperties["keyAlias"] as String?
-                val keyPw = keystoreProperties["keyPassword"] as String?
-                listOf(
+                val storePw = keystoreProperties["storePassword"]
+                val alias = keystoreProperties["keyAlias"]
+                val keyPw = keystoreProperties["keyPassword"]
+                for (entry in listOf(
                     "storePassword" to storePw,
-                    "keyAlias" to keyAliasValue,
+                    "keyAlias" to alias,
                     "keyPassword" to keyPw,
-                ).forEach { (name, value) ->
-                    if (value.isNullOrBlank() || value == "CHANGE_ME") {
+                )) {
+                    if (entry.second.isNullOrBlank() || entry.second == "CHANGE_ME") {
                         throw org.gradle.api.GradleException(
-                            "Set $name in android/key.properties " +
+                            "Set ${entry.first} in android/key.properties " +
                                 "(template: android/key.properties.example)."
                         )
                     }
                 }
                 storeFile = resolved
                 storePassword = storePw
-                keyAlias = keyAliasValue
+                keyAlias = alias
                 keyPassword = keyPw
             }
         }
@@ -99,7 +108,10 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             } else {
                 // Fail fast: a debug-signed bundle is rejected by Google Play.
-                if (gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }) {
+                val buildingRelease = gradle.startParameter.taskNames.any {
+                    it.contains("Release", ignoreCase = true)
+                }
+                if (buildingRelease) {
                     throw org.gradle.api.GradleException(
                         "Missing android/key.properties — create your upload keystore first " +
                             "(see docs/PLAY_STORE_RELEASE_GUIDE.md section 1.2)."
