@@ -41,8 +41,8 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyB0EHs3fiytPSPrxAvlcfQ2BsZ4TSpRdRo',
-    appId: '1:21334425002:web:b411cc558fc7713e3d7fd3',
+    apiKey: 'AIzaSyB1lsBp_TPSLcDMWlz04uFjfy290D7wbjE',
+    appId: '1:21334425002:web:af194bdf5bdde47b3d7fd3',
     messagingSenderId: '21334425002',
     projectId: 'my-portfolio-78ae4',
     authDomain: 'my-portfolio-78ae4.firebaseapp.com',
@@ -51,27 +51,29 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD7J3Upm5hn2B6k8Hc81eyxX8RiAqv-TUo',
-    appId: '1:21334425002:android:1eac36ec61c5d4853d7fd3',
+    appId: '1:21334425002:android:1fea5f5c44eb60af3d7fd3',
     messagingSenderId: '21334425002',
     projectId: 'my-portfolio-78ae4',
     storageBucket: 'my-portfolio-78ae4.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyD057Z0e7AjMz37b3RmYxvi-98axJNSiSo',
     appId: '1:21334425002:ios:4127badf8b70b01f3d7fd3',
     messagingSenderId: '21334425002',
     projectId: 'my-portfolio-78ae4',
     storageBucket: 'my-portfolio-78ae4.firebasestorage.app',
+    androidClientId: '21334425002-sel00dimb9ck4l1le99v7oh9nok527j0.apps.googleusercontent.com',
+    iosClientId: '21334425002-gqjv2hsv0kabsjaoqctdo1ecdbpbeemk.apps.googleusercontent.com',
     iosBundleId: 'com.example.adShopPos',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyD057Z0e7AjMz37b3RmYxvi-98axJNSiSo',
     appId: '1:21334425002:ios:4127badf8b70b01f3d7fd3',
     messagingSenderId: '21334425002',
     projectId: 'my-portfolio-78ae4',
     storageBucket: 'my-portfolio-78ae4.firebasestorage.app',
+    androidClientId: '21334425002-sel00dimb9ck4l1le99v7oh9nok527j0.apps.googleusercontent.com',
+    iosClientId: '21334425002-gqjv2hsv0kabsjaoqctdo1ecdbpbeemk.apps.googleusercontent.com',
     iosBundleId: 'com.example.adShopPos',
   );
 

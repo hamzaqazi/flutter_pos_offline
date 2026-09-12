@@ -7,6 +7,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:21334425002:android:1fea5f5c44eb60af3d7fd3",
+        "android_client_info": {
+          "package_name": "com.codynest.pos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "21334425002-a7oubp20qt1kcpnlahmffrjrvfbm51v4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7J3Upm5hn2B6k8Hc81eyxX8RiAqv-TUo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "21334425002-a7oubp20qt1kcpnlahmffrjrvfbm51v4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "21334425002-gqjv2hsv0kabsjaoqctdo1ecdbpbeemk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.adShopPos"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:21334425002:android:1eac36ec61c5d4853d7fd3",
         "android_client_info": {
           "package_name": "com.example.ad_shop_pos"
@@ -37,6 +73,13 @@
             {
               "client_id": "21334425002-a7oubp20qt1kcpnlahmffrjrvfbm51v4.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "21334425002-gqjv2hsv0kabsjaoqctdo1ecdbpbeemk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.adShopPos"
+              }
             }
           ]
         }
@@ -66,6 +109,13 @@
             {
               "client_id": "21334425002-a7oubp20qt1kcpnlahmffrjrvfbm51v4.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "21334425002-gqjv2hsv0kabsjaoqctdo1ecdbpbeemk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.adShopPos"
+              }
             }
           ]
         }
