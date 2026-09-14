@@ -172,7 +172,7 @@ class DashboardPage extends GetView<DashboardController> {
     if (sales == 0 && revenue == 0) {
       return Card(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             children: [
               Icon(

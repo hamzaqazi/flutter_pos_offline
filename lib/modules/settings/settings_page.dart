@@ -213,7 +213,9 @@ class SettingsPage extends GetView<SettingsController> {
             subtitle: "How your shop data is stored & protected",
             color: AppColors.seed,
             onTap: () => Launcher.launch(
-              Uri.parse('https://codynest.com/privacy-policy'),
+              Uri.parse(
+                'https://www.freeprivacypolicy.com/live/5c721b8c-0bc4-4390-8c47-0fa555393b03',
+              ),
               mode: LaunchMode.externalApplication,
             ),
           ),

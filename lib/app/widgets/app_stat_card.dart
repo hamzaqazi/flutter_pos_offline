@@ -35,8 +35,8 @@ class AppStatCard extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
