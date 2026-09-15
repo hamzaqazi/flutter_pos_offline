@@ -117,6 +117,76 @@ class PremiumGateIcon extends StatelessWidget {
   }
 }
 
+/// Default locked feature card shown to free users.
+class _LockedFeature extends StatelessWidget {
+  const _LockedFeature({required this.feature});
+
+  final String feature;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.lock_outline, size: 48, color: cs.primary),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              feature,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'This feature is available on Premium plans.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: 220,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () => _showUpgradeSheet(context),
+                icon: const Icon(Icons.workspace_premium_outlined, size: 20),
+                label: const Text('Upgrade to Premium'),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextButton(
+              onPressed: () => _showUpgradeSheet(context, showKeyEntry: true),
+              child: Text(
+                'Already have a license key?',
+                style: TextStyle(
+                  color: cs.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Trial banner shown at the top of pages during the trial period.
 class _TrialBanner extends StatelessWidget {
   const _TrialBanner({required this.daysRemaining});
