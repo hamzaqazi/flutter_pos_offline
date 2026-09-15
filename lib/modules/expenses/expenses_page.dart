@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/expense_model.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
@@ -14,14 +15,17 @@ class ExpensesPage extends GetView<ExpensesController> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isPremium = LicenseService.isPremium;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Expenses")),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddExpenseDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text("Add expense"),
-      ),
+      floatingActionButton: isPremium
+          ? FloatingActionButton.extended(
+              onPressed: () => _showAddExpenseDialog(context),
+              icon: const Icon(Icons.add),
+              label: const Text("Add expense"),
+            )
+          : null,
       body: PremiumGate(
         feature: 'Expense Tracking',
         child: Obx(() {
