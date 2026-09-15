@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 /// Service for license key validation via Firebase Firestore.
@@ -17,6 +18,21 @@ import 'package:hive/hive.dart';
 /// Trial: 14-day free trial on first install, all premium features unlocked.
 class LicenseService {
   static final _box = Hive.box('settings');
+
+  // =================== Reactive State ===================
+
+  /// Bumped every time license/trial state changes (activation, expiry,
+  /// deactivation, trial start...). Because every getter below is static and
+  /// reads straight from Hive, the UI has no other way of knowing that
+  /// something changed — so any widget that renders license-dependent UI
+  /// (banners, plan tiles, premium gates) reads this inside an [Obx] and
+  /// therefore rebuilds automatically.
+  static final RxInt revision = 0.obs;
+
+  /// Call at the end of every method that mutates license or trial state.
+  static void _notifyChanged() {
+    revision.value++;
+  }
 
   // =================== Trial Constants ===================
 
@@ -81,6 +97,7 @@ class LicenseService {
   /// Clear the deactivation reason (after it's been shown).
   static void clearDeactivationReason() {
     _box.delete('license_deactivationReason');
+    _notifyChanged();
   }
 
   // =================== Plan & Premium ===================
@@ -196,11 +213,13 @@ class LicenseService {
     }
     // Register device in Firestore to block repeat trials on this device
     await registerTrialDevice(customerPhone: customerPhone);
+    _notifyChanged();
   }
 
   /// Mark the trial as expired (called when trial days run out).
   static void expireTrial() {
     _box.put('trial_expired', true);
+    _notifyChanged();
   }
 
   /// Check if trial has just expired (was active but now expired).
@@ -356,6 +375,7 @@ class LicenseService {
   static Future<void> markTrialAlreadyUsed() async {
     await _box.put('trial_startDate', DateTime(2020, 1, 1).toIso8601String());
     await _box.put('trial_expired', true);
+    _notifyChanged();
   }
 
   // =================== PIN Lock ===================
@@ -636,8 +656,9 @@ class LicenseService {
       // No internet — trust the saved activation (with offline grace)
       return isActivated;
     }
-  }
 
+    _notifyChanged();
+  }
   // =================== Save / Deactivate ===================
 
   /// Save activation details locally.
@@ -669,6 +690,8 @@ class LicenseService {
     // Remove this device from trial_devices Firestore
     // (it's now tracked under the license's registeredDevices)
     await _removeTrialDeviceRecord();
+
+    _notifyChanged();
   }
 
   /// Deactivate this device (local wipe).
@@ -691,6 +714,8 @@ class LicenseService {
     await _box.delete('license_pin');
     await _box.delete('license_pinEnabled');
     // Keep trial_startDate so we know trial was used — don't delete it
+
+    _notifyChanged();
   }
 
   /// Remove this device from Firestore trial_devices collection.

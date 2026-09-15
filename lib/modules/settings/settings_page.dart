@@ -2416,23 +2416,30 @@ class _PinLockSectionState extends State<_PinLockSection> {
           ),
         ],
         const SizedBox(height: AppSpacing.md),
-        // License & Plan info — tappable card
-        AppActionTile(
-          icon: LicenseService.isPremium
-              ? Icons.workspace_premium_outlined
-              : Icons.lock_outline,
-          color: LicenseService.isPremium ? AppColors.seed : AppColors.warning,
-          title: LicenseService.planDisplayWithEmoji,
-          subtitle: LicenseService.isTrialActive
-              ? '${LicenseService.trialDaysRemaining} days remaining'
-              : (LicenseService.isActivated &&
-                    LicenseService.shopName.isNotEmpty)
-              ? LicenseService.shopName
-              : LicenseService.isFreeTier
-              ? '${LicenseService.freeMaxProducts} products max'
-              : '',
-          onTap: () => Get.toNamed('/license'),
-        ),
+        // License & Plan info — tappable card.
+        // Obx: refreshes immediately after activation/deactivation instead
+        // of showing the stale "Free Plan" title until restart.
+        Obx(() {
+          LicenseService.revision.value;
+          return AppActionTile(
+            icon: LicenseService.isPremium
+                ? Icons.workspace_premium_outlined
+                : Icons.lock_outline,
+            color: LicenseService.isPremium
+                ? AppColors.seed
+                : AppColors.warning,
+            title: LicenseService.planDisplayWithEmoji,
+            subtitle: LicenseService.isTrialActive
+                ? '${LicenseService.trialDaysRemaining} days remaining'
+                : (LicenseService.isActivated &&
+                      LicenseService.shopName.isNotEmpty)
+                ? LicenseService.shopName
+                : LicenseService.isFreeTier
+                ? '${LicenseService.freeMaxProducts} products max'
+                : '',
+            onTap: () => Get.toNamed('/license'),
+          );
+        }),
       ],
     );
   }

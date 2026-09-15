@@ -41,24 +41,32 @@ class PremiumGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Premium or trial → show feature
-    if (LicenseService.isPremium) {
-      if (LicenseService.isTrialActive && showTrialBanner) {
-        return Column(
-          children: [
-            _TrialBanner(daysRemaining: LicenseService.trialDaysRemaining),
-            Expanded(child: child),
-          ],
-        );
-      }
-      return child;
-    }
+    // Wrapped in Obx so the gate re-evaluates the moment a license is
+    // activated or expires — otherwise the user keeps seeing the locked
+    // state (or the trial banner) until the app is restarted.
+    return Obx(() {
+      // Reading the revision registers the reactive dependency.
+      LicenseService.revision.value;
 
-    // Free tier → show locked state
-    if (lockedBuilder != null) {
-      return lockedBuilder!(context, feature);
-    }
-    return _LockedFeature(feature: feature);
+      // Premium or trial → show feature
+      if (LicenseService.isPremium) {
+        if (LicenseService.isTrialActive && showTrialBanner) {
+          return Column(
+            children: [
+              _TrialBanner(daysRemaining: LicenseService.trialDaysRemaining),
+              Expanded(child: child),
+            ],
+          );
+        }
+        return child;
+      }
+
+      // Free tier → show locked state
+      if (lockedBuilder != null) {
+        return lockedBuilder!(context, feature);
+      }
+      return _LockedFeature(feature: feature);
+    });
   }
 }
 
@@ -78,99 +86,34 @@ class PremiumGateIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (LicenseService.isPremium) return child;
+    return Obx(() {
+      // Rebuild when license state changes (activation / expiry).
+      LicenseService.revision.value;
 
-    return GestureDetector(
-      onTap: onLocked ?? () => _showUpgradeSheet(context),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          child,
-          Positioned(
-            top: -4,
-            right: -4,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: AppColors.warning,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.lock, size: 10, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+      if (LicenseService.isPremium) return child;
 
-/// Default locked feature card shown to free users.
-class _LockedFeature extends StatelessWidget {
-  const _LockedFeature({required this.feature});
-
-  final String feature;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      return GestureDetector(
+        onTap: onLocked ?? () => _showUpgradeSheet(context),
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.lock_outline, size: 48, color: cs.primary),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              feature,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'This feature is available on Premium plans.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            SizedBox(
-              width: 220,
-              height: 48,
-              child: FilledButton.icon(
-                onPressed: () => _showUpgradeSheet(context),
-                icon: const Icon(Icons.workspace_premium_outlined, size: 20),
-                label: const Text('Upgrade to Premium'),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TextButton(
-              onPressed: () => _showUpgradeSheet(context, showKeyEntry: true),
-              child: Text(
-                'Already have a license key?',
-                style: TextStyle(
-                  color: cs.primary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+            child,
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: AppColors.warning,
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.lock, size: 10, color: Colors.white),
               ),
             ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 }
 

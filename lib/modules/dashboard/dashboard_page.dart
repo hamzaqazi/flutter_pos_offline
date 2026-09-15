@@ -45,7 +45,12 @@ class DashboardPage extends GetView<DashboardController> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // ── Banners ──
-                    _buildBanners(context),
+                    // Obx: license banners must refresh right after the user
+                    // activates a license (trial → paid) without a restart.
+                    Obx(() {
+                      LicenseService.revision.value;
+                      return _buildBanners(context);
+                    }),
 
                     // ── Today's Summary ──
                     AppSectionHeader(

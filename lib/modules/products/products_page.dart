@@ -24,13 +24,13 @@ class ProductsPage extends GetView<ProductsController> {
 
     return Scaffold(
       appBar: AppShellAppBar(
-        title: Builder(
-          builder: (_) {
-            if (LicenseService.isPremium) return const Text("Products");
-            final count = controller.products.length;
-            return Text("Products ($count/${LicenseService.freeMaxProducts})");
-          },
-        ),
+        title: Obx(() {
+          // Rebuild the product cap counter when the plan changes.
+          LicenseService.revision.value;
+          if (LicenseService.isPremium) return const Text("Products");
+          final count = controller.products.length;
+          return Text("Products ($count/${LicenseService.freeMaxProducts})");
+        }),
         actions: [
           // Barcode scanner button
           IconButton(

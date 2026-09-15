@@ -16,44 +16,49 @@ class LicensePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('License & Subscription')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ── Plan Header Card ──
-            _PlanHeader(),
-            const SizedBox(height: AppSpacing.xxl),
+      body: Obx(() {
+        // Rebuild the whole page when license state changes so activating or
+        // deactivating here reflects instantly.
+        LicenseService.revision.value;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ── Plan Header Card ──
+              _PlanHeader(),
+              const SizedBox(height: AppSpacing.xxl),
 
-            // ── License Details ──
-            AppSectionHeader(
-              title: 'License Details',
-              subtitle: 'Your current license information',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _DetailsCard(),
-            const SizedBox(height: AppSpacing.xxl),
+              // ── License Details ──
+              AppSectionHeader(
+                title: 'License Details',
+                subtitle: 'Your current license information',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _DetailsCard(),
+              const SizedBox(height: AppSpacing.xxl),
 
-            // ── Available Plans ──
-            AppSectionHeader(
-              title: 'Available Plans',
-              subtitle: 'Upgrade to unlock all features',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _PlanComparisonCards(),
-            const SizedBox(height: AppSpacing.xxl),
+              // ── Available Plans ──
+              AppSectionHeader(
+                title: 'Available Plans',
+                subtitle: 'Upgrade to unlock all features',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _PlanComparisonCards(),
+              const SizedBox(height: AppSpacing.xxl),
 
-            // ── Actions ──
-            if (LicenseService.isActivated) _DeactivateButton(),
-            if (!LicenseService.isPaidPlan) _UpgradeSection(),
-            const SizedBox(height: AppSpacing.xxl),
+              // ── Actions ──
+              if (LicenseService.isActivated) _DeactivateButton(),
+              if (!LicenseService.isPaidPlan) _UpgradeSection(),
+              const SizedBox(height: AppSpacing.xxl),
 
-            // ── Support ──
-            _SupportCard(),
-            const SizedBox(height: AppSpacing.huge),
-          ],
-        ),
-      ),
+              // ── Support ──
+              _SupportCard(),
+              const SizedBox(height: AppSpacing.huge),
+            ],
+          ),
+        );
+      }),
     );
   }
 }
