@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
 import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
 import 'package:ad_shop_pos/data/services/export_service.dart';
+import 'package:ad_shop_pos/data/services/app_signature.dart';
 import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
@@ -2720,6 +2721,23 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
   static const _driveGreen = AppColors.seed;
   bool _busy = false;
 
+  /// SHA-1 the *installed* build is signed with. Shown next to any Google
+  /// error so it can be compared with the fingerprints registered in
+  /// Firebase / the Google Cloud OAuth client.
+  String? _signingSha1;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSignature();
+  }
+
+  Future<void> _loadSignature() async {
+    final sha1 = await AppSignature.sha1;
+    if (!mounted || sha1 == null) return;
+    setState(() => _signingSha1 = sha1);
+  }
+
   Future<void> _signIn() async {
     setState(() => _busy = true);
     final ok = await GoogleDriveService.signIn();
@@ -2854,6 +2872,30 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
                     color: AppColors.danger,
                   ),
                 ),
+                if (_signingSha1 != null) ...[
+                  const SizedBox(height: 6),
+                  SelectableText(
+                    'This build is signed with SHA-1:',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  SelectableText(
+                    _signingSha1!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Register exactly this fingerprint on the Android app '
+                    'in Firebase, then re-download google-services.json.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
