@@ -77,8 +77,13 @@ then re-download `google-services.json` into `android/app/`:
 | Key | Where to find the SHA-1 |
 |---|---|
 | Debug | `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android` |
-| Upload (your `codynest-upload.jks`) | `keytool -list -v -keystore ~/codynest-upload.jks -alias upload` |
+| Upload (your `codynest-upload.jks`) | `keytool -list -v -keystore ~/codynest-upload.jks -alias upload` — also shown in-app by `flutter run --release` |
 | **Play App Signing** | Play Console → *Codynest POS* → Setup → App integrity → App signing key certificate → **SHA-1** |
+
+All three are different keys. A local `flutter run --release` is signed with the
+**upload** key, so its sign-in failure says nothing about the Play build — and
+it will keep failing until the upload key's SHA-1 is registered too. Register
+all three so every build flavour can sign in.
 
 Check what's currently registered:
 
