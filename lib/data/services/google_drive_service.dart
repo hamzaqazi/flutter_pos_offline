@@ -64,6 +64,19 @@ class GoogleDriveService {
   static bool _initialized = false;
   static GoogleSignInAccount? _account;
 
+  /// Description of the last sign-in / Drive error (e.g. "providerError:
+  /// ApiException: 10"). Shown in Settings so release-build problems
+  /// (usually a missing SHA-1 fingerprint) can be diagnosed on-device
+  /// without attaching a debugger. Empty when there is no error.
+  static String lastErrorMessage = '';
+
+  static void _recordError(Object e) {
+    lastErrorMessage = e is GoogleSignInException
+        ? '${e.code.name}${e.description == null ? '' : ' — ${e.description}'}'
+        : e.toString();
+    debugPrint('⚠️ GoogleDrive error: $lastErrorMessage');
+  }
+
   // ─── State getters ───────────────────────────────────────────
 
   /// Whether the user opted in to also upload auto-backups to Drive.
@@ -142,7 +155,7 @@ class GoogleDriveService {
       // Silently restore the previous session (fires a sign-in event on success).
       await GoogleSignIn.instance.attemptLightweightAuthentication();
     } catch (e) {
-      debugPrint('⚠️ GoogleDrive init failed: $e');
+      _recordError(e);
     }
   }
 
@@ -159,6 +172,7 @@ class GoogleDriveService {
       );
       _account = account;
       _persistAccount(account);
+      lastErrorMessage = '';
       // Ensure Drive scope is granted up front.
       final headers = await account.authorizationClient.authorizationHeaders(
         const [_driveScope],
@@ -170,10 +184,10 @@ class GoogleDriveService {
       }
       return true;
     } on GoogleSignInException catch (e) {
-      debugPrint('⚠️ GoogleDrive sign-in error: ${e.code} ${e.description}');
+      _recordError(e);
       return false;
     } catch (e) {
-      debugPrint('⚠️ GoogleDrive sign-in error: $e');
+      _recordError(e);
       return false;
     }
   }

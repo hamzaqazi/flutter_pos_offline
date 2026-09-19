@@ -2735,14 +2735,17 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
         colorText: _driveGreen,
       );
     } else {
+      final detail = GoogleDriveService.lastErrorMessage;
       Get.snackbar(
         'Sign-in failed',
-        'Could not connect to Google Drive. Make sure Drive access is '
-            'configured and try again.',
+        detail.isEmpty
+            ? 'Could not connect to Google Drive. Make sure Drive access is '
+                'configured and try again.'
+            : 'Google Drive sign-in failed: $detail',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppColors.danger.withValues(alpha: 0.15),
         colorText: AppColors.danger,
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 8),
       );
     }
   }
@@ -2811,6 +2814,50 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
             color: cs.onSurfaceVariant,
           ),
         ),
+        // Surface the real Google error so release-build problems (most
+        // often a missing Play App Signing SHA-1) can be read straight off
+        // the device instead of from logcat.
+        if (GoogleDriveService.lastErrorMessage.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 16,
+                      color: AppColors.danger,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Last error',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: AppColors.danger,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                SelectableText(
+                  GoogleDriveService.lastErrorMessage,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.danger,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: AppSpacing.md),
 
         if (!signedIn) ...[
