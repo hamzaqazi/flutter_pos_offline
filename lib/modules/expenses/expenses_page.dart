@@ -15,17 +15,20 @@ class ExpensesPage extends GetView<ExpensesController> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isPremium = LicenseService.isPremium;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Expenses")),
-      floatingActionButton: isPremium
-          ? FloatingActionButton.extended(
-              onPressed: () => _showAddExpenseDialog(context),
-              icon: const Icon(Icons.add),
-              label: const Text("Add expense"),
-            )
-          : null,
+      // Obx: the FAB has to appear the moment a license is activated,
+      // without waiting for the page to be rebuilt (tab switch / restart).
+      floatingActionButton: Obx(() {
+        LicenseService.revision.value;
+        if (!LicenseService.isPremium) return const SizedBox.shrink();
+        return FloatingActionButton.extended(
+          onPressed: () => _showAddExpenseDialog(context),
+          icon: const Icon(Icons.add),
+          label: const Text("Add expense"),
+        );
+      }),
       body: PremiumGate(
         feature: 'Expense Tracking',
         child: Obx(() {
