@@ -7,6 +7,8 @@ import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/app/shell/shell_controller.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
+import 'package:ad_shop_pos/data/services/google_drive_service.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
@@ -24,7 +26,10 @@ class DashboardPage extends GetView<DashboardController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: const AppShellAppBar(title: Text('Dashboard')),
+      appBar: const AppShellAppBar(
+        title: Text('Dashboard'),
+        actions: [_AutoBackupAppBarAction()],
+      ),
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -454,6 +459,247 @@ class DashboardPage extends GetView<DashboardController> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => _TrialUpgradeSheet(),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUTO BACKUP SHORTCUT — app bar button + status sheet
+// ═══════════════════════════════════════════════════════════════
+
+/// Trailing app-bar button that only appears while auto backup is switched
+/// on. Tapping it opens [_AutoBackupSheet] with the current status and a
+/// "Back up now" action.
+class _AutoBackupAppBarAction extends StatelessWidget {
+  const _AutoBackupAppBarAction();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      // Rebuild when auto backup is toggled / a backup completes.
+      AutoBackupService.revision.value;
+
+      if (!AutoBackupService.isEnabled) return const SizedBox.shrink();
+
+      return IconButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (_) => const _AutoBackupSheet(),
+          );
+        },
+        icon: const Icon(Icons.backup_outlined),
+        tooltip: 'Auto backup is on',
+      );
+    });
+  }
+}
+
+/// Status sheet: what auto backup is doing right now + a manual trigger.
+class _AutoBackupSheet extends StatefulWidget {
+  const _AutoBackupSheet();
+
+  @override
+  State<_AutoBackupSheet> createState() => _AutoBackupSheetState();
+}
+
+class _AutoBackupSheetState extends State<_AutoBackupSheet> {
+  bool _busy = false;
+
+  Future<void> _backupNow() async {
+    setState(() => _busy = true);
+    final success = await AutoBackupService.backupNow();
+    if (!mounted) return;
+    setState(() => _busy = false);
+
+    Get.snackbar(
+      success ? 'Backup complete' : 'Backup failed',
+      success
+          ? 'Saved to this device'
+          : 'Could not create the backup. Please try again.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: (success ? AppColors.success : AppColors.danger)
+          .withValues(alpha: 0.15),
+      colorText: success ? AppColors.success : AppColors.danger,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.xl,
+        right: AppSpacing.xl,
+        top: AppSpacing.xl,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
+      ),
+      child: Obx(() {
+        // Keeps the sheet in sync while it is open.
+        AutoBackupService.revision.value;
+
+        final frequency = switch (AutoBackupService.frequency) {
+          'weekly' => 'Every week',
+          'manual' => 'Manual only',
+          _ => 'Every day',
+        };
+        final driveOn =
+            GoogleDriveService.isEnabled && GoogleDriveService.isSignedIn;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            Icon(Icons.backup_outlined, size: 40, color: cs.primary),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Auto backup is on',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              AutoBackupService.frequency == 'manual'
+                  ? 'Scheduling is set to manual — run a backup whenever you like.'
+                  : 'Your data is being saved automatically. '
+                      'You can also run a backup right now.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Status rows
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Column(
+                children: [
+                  _BackupInfoRow(
+                    icon: Icons.schedule_outlined,
+                    label: 'Schedule',
+                    value: frequency,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _BackupInfoRow(
+                    icon: Icons.history_toggle_off_outlined,
+                    label: 'Last backup',
+                    value: AutoBackupService.lastBackupAgo,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _BackupInfoRow(
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Backups kept',
+                    value: '${AutoBackupService.keepLast} latest',
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _BackupInfoRow(
+                    icon: Icons.cloud_outlined,
+                    label: 'Google Drive',
+                    value: driveOn ? 'Also uploading' : 'Off',
+                    valueColor: driveOn ? AppColors.success : null,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Primary action
+            SizedBox(
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: _busy ? null : _backupNow,
+                icon: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.backup_outlined, size: 20),
+                label: Text(_busy ? 'Backing up…' : 'Back up now'),
+                style: FilledButton.styleFrom(backgroundColor: cs.primary),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ShellController.to.goSettings();
+              },
+              icon: const Icon(Icons.settings_outlined, size: 18),
+              label: const Text('Manage backup settings'),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+}
+
+/// Label/value row used by [_AutoBackupSheet].
+class _BackupInfoRow extends StatelessWidget {
+  const _BackupInfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: cs.onSurfaceVariant),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: valueColor ?? cs.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }

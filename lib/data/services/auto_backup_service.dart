@@ -37,6 +37,15 @@ class AutoBackupService {
 
   static final _settingsBox = Hive.box(_box);
 
+  // ─── Reactive State ──────────────────────────────────────────
+
+  /// Bumped whenever auto-backup settings or the last backup time change, so
+  /// widgets outside the Settings page (e.g. the Dashboard app-bar shortcut)
+  /// can react with Obx instead of showing a stale value.
+  static final RxInt revision = 0.obs;
+
+  static void _notifyChanged() => revision.value++;
+
   // ─── Settings Getters ────────────────────────────────────────
 
   /// Whether auto backup is enabled.
@@ -86,6 +95,7 @@ class AutoBackupService {
     } else {
       await cancelAutoBackup();
     }
+    _notifyChanged();
   }
 
   static Future<void> setFrequency(String freq) async {
@@ -93,11 +103,13 @@ class AutoBackupService {
     if (isEnabled) {
       await scheduleAutoBackup();
     }
+    _notifyChanged();
   }
 
   static Future<void> setMaxBackups(int count) async {
     await _settingsBox.put(_keyMaxBackups, count);
     await _settingsBox.put(_keyKeepLast, count);
+    _notifyChanged();
   }
 
   // ─── Scheduling ──────────────────────────────────────────────
@@ -221,6 +233,7 @@ class AutoBackupService {
 
       // Update last backup time
       await _settingsBox.put(_keyLastBackup, DateTime.now().toIso8601String());
+      _notifyChanged();
 
       // Prune old backups
       await _pruneOldBackups(backupDir);
