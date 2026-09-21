@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
@@ -141,6 +142,7 @@ class ImportService {
       returnCount: (data['returns'] as List?)?.length ?? 0,
       customerCount: (data['customers'] as List?)?.length ?? 0,
       staffCount: (data['staff'] as List?)?.length ?? 0,
+      categoryCount: (data['categories'] as List?)?.length ?? 0,
       hasSettings: data.containsKey('settings'),
     );
   }
@@ -236,10 +238,23 @@ class ImportService {
         );
       }
 
-      // Import categories
-      if (data['categories'] != null) {
-        final catBox = Hive.box('categories');
-        catBox.put('items', data['categories']);
+      // Import categories — normalise each entry so Hive stores plain maps
+      // (JSON decoding produces _Map<String, dynamic>, which CategoryModel
+      // reads back fine, but explicit conversion keeps the box consistent).
+      final categories = (data['categories'] as List?) ?? [];
+      final catBox = Hive.box('categories');
+      if (categories.isEmpty) {
+        // Old backup without categories: drop whatever is in the box so
+        // CategoryController re-seeds its defaults on reload instead of
+        // keeping categories that weren't part of the backup.
+        await catBox.delete('items');
+      } else {
+        await catBox.put(
+          'items',
+          categories
+              .map((c) => Map<String, dynamic>.from(c as Map))
+              .toList(),
+        );
       }
 
       // Import last invoice number
@@ -336,6 +351,7 @@ class ImportService {
     await HiveService.returnsBox.clear();
     await HiveService.customersBox.clear();
     await HiveService.staffBox.clear();
+    await Hive.box('categories').clear();
     await settingsBox.clear();
 
     // Restore preserved license + auto-backup data
@@ -367,6 +383,9 @@ class ImportService {
     try {
       Get.find<SettingsController>().loadSettings();
     } catch (_) {}
+    try {
+      Get.find<CategoryController>().loadCategories();
+    } catch (_) {}
   }
 }
 
@@ -380,6 +399,7 @@ class BackupSummary {
   final int returnCount;
   final int customerCount;
   final int staffCount;
+  final int categoryCount;
   final bool hasSettings;
 
   BackupSummary({
@@ -391,6 +411,7 @@ class BackupSummary {
     required this.returnCount,
     required this.customerCount,
     required this.staffCount,
+    required this.categoryCount,
     required this.hasSettings,
   });
 
@@ -399,6 +420,7 @@ class BackupSummary {
       saleCount +
       expenseCount +
       returnCount +
+      categoryCount +
       customerCount +
       staffCount;
 

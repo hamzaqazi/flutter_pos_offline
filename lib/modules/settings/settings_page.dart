@@ -2170,6 +2170,12 @@ class _ImportConfirmDialog extends StatelessWidget {
                     label: "Staff",
                     value: "${summary.staffCount}",
                   ),
+                if (summary.categoryCount > 0)
+                  _SummaryRow(
+                    icon: Icons.category_outlined,
+                    label: "Categories",
+                    value: "${summary.categoryCount}",
+                  ),
                 if (summary.hasSettings)
                   _SummaryRow(
                     icon: Icons.settings_outlined,

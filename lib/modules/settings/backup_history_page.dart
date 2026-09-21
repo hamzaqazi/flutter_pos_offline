@@ -140,6 +140,7 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
                   ('Returns', summary.returnCount),
                   ('Customers', summary.customerCount),
                   ('Staff', summary.staffCount),
+                  ('Categories', summary.categoryCount),
                 ]
                 .where((e) => e.$2 > 0)
                 .map(

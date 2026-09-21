@@ -161,6 +161,7 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
                   ('Returns', summary.returnCount),
                   ('Customers', summary.customerCount),
                   ('Staff', summary.staffCount),
+                  ('Categories', summary.categoryCount),
                 ]
                 .where((e) => e.$2 > 0)
                 .map(
