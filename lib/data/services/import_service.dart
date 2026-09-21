@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
@@ -56,11 +57,22 @@ class ImportService {
   static Future<Map<String, dynamic>?> pickBackupFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
+        type: FileType.any,
+        // allowedExtensions: ['json'],
         withData: true,
         dialogTitle: 'Select Backup File',
       );
+
+      // if not a json file, show error and return null
+      if (result != null && result.files.single.extension != 'json') {
+        Get.snackbar(
+          "Invalid file",
+          backgroundColor: AppColors.danger.withOpacity(0.3),
+          "Please select a valid JSON backup file.",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return null;
+      }
 
       if (result == null || result.files.isEmpty) {
         return null;

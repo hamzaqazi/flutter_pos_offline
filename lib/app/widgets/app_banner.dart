@@ -29,15 +29,14 @@ class AppBanner extends StatelessWidget {
     String? subtitle,
     String? actionLabel,
     VoidCallback? onAction,
-  }) =>
-      AppBanner(
-        title: title,
-        subtitle: subtitle,
-        type: AppBannerType.trial,
-        icon: Icons.celebration_outlined,
-        actionLabel: actionLabel,
-        onAction: onAction,
-      );
+  }) => AppBanner(
+    title: title,
+    subtitle: subtitle,
+    type: AppBannerType.trial,
+    icon: Icons.celebration_outlined,
+    actionLabel: actionLabel,
+    onAction: onAction,
+  );
 
   factory AppBanner.warning({
     required String title,
@@ -45,15 +44,14 @@ class AppBanner extends StatelessWidget {
     IconData? icon,
     String? actionLabel,
     VoidCallback? onAction,
-  }) =>
-      AppBanner(
-        title: title,
-        subtitle: subtitle,
-        type: AppBannerType.warning,
-        icon: icon ?? Icons.warning_amber_rounded,
-        actionLabel: actionLabel,
-        onAction: onAction,
-      );
+  }) => AppBanner(
+    title: title,
+    subtitle: subtitle,
+    type: AppBannerType.warning,
+    icon: icon ?? Icons.warning_amber_rounded,
+    actionLabel: actionLabel,
+    onAction: onAction,
+  );
 
   factory AppBanner.danger({
     required String title,
@@ -61,27 +59,25 @@ class AppBanner extends StatelessWidget {
     IconData? icon,
     String? actionLabel,
     VoidCallback? onAction,
-  }) =>
-      AppBanner(
-        title: title,
-        subtitle: subtitle,
-        type: AppBannerType.danger,
-        icon: icon ?? Icons.error_outline_rounded,
-        actionLabel: actionLabel,
-        onAction: onAction,
-      );
+  }) => AppBanner(
+    title: title,
+    subtitle: subtitle,
+    type: AppBannerType.danger,
+    icon: icon ?? Icons.error_outline_rounded,
+    actionLabel: actionLabel,
+    onAction: onAction,
+  );
 
   factory AppBanner.success({
     required String title,
     String? subtitle,
     IconData? icon,
-  }) =>
-      AppBanner(
-        title: title,
-        subtitle: subtitle,
-        type: AppBannerType.success,
-        icon: icon ?? Icons.check_circle_outline_rounded,
-      );
+  }) => AppBanner(
+    title: title,
+    subtitle: subtitle,
+    type: AppBannerType.success,
+    icon: icon ?? Icons.check_circle_outline_rounded,
+  );
 
   factory AppBanner.info({
     required String title,
@@ -89,15 +85,14 @@ class AppBanner extends StatelessWidget {
     IconData? icon,
     String? actionLabel,
     VoidCallback? onAction,
-  }) =>
-      AppBanner(
-        title: title,
-        subtitle: subtitle,
-        type: AppBannerType.info,
-        icon: icon ?? Icons.info_outline_rounded,
-        actionLabel: actionLabel,
-        onAction: onAction,
-      );
+  }) => AppBanner(
+    title: title,
+    subtitle: subtitle,
+    type: AppBannerType.info,
+    icon: icon ?? Icons.info_outline_rounded,
+    actionLabel: actionLabel,
+    onAction: onAction,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +102,7 @@ class AppBanner extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       margin: margin ?? const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: bgColor,
@@ -153,11 +148,16 @@ class AppBanner extends StatelessWidget {
                 onPressed: onAction,
                 style: FilledButton.styleFrom(
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
                 ),
                 child: Text(
                   actionLabel!,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),

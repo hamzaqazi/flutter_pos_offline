@@ -22,6 +22,9 @@ class CustomersPage extends GetView<CustomersController> {
         onPressed: () => _showAddEditDialog(context),
         icon: const Icon(Icons.person_add_outlined),
         label: const Text("Add Customer"),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.huge),
+        ),
       ),
       body: Column(
         children: [
@@ -109,8 +112,9 @@ class CustomersPage extends GetView<CustomersController> {
     final nameController = TextEditingController(text: existing?.name ?? '');
     final phoneController = TextEditingController(text: existing?.phone ?? '');
     final emailController = TextEditingController(text: existing?.email ?? '');
-    final addressController =
-        TextEditingController(text: existing?.address ?? '');
+    final addressController = TextEditingController(
+      text: existing?.address ?? '',
+    );
 
     Get.dialog(
       Dialog(
@@ -129,11 +133,14 @@ class CustomersPage extends GetView<CustomersController> {
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: AppColors.seed.withValues(alpha: 0.12),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       child: Icon(
-                        isEdit ? Icons.edit_outlined : Icons.person_add_outlined,
+                        isEdit
+                            ? Icons.edit_outlined
+                            : Icons.person_add_outlined,
                         color: AppColors.seed,
                       ),
                     ),
@@ -303,8 +310,11 @@ class _CustomerTile extends StatelessWidget {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.phone_outlined,
-                                  size: 12, color: cs.onSurfaceVariant),
+                              Icon(
+                                Icons.phone_outlined,
+                                size: 12,
+                                color: cs.onSurfaceVariant,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 customer.phone,
@@ -318,8 +328,11 @@ class _CustomerTile extends StatelessWidget {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.email_outlined,
-                                  size: 12, color: cs.onSurfaceVariant),
+                              Icon(
+                                Icons.email_outlined,
+                                size: 12,
+                                color: cs.onSurfaceVariant,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 customer.email,
@@ -334,11 +347,7 @@ class _CustomerTile extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: cs.onSurfaceVariant,
-                size: 20,
-              ),
+              Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 20),
             ],
           ),
         ),
@@ -355,8 +364,7 @@ class _CustomerTile extends StatelessWidget {
     final customerSales = salesController.sales
         .where((s) => s.customerId == customer.id)
         .toList();
-    final totalSpent =
-        customerSales.fold<double>(0, (sum, s) => sum + s.total);
+    final totalSpent = customerSales.fold<double>(0, (sum, s) => sum + s.total);
 
     Get.bottomSheet(
       Container(
@@ -438,7 +446,10 @@ class _CustomerTile extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
               ],
               if (customer.hasAddress) ...[
-                _InfoRow(icon: Icons.location_on_outlined, text: customer.address),
+                _InfoRow(
+                  icon: Icons.location_on_outlined,
+                  text: customer.address,
+                ),
                 const SizedBox(height: AppSpacing.sm),
               ],
               _InfoRow(
@@ -520,12 +531,19 @@ class _CustomerTile extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _confirmDelete(context, controller),
-                      icon: Icon(Icons.delete_outline,
-                          size: 18, color: AppColors.danger),
-                      label: Text("Delete",
-                          style: TextStyle(color: AppColors.danger)),
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: 18,
+                        color: AppColors.danger,
+                      ),
+                      label: Text(
+                        "Delete",
+                        style: TextStyle(color: AppColors.danger),
+                      ),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppColors.danger.withValues(alpha: 0.4)),
+                        side: BorderSide(
+                          color: AppColors.danger.withValues(alpha: 0.4),
+                        ),
                       ),
                     ),
                   ),
@@ -562,13 +580,20 @@ class _CustomerTile extends StatelessWidget {
                       padding: const EdgeInsets.all(AppSpacing.sm),
                       decoration: BoxDecoration(
                         color: AppColors.seed.withValues(alpha: 0.12),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
-                      child: const Icon(Icons.edit_outlined, color: AppColors.seed),
+                      child: const Icon(
+                        Icons.edit_outlined,
+                        color: AppColors.seed,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    Text("Edit Customer", style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      "Edit Customer",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -623,8 +648,11 @@ class _CustomerTile extends StatelessWidget {
                       child: FilledButton(
                         onPressed: () {
                           if (nameController.text.trim().isEmpty) {
-                            Get.snackbar("Missing info", "Customer name is required",
-                                snackPosition: SnackPosition.BOTTOM);
+                            Get.snackbar(
+                              "Missing info",
+                              "Customer name is required",
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
                             return;
                           }
                           controller.updateCustomer(
@@ -715,7 +743,9 @@ class _EmptyCustomers extends StatelessWidget {
     return AppEmptyState(
       icon: hasCustomers ? Icons.search_off : Icons.people_outline,
       title: hasCustomers ? 'No matching customers' : 'No customers yet',
-      subtitle: hasCustomers ? 'Try a different search' : 'Add customers to track their purchases',
+      subtitle: hasCustomers
+          ? 'Try a different search'
+          : 'Add customers to track their purchases',
     );
   }
 }

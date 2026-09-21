@@ -917,14 +917,17 @@ class _TaxFormState extends State<_TaxForm> {
 
     return Column(
       children: [
-        TextField(
-          controller: _taxRateController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: "Tax rate",
-            prefixIcon: Icon(Icons.percent_outlined),
-            suffixText: "%",
-            hintText: "e.g. 16 for 16% VAT",
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: TextField(
+            controller: _taxRateController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: "Tax rate",
+              prefixIcon: Icon(Icons.percent_outlined),
+              suffixText: "%",
+              hintText: "e.g. 16 for 16% VAT",
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -2758,7 +2761,7 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
         'Sign-in failed',
         detail.isEmpty
             ? 'Could not connect to Google Drive. Make sure Drive access is '
-                'configured and try again.'
+                  'configured and try again.'
             : 'Google Drive sign-in failed: $detail',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: AppColors.danger.withValues(alpha: 0.15),
@@ -2843,7 +2846,9 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
             decoration: BoxDecoration(
               color: AppColors.danger.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppColors.danger.withValues(alpha: 0.3),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

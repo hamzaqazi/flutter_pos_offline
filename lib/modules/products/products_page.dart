@@ -91,107 +91,106 @@ class ProductsPage extends GetView<ProductsController> {
           onPressed: () => _showAddProductDialog(context),
           icon: const Icon(Icons.add),
           label: const Text("Add product"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.huge),
+          ),
         ),
       ),
       body: Column(
-          children: [
-            // ---------- Search with SKU scan icon ----------
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.sm,
-                AppSpacing.lg,
-                AppSpacing.sm,
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: "Search by name, brand, SKU or barcode...",
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: Obx(() {
-                    final query = controller.searchQuery.value;
-                    if (query.isEmpty) return const SizedBox.shrink();
-                    return IconButton(
-                      icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () => controller.searchQuery.value = '',
-                    );
-                  }),
-                ),
-                onChanged: (value) => controller.searchQuery.value = value,
-              ),
+        children: [
+          // ---------- Search with SKU scan icon ----------
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              AppSpacing.sm,
             ),
-
-            // ---------- Category filter ----------
-            SizedBox(
-              height: 44,
-              child: Obx(() {
-                final cats = [
-                  'All',
-                  ...Get.find<CategoryController>().categoryNames,
-                ];
-                return ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
-                  itemCount: cats.length,
-                  separatorBuilder: (_, __) =>
-                      const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (_, i) => _categoryChip(cats[i], cs),
-                );
-              }),
-            ),
-
-            // ---------- Grid ----------
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: controller.refreshProducts,
-                color: cs.primary,
-                child: Obx(() {
-                  final items = controller.filteredProducts;
-                  if (items.isEmpty) {
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
-                            ),
-                            child: Center(
-                              child: _EmptyState(
-                                hasProducts: controller.products.isNotEmpty,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }
-                  return GridView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.lg,
-                      AppSpacing.lg,
-                      // Floating nav clearance + room for the FAB above it
-                      AppSpacing.navClearance + AppSpacing.huge,
-                    ),
-                    itemCount: items.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.65,
-                      crossAxisSpacing: AppSpacing.md,
-                      mainAxisSpacing: AppSpacing.md,
-                    ),
-                    itemBuilder: (_, index) =>
-                        ProductCard(product: items[index]),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Search by name, brand, SKU or barcode...",
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: Obx(() {
+                  final query = controller.searchQuery.value;
+                  if (query.isEmpty) return const SizedBox.shrink();
+                  return IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    onPressed: () => controller.searchQuery.value = '',
                   );
                 }),
               ),
+              onChanged: (value) => controller.searchQuery.value = value,
             ),
-          ],
-        ),
+          ),
+
+          // ---------- Category filter ----------
+          SizedBox(
+            height: 44,
+            child: Obx(() {
+              final cats = [
+                'All',
+                ...Get.find<CategoryController>().categoryNames,
+              ];
+              return ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                itemCount: cats.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: AppSpacing.sm),
+                itemBuilder: (_, i) => _categoryChip(cats[i], cs),
+              );
+            }),
+          ),
+
+          // ---------- Grid ----------
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: controller.refreshProducts,
+              color: cs.primary,
+              child: Obx(() {
+                final items = controller.filteredProducts;
+                if (items.isEmpty) {
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Center(
+                            child: _EmptyState(
+                              hasProducts: controller.products.isNotEmpty,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+                return GridView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    // Floating nav clearance + room for the FAB above it
+                    AppSpacing.navClearance + AppSpacing.huge,
+                  ),
+                  itemCount: items.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.65,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                  ),
+                  itemBuilder: (_, index) => ProductCard(product: items[index]),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

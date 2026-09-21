@@ -27,6 +27,9 @@ class ExpensesPage extends GetView<ExpensesController> {
           onPressed: () => _showAddExpenseDialog(context),
           icon: const Icon(Icons.add),
           label: const Text("Add expense"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.huge),
+          ),
         );
       }),
       body: PremiumGate(

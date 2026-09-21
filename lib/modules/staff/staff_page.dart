@@ -22,6 +22,9 @@ class StaffPage extends GetView<StaffController> {
         onPressed: () => _showAddEditDialog(controller),
         icon: const Icon(Icons.person_add_outlined),
         label: const Text("Add Staff"),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.huge),
+        ),
       ),
       body: Column(
         children: [
