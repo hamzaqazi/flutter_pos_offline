@@ -93,6 +93,39 @@ python3 -c "import json;d=json.load(open('android/app/google-services.json'));\
  [o.get('android_info',{}).get('certificate_hash') for o in c.get('oauth_client',[])]) for c in d['client']]"
 ```
 
+### ⚠️ Quantum-ready app signing (Play's hidden fourth certificate)
+
+If Play Console labels your app signing key **"Quantum-ready (beta)"**, Play
+manages **three** certificates for your app. The SHA-1 buttons on the App
+signing page (Classical key / Post-quantum key) are **not** the certificate
+Android verifies at runtime — the *deployment* certificate is, and it has no
+button on that page.
+
+Google's own guidance: *"If your app uses quantum-ready hybrid signing, you
+must copy the fingerprints for three keys and register each of them."*
+
+1. Play Console → **Protected with Play → Play app signing** (or
+   *Release → Setup → App integrity*) → **Download certificates** → `certificates.zip`
+2. Read each fingerprint:
+   ```bash
+   unzip certificates.zip -d play-certs && cd play-certs
+   # preferred
+   openssl x509 -inform DER -in deployment_cert.der       -noout -fingerprint -sha1
+   openssl x509 -inform DER -in hybrid_classical_cert.der  -noout -fingerprint -sha1
+   # fallback that also works for the ML-DSA (post-quantum) cert — a DER
+   # certificate's fingerprint is just the SHA-1 of the file:
+   shasum deployment_cert.der hybrid_classical_cert.der hybrid_pqc_cert.der
+   ```
+3. Register **every** resulting SHA-1 (with package `com.codynest.pos`) in
+   *Google Cloud Console → APIs & Services → Credentials* as Android OAuth
+   clients, **and** add them to the Firebase Android app → re-download
+   `google-services.json` → replace `android/app/google-services.json` →
+   rebuild (the json is compiled into the app).
+
+Shortcut: the app prints the SHA-1 of whatever certificate the *installed*
+build actually carries (**Settings → Data & Backup → Google Drive Backup**,
+next to the error). Register that exact value instead of guessing.
+
 ### Error → cause
 
 The app now shows the exact Google error under **Settings → Data & Backup →
