@@ -16,6 +16,7 @@ import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DashboardPage extends GetView<DashboardController> {
   const DashboardPage({super.key});
@@ -26,9 +27,9 @@ class DashboardPage extends GetView<DashboardController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: const AppShellAppBar(
+      appBar: AppShellAppBar(
         title: Text('Dashboard'),
-        actions: [_AutoBackupAppBarAction()],
+        actions: const [_AutoBackupAppBarAction()],
       ),
       body: SafeArea(
         bottom: false,
@@ -488,7 +489,15 @@ class _AutoBackupAppBarAction extends StatelessWidget {
             builder: (_) => const _AutoBackupSheet(),
           );
         },
-        icon: const Icon(Icons.backup_outlined),
+        icon: Badge(
+          // alignment: Alignment.topCenter,
+          backgroundColor: AppColors.warning,
+          label: Text(
+            AutoBackupService.lastBackupAgo,
+            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
+          ),
+          child: const Icon(Icons.backup_outlined, size: 20),
+        ),
         tooltip: 'Auto backup is on',
       );
     });
@@ -579,7 +588,7 @@ class _AutoBackupSheetState extends State<_AutoBackupSheet> {
               AutoBackupService.frequency == 'manual'
                   ? 'Scheduling is set to manual — run a backup whenever you like.'
                   : 'Your data is being saved automatically. '
-                      'You can also run a backup right now.',
+                        'You can also run a backup right now.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
@@ -755,9 +764,10 @@ class _Header extends StatelessWidget {
                       ),
                     );
                   }
-                  return Icon(
-                    Icons.storefront_rounded,
-                    size: 28,
+                  return Image.asset(
+                    'lib/assets/images/cn_pos_logo_rm.png',
+                    height: 38,
+                    width: 38,
                     color: cs.primary,
                   );
                 }),

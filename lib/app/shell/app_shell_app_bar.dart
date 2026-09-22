@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Shared app bar for every AppShell tab page — same title style and the
 /// same trailing actions (theme toggle + settings shortcut) everywhere.
@@ -32,7 +33,35 @@ class AppShellAppBar extends StatelessWidget implements PreferredSizeWidget {
     final themeController = Get.find<ThemeController>();
 
     return AppBar(
-      title: title,
+      // Use google fonts for the title, but let the page itself override the font size if needed.
+      title: DefaultTextStyle.merge(
+        style: GoogleFonts.poppins(
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
+          fontSize: 18,
+        ),
+        child: title,
+      ),
+
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primaryContainer,
+                Theme.of(context).colorScheme.surface,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
+      elevation: 20,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       actions: [
         ...actions,
         Obx(
