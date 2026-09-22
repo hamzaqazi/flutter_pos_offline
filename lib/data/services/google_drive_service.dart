@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 
@@ -86,17 +87,35 @@ class GoogleDriveService {
   /// Whether a Google account is currently connected.
   static bool get isSignedIn => _account != null || accountEmail.isNotEmpty;
 
-  /// Email of the connected account (persisted; available before init).
-  static String get accountEmail =>
-      _settings.get(_keyDriveEmail, defaultValue: '') as String;
+  /// Bumped whenever the connected account changes, so widgets can rebuild
+  /// with [Obx] instead of showing stale (or empty) account details.
+  static final RxInt revision = 0.obs;
 
-  /// Display name of the connected account.
-  static String get accountName =>
-      _settings.get(_keyDriveName, defaultValue: '') as String;
+  /// Email of the connected account.
+  ///
+  /// Prefers the live [GoogleSignInAccount] and falls back to the persisted
+  /// value. Previously this read Hive only: if the stored copy was wiped
+  /// (e.g. by restoring a backup) the Settings tile showed an empty name,
+  /// photo and email while still claiming to be signed in.
+  static String get accountEmail {
+    final live = _account?.email ?? '';
+    if (live.isNotEmpty) return live;
+    return _settings.get(_keyDriveEmail, defaultValue: '') as String;
+  }
 
-  /// Photo URL of the connected account (may be empty).
-  static String get accountPhoto =>
-      _settings.get(_keyDrivePhoto, defaultValue: '') as String;
+  /// Display name of the connected account (live, else persisted).
+  static String get accountName {
+    final live = _account?.displayName ?? '';
+    if (live.isNotEmpty) return live;
+    return _settings.get(_keyDriveName, defaultValue: '') as String;
+  }
+
+  /// Photo URL of the connected account (may be empty; live, else persisted).
+  static String get accountPhoto {
+    final live = _account?.photoUrl ?? '';
+    if (live.isNotEmpty) return live;
+    return _settings.get(_keyDrivePhoto, defaultValue: '') as String;
+  }
 
   /// ISO8601 of last successful Drive upload.
   static String get lastDriveBackupIso =>
@@ -207,12 +226,15 @@ class GoogleDriveService {
     _settings.put(_keyDriveEmail, account.email);
     _settings.put(_keyDriveName, account.displayName ?? '');
     _settings.put(_keyDrivePhoto, account.photoUrl ?? '');
+    revision.value++;
   }
 
   static void _clearPersistedAccount() {
     _settings.delete(_keyDriveEmail);
     _settings.delete(_keyDriveName);
     _settings.delete(_keyDrivePhoto);
+    _account = null;
+    revision.value++;
   }
 
   // ─── Drive API plumbing ──────────────────────────────────────

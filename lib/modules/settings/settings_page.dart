@@ -2826,9 +2826,17 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild whenever the connected Google account changes, so the tile
+    // never shows stale (or empty) account details.
+    return Obx(() {
+      GoogleDriveService.revision.value;
+      return _buildBody(context, GoogleDriveService.isSignedIn);
+    });
+  }
+
+  Widget _buildBody(BuildContext context, bool signedIn) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final signedIn = GoogleDriveService.isSignedIn;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

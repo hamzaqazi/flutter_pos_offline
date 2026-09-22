@@ -338,6 +338,13 @@ class ImportService {
       'autoBackup_maxBackups',
       'autoBackup_keepLast',
       'web_deviceId', // Preserve web browser fingerprint across imports
+      // Keep the Google Drive connection intact across a restore,
+      // otherwise the account tile shows an empty name/photo/email.
+      'driveBackup_enabled',
+      'driveBackup_email',
+      'driveBackup_name',
+      'driveBackup_photo',
+      'driveBackup_lastBackup',
     ]) {
       final value = settingsBox.get(key);
       if (value != null) {
