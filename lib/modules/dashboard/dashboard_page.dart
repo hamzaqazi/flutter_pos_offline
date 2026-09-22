@@ -779,9 +779,12 @@ class _Header extends StatelessWidget {
                   final settings = Get.find<SettingsController>();
                   return Text(
                     settings.shopName,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+                    // styled it with googlefonts
+                    style: GoogleFonts.slackey(
+                      textStyle: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0,
+                      ),
                     ),
                   );
                 }),
