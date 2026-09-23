@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
+import 'package:ad_shop_pos/modules/manual/manual_nav.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
 import 'package:ad_shop_pos/widgets/product_image_picker.dart';
@@ -31,6 +32,9 @@ class ProductsPage extends GetView<ProductsController> {
           final count = controller.products.length;
           return Text("Products ($count/${LicenseService.freeMaxProducts})");
         }),
+        // No app-bar help icon here — this bar already carries the scanner
+        // and cart actions plus the free-plan product counter. The manual is
+        // one tap away from the empty state below and from the More tab.
         actions: [
           // Barcode scanner button
           IconButton(
@@ -507,6 +511,12 @@ class _EmptyState extends StatelessWidget {
       subtitle: hasProducts
           ? 'Try a different search or category'
           : 'Tap "Add product" to get started',
+      // Point first-time users at the manual rather than leaving them at a
+      // dead end.
+      actionLabel: hasProducts ? null : 'How to add a product',
+      onAction: hasProducts
+          ? null
+          : () => ManualNav.openGuide('add-product'),
     );
   }
 }

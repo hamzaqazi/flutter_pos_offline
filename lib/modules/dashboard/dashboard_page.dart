@@ -29,6 +29,7 @@ class DashboardPage extends GetView<DashboardController> {
     return Scaffold(
       appBar: AppShellAppBar(
         title: Text('Dashboard'),
+        helpTopicId: 'getting-started',
         actions: const [_AutoBackupAppBarAction()],
       ),
       body: SafeArea(

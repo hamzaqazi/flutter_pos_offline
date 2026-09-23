@@ -29,6 +29,9 @@ class CartPage extends GetView<CartController> {
     return Scaffold(
       appBar: AppShellAppBar(
         title: const Text("Cart"),
+        // Help icon intentionally omitted: this bar gains Hold/Clear actions
+        // as soon as the cart has items, and a fifth icon crowds small
+        // screens. The manual is available from the More tab instead.
         actions: [
           Obx(() {
             if (controller.cartItems.isEmpty) return const SizedBox.shrink();

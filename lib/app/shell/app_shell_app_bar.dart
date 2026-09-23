@@ -1,3 +1,4 @@
+import 'package:ad_shop_pos/app/routes/app_routes.dart';
 import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/theme/theme_controller.dart';
@@ -15,6 +16,7 @@ class AppShellAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.actions = const [],
     this.showSettingsAction = true,
+    this.helpTopicId,
   });
 
   /// Usually a `Text(...)`, but any widget works — e.g. Products passes a
@@ -24,6 +26,12 @@ class AppShellAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// Hide the settings shortcut on the Settings page itself.
   final bool showSettingsAction;
+
+  /// Id of the manual guide for this screen. When set, a help button appears
+  /// in the app bar that deep-links straight to that guide — so "how do I do
+  /// this?" is answered from the screen the user is already on. Leave null on
+  /// screens with no matching guide.
+  final String? helpTopicId;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -64,6 +72,15 @@ class AppShellAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Theme.of(context).colorScheme.surface,
       actions: [
         ...actions,
+        if (helpTopicId != null)
+          IconButton(
+            onPressed: () => Get.toNamed(
+              Routes.manualArticle,
+              parameters: {'id': helpTopicId!},
+            ),
+            icon: const Icon(Icons.help_outline_rounded),
+            tooltip: 'Help for this screen',
+          ),
         Obx(
           () => IconButton(
             onPressed: themeController.toggle,

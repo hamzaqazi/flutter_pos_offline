@@ -24,7 +24,10 @@ class SalesHistoryPage extends GetView<SalesController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppShellAppBar(title: const Text("Sales History")),
+      appBar: AppShellAppBar(
+        title: const Text("Sales History"),
+        helpTopicId: 'sales-history',
+      ),
       body: Obx(() {
         if (controller.sales.isEmpty) {
           return _EmptySales();

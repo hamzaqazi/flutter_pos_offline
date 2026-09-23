@@ -15,6 +15,7 @@ import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ad_shop_pos/modules/manual/manual_nav.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -206,6 +207,26 @@ class SettingsPage extends GetView<SettingsController> {
         ],
       ),
       (
+        'Help & Guides',
+        [
+          AppActionTile(
+            icon: Icons.menu_book_outlined,
+            title: "User Manual",
+            subtitle: "Step-by-step guides for every feature",
+            color: AppColors.seed,
+            onTap: ManualNav.openHub,
+          ),
+          const Divider(height: 1, indent: 52),
+          AppActionTile(
+            icon: Icons.build_outlined,
+            title: "Troubleshooting",
+            subtitle: "Fixes for the most common problems",
+            color: AppColors.warning,
+            onTap: () => ManualNav.openGuide('troubleshooting'),
+          ),
+        ],
+      ),
+      (
         'About & Legal',
         [
           AppActionTile(
@@ -279,6 +300,7 @@ class SettingsPage extends GetView<SettingsController> {
       appBar: const AppShellAppBar(
         title: Text("Settings"),
         showSettingsAction: false,
+        helpTopicId: 'shop-information',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
