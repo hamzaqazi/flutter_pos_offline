@@ -108,18 +108,13 @@ class CartPage extends GetView<CartController> {
                       },
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: AppSpacing.navClearance,
-                    ),
-                    child: _SummaryBar(
-                      total: controller.totalAmount,
-                      subtotal: controller.subtotalAmount,
-                      tax: controller.taxAmount,
-                      savings: controller.totalSavings,
-                      itemCount: controller.totalItems,
-                      onCheckout: () => _checkout(context),
-                    ),
+                  _SummaryBar(
+                    total: controller.totalAmount,
+                    subtotal: controller.subtotalAmount,
+                    tax: controller.taxAmount,
+                    savings: controller.totalSavings,
+                    itemCount: controller.totalItems,
+                    onCheckout: () => _checkout(context),
                   ),
                 ],
               );
@@ -628,9 +623,7 @@ class CartPage extends GetView<CartController> {
                                 context,
                               );
                               if (created != null) {
-                                setState(
-                                  () => selectedCustomerId = created.id,
-                                );
+                                setState(() => selectedCustomerId = created.id);
                               }
                             },
                             icon: const Icon(

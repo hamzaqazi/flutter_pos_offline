@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/modules/reports/charts_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'reports_controller.dart';
 
@@ -19,7 +20,35 @@ class ReportsPage extends GetView<ReportsController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Reports")),
+      appBar: AppBar(
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 16,
+          ),
+          child: Text("Reports & Analytics"),
+        ),
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.surface,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+        elevation: 20,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+      ),
       body: PremiumGate(
         feature: 'Reports & Analytics',
         child: Column(

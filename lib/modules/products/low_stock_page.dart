@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../data/models/product_model.dart';
 
@@ -22,7 +23,28 @@ class LowStockPage extends StatelessWidget {
     final controller = Get.find<ProductsController>();
 
     return Scaffold(
-      appBar: AppBar(title: Text("Low Stock (≤ $threshold)")),
+      appBar: AppBar(
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 16,
+          ),
+          child: Text("Low Stock Products (≤ $threshold)"),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primaryContainer,
+                Theme.of(context).colorScheme.surface,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
       body: Obx(() {
         final outOfStock = controller.outOfStockProducts;
         final lowStock = controller.lowStockProducts

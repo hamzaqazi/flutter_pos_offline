@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Page showing backups stored in the user's Google Drive, with
 /// restore/delete options.
@@ -273,7 +274,28 @@ class _DriveBackupPageState extends State<DriveBackupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Google Drive Backups'),
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 16,
+          ),
+          child: const Text("Google Drive Backups"),
+        ),
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.surface,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: _loadBackups,

@@ -275,6 +275,14 @@ class _NavItem extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
+          // const SizedBox(height: 4),
+          Text(
+            destination.label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

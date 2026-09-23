@@ -1469,6 +1469,16 @@ class _ActivationScreenState extends State<ActivationScreen> {
                         child: FilledButton.icon(
                           onPressed: _loading ? null : _activate,
                           style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.seed,
+                            disabledBackgroundColor: AppColors.seed.withValues(
+                              alpha: 0.5,
+                            ),
+                            disabledForegroundColor: Colors.white.withValues(
+                              alpha: 0.7,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                            ),
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(

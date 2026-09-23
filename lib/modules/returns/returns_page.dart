@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ReturnsPage extends GetView<ReturnsController> {
   const ReturnsPage({super.key});
@@ -17,7 +18,25 @@ class ReturnsPage extends GetView<ReturnsController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Returns History")),
+      appBar: AppBar(
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 18,
+          ),
+          child: Text("Returns & Refunds"),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cs.primaryContainer, cs.surface],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
       body: PremiumGate(
         feature: 'Returns & Refunds',
         child: Obx(() {

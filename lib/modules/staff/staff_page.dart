@@ -5,6 +5,7 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class StaffPage extends GetView<StaffController> {
   const StaffPage({super.key});
@@ -17,7 +18,35 @@ class StaffPage extends GetView<StaffController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Staff")),
+      appBar: AppBar(
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 16,
+          ),
+          child: Text("Staff Management"),
+        ),
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.surface,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+        elevation: 20,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddEditDialog(controller),
         icon: const Icon(Icons.person_add_outlined),

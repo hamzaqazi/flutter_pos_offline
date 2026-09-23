@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'expenses_controller.dart';
 
@@ -17,7 +18,30 @@ class ExpensesPage extends GetView<ExpensesController> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Expenses")),
+      appBar: AppBar(
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 16,
+          ),
+          child: Text("Expenses"),
+        ),
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.surface,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+      ),
       // Obx: the FAB has to appear the moment a license is activated,
       // without waiting for the page to be rebuilt (tab switch / restart).
       floatingActionButton: Obx(() {

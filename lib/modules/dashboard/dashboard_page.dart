@@ -99,76 +99,79 @@ class DashboardPage extends GetView<DashboardController> {
   // ── Banners ──
 
   Widget _buildBanners(BuildContext context) {
-    return Column(
-      children: [
-        // Trial banner
-        if (LicenseService.isTrialActive)
+    return GestureDetector(
+      onTap: () => Get.toNamed("/license"),
+      child: Column(
+        children: [
+          // Trial banner
+          if (LicenseService.isTrialActive)
+            Builder(
+              builder: (context) {
+                final days = LicenseService.trialDaysRemaining;
+                final isUrgent = days <= 3;
+                return AppBanner(
+                  type: isUrgent ? AppBannerType.warning : AppBannerType.trial,
+                  icon: isUrgent
+                      ? Icons.timer_outlined
+                      : Icons.celebration_outlined,
+                  title: isUrgent
+                      ? 'Trial expires in $days day${days == 1 ? '' : 's'}!'
+                      : 'Free Trial — $days days remaining',
+                  subtitle: 'Upgrade to keep all Premium features',
+                  actionLabel: 'Enter Key',
+                  onAction: () => _showUpgradeSheet(context),
+                );
+              },
+            ),
+          // Free tier banner
+          if (LicenseService.isFreeTier)
+            AppBanner.warning(
+              title: 'Free Plan — Limited Features',
+              subtitle: 'Upgrade to unlock Returns, Reports, and more',
+              icon: Icons.workspace_premium_outlined,
+              actionLabel: 'Enter Key',
+              onAction: () => _showUpgradeSheet(context),
+            ),
+          // License info
           Builder(
             builder: (context) {
-              final days = LicenseService.trialDaysRemaining;
-              final isUrgent = days <= 3;
-              return AppBanner(
-                type: isUrgent ? AppBannerType.warning : AppBannerType.trial,
-                icon: isUrgent
-                    ? Icons.timer_outlined
-                    : Icons.celebration_outlined,
-                title: isUrgent
-                    ? 'Trial expires in $days day${days == 1 ? '' : 's'}!'
-                    : 'Free Trial — $days days remaining',
-                subtitle: 'Upgrade to keep all Premium features',
-                actionLabel: 'Enter Key',
-                onAction: () => _showUpgradeSheet(context),
+              if (!LicenseService.isActivated) return const SizedBox.shrink();
+              final days = LicenseService.daysUntilExpiry;
+              final expiresAt = LicenseService.expiresAt;
+              if (days == null && LicenseService.storedPlan == 'lifetime') {
+                return AppBanner(
+                  type: AppBannerType.success,
+                  icon: Icons.workspace_premium,
+                  title: 'Lifetime License — Active',
+                  subtitle: LicenseService.shopName,
+                );
+              }
+              if (days == null || expiresAt == null)
+                return const SizedBox.shrink();
+              final isCritical = days <= 7;
+              final isWarning = days <= 30;
+              if (isCritical) {
+                return AppBanner.danger(
+                  title: 'License expires in $days day${days == 1 ? '' : 's'}!',
+                  subtitle: 'Expires: ${formatDate(expiresAt)}',
+                  icon: Icons.vpn_key_outlined,
+                );
+              }
+              if (isWarning) {
+                return AppBanner.warning(
+                  title: 'License expires in $days days',
+                  subtitle: 'Expires: ${formatDate(expiresAt)}',
+                  icon: Icons.vpn_key_outlined,
+                );
+              }
+              return AppBanner.success(
+                title: 'License active',
+                subtitle: 'Expires: ${formatDate(expiresAt)}',
               );
             },
           ),
-        // Free tier banner
-        if (LicenseService.isFreeTier)
-          AppBanner.warning(
-            title: 'Free Plan — Limited Features',
-            subtitle: 'Upgrade to unlock Returns, Reports, and more',
-            icon: Icons.workspace_premium_outlined,
-            actionLabel: 'Enter Key',
-            onAction: () => _showUpgradeSheet(context),
-          ),
-        // License info
-        Builder(
-          builder: (context) {
-            if (!LicenseService.isActivated) return const SizedBox.shrink();
-            final days = LicenseService.daysUntilExpiry;
-            final expiresAt = LicenseService.expiresAt;
-            if (days == null && LicenseService.storedPlan == 'lifetime') {
-              return AppBanner(
-                type: AppBannerType.success,
-                icon: Icons.workspace_premium,
-                title: 'Lifetime License — Active',
-                subtitle: LicenseService.shopName,
-              );
-            }
-            if (days == null || expiresAt == null)
-              return const SizedBox.shrink();
-            final isCritical = days <= 7;
-            final isWarning = days <= 30;
-            if (isCritical) {
-              return AppBanner.danger(
-                title: 'License expires in $days day${days == 1 ? '' : 's'}!',
-                subtitle: 'Expires: ${formatDate(expiresAt)}',
-                icon: Icons.vpn_key_outlined,
-              );
-            }
-            if (isWarning) {
-              return AppBanner.warning(
-                title: 'License expires in $days days',
-                subtitle: 'Expires: ${formatDate(expiresAt)}',
-                icon: Icons.vpn_key_outlined,
-              );
-            }
-            return AppBanner.success(
-              title: 'License active',
-              subtitle: 'Expires: ${formatDate(expiresAt)}',
-            );
-          },
-        ),
-      ],
+        ],
+      ),
     );
   }
 

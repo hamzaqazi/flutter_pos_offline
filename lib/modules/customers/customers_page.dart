@@ -7,6 +7,7 @@ import 'package:ad_shop_pos/modules/sales/sales_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CustomersPage extends GetView<CustomersController> {
   const CustomersPage({super.key});
@@ -17,7 +18,30 @@ class CustomersPage extends GetView<CustomersController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Customers")),
+      appBar: AppBar(
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 16,
+          ),
+          child: Text("Customers"),
+        ),
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.surface,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddEditDialog(context),
         icon: const Icon(Icons.person_add_outlined),

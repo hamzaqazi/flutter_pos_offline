@@ -23,9 +23,7 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
   final MobileScannerController _controller = MobileScannerController(
     autoStart: true,
     facing: CameraFacing.back,
-    formats: [
-      BarcodeFormat.all,
-    ],
+    formats: [BarcodeFormat.all],
   );
 
   bool _hasScanned = false;
@@ -62,7 +60,13 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
-        title: const Text("Scan Barcode"),
+        title: Text(
+          "Scan Barcode / QR Code",
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         elevation: 0,
         actions: [
           // Flash toggle
@@ -81,16 +85,10 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
       body: Stack(
         children: [
           // Camera preview
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
 
           // Scan overlay
-          CustomPaint(
-            painter: _ScanOverlayPainter(),
-            size: Size.infinite,
-          ),
+          CustomPaint(painter: _ScanOverlayPainter(), size: Size.infinite),
 
           // Instructions
           Positioned(
@@ -112,7 +110,11 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.qr_code_scanner, color: Colors.white70, size: 20),
+                      Icon(
+                        Icons.qr_code_scanner,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         "Point camera at a barcode or QR code",
@@ -135,7 +137,11 @@ class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
             child: Center(
               child: TextButton.icon(
                 onPressed: () => _showManualEntry(),
-                icon: const Icon(Icons.keyboard_outlined, color: Colors.white70, size: 18),
+                icon: const Icon(
+                  Icons.keyboard_outlined,
+                  color: Colors.white70,
+                  size: 18,
+                ),
                 label: const Text(
                   "Enter code manually",
                   style: TextStyle(color: Colors.white70),

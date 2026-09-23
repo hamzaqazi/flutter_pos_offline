@@ -4,6 +4,7 @@ import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/services/import_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Page showing all auto-backup files with restore/delete options.
 class BackupHistoryPage extends StatefulWidget {
@@ -252,7 +253,28 @@ class _BackupHistoryPageState extends State<BackupHistoryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Backup History'),
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 16,
+          ),
+          child: const Text("Backup History"),
+        ),
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.surface,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
         actions: [
           if (_backups.isNotEmpty)
             IconButton(

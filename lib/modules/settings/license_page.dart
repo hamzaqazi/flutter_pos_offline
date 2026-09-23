@@ -5,6 +5,7 @@ import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LicensePage extends StatelessWidget {
   const LicensePage({super.key});
@@ -15,7 +16,25 @@ class LicensePage extends StatelessWidget {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('License & Subscription')),
+      appBar: AppBar(
+        title: DefaultTextStyle.merge(
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            fontSize: 14,
+          ),
+          child: Text("License & Plans"),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cs.primaryContainer, cs.surface],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
       body: Obx(() {
         // Rebuild the whole page when license state changes so activating or
         // deactivating here reflects instantly.
@@ -99,8 +118,8 @@ class _PlanHeader extends StatelessWidget {
             child: Icon(
               isPremium
                   ? (LicenseService.storedPlan == 'lifetime'
-                      ? Icons.workspace_premium
-                      : Icons.verified)
+                        ? Icons.workspace_premium
+                        : Icons.verified)
                   : Icons.lock_outline,
               size: 36,
               color: Colors.white,
@@ -185,23 +204,25 @@ class _DetailsCard extends StatelessWidget {
             // Expiry
             if (LicenseService.expiresAt != null) ...[
               const AppDetailDivider(),
-              Builder(builder: (_) {
-                final exp = LicenseService.expiresAt!;
-                final days = LicenseService.daysUntilExpiry ?? 0;
-                final isWarning = days <= 30;
-                final isCritical = days <= 7;
-                final color = isCritical
-                    ? AppColors.danger
-                    : isWarning
-                    ? AppColors.warning
-                    : AppColors.success;
-                return AppDetailRow(
-                  icon: Icons.event_outlined,
-                  label: 'Expires',
-                  value: '${_formatDate(exp)} ($days days left)',
-                  valueColor: color,
-                );
-              }),
+              Builder(
+                builder: (_) {
+                  final exp = LicenseService.expiresAt!;
+                  final days = LicenseService.daysUntilExpiry ?? 0;
+                  final isWarning = days <= 30;
+                  final isCritical = days <= 7;
+                  final color = isCritical
+                      ? AppColors.danger
+                      : isWarning
+                      ? AppColors.warning
+                      : AppColors.success;
+                  return AppDetailRow(
+                    icon: Icons.event_outlined,
+                    label: 'Expires',
+                    value: '${_formatDate(exp)} ($days days left)',
+                    valueColor: color,
+                  );
+                },
+              ),
             ],
 
             // Lifetime
@@ -217,7 +238,8 @@ class _DetailsCard extends StatelessWidget {
             ],
 
             // Trial start
-            if (LicenseService.isTrialActive && !LicenseService.isActivated) ...[
+            if (LicenseService.isTrialActive &&
+                !LicenseService.isActivated) ...[
               const AppDetailDivider(),
               AppDetailRow(
                 icon: Icons.celebration_outlined,
@@ -280,7 +302,11 @@ class _PlanComparisonCards extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         // Yearly
         _PlanRow(
-          icon: Icon(CupertinoIcons.calendar_today, size: 28, color: AppColors.seed),
+          icon: Icon(
+            CupertinoIcons.calendar_today,
+            size: 28,
+            color: AppColors.seed,
+          ),
           title: 'Yearly',
           price: 'Rs 4,000/yr',
           features: 'All features, 33% off monthly',
@@ -347,31 +373,42 @@ class _PlanRow extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(title, style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        )),
+                        Text(
+                          title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                         if (badge != null) ...[
                           const SizedBox(width: AppSpacing.sm),
                           AppBadge(
                             label: badge!,
-                            type: isHighlighted ? AppBadgeType.info : AppBadgeType.neutral,
+                            type: isHighlighted
+                                ? AppBadgeType.info
+                                : AppBadgeType.neutral,
                           ),
                         ],
                       ],
                     ),
-                    Text(features, style: theme.textTheme.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    )),
+                    Text(
+                      features,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
               if (isCurrent)
                 AppBadge(label: 'Current', type: AppBadgeType.success)
               else
-                Text(price, style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: isHighlighted ? cs.primary : null,
-                )),
+                Text(
+                  price,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: isHighlighted ? cs.primary : null,
+                  ),
+                ),
             ],
           ),
         ),
@@ -394,9 +431,15 @@ class _DeactivateButton extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         OutlinedButton.icon(
           onPressed: () => _confirmDeactivate(context),
-          icon: Icon(Icons.logout, size: 18, color: AppColors.danger.withValues(alpha: 0.7)),
-          label: Text('Deactivate License',
-            style: TextStyle(color: AppColors.danger.withValues(alpha: 0.7))),
+          icon: Icon(
+            Icons.logout,
+            size: 18,
+            color: AppColors.danger.withValues(alpha: 0.7),
+          ),
+          label: Text(
+            'Deactivate License',
+            style: TextStyle(color: AppColors.danger.withValues(alpha: 0.7)),
+          ),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: AppColors.danger.withValues(alpha: 0.3)),
           ),
@@ -452,7 +495,8 @@ class _UpgradeSection extends StatelessWidget {
             onPressed: () => _openWhatsApp(context, 'Any Plan'),
             icon: Image.asset(
               'lib/assets/images/whatsapp-logo1.png',
-              width: 24, height: 24,
+              width: 24,
+              height: 24,
             ),
             label: const Text('Purchase via WhatsApp'),
           ),
@@ -491,15 +535,20 @@ class _SupportCard extends StatelessWidget {
               children: [
                 Icon(Icons.support_agent, size: 20, color: cs.primary),
                 const SizedBox(width: AppSpacing.sm),
-                Text('Need Help?', style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                )),
+                Text(
+                  'Need Help?',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               'For license activation, renewal, or any issues, contact us:',
-              style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             // WhatsApp
@@ -510,11 +559,20 @@ class _SupportCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
                 child: Row(
                   children: [
-                    Image.asset('lib/assets/images/whatsapp-logo1.png', width: 18, height: 18),
+                    Image.asset(
+                      'lib/assets/images/whatsapp-logo1.png',
+                      width: 18,
+                      height: 18,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
-                    Text('WhatsApp: 0315-3507075', style: TextStyle(
-                      color: Colors.green[700], fontWeight: FontWeight.w600, fontSize: 14,
-                    )),
+                    Text(
+                      'WhatsApp: 0315-3507075',
+                      style: TextStyle(
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -530,9 +588,14 @@ class _SupportCard extends StatelessWidget {
                   children: [
                     Icon(Icons.call, size: 18, color: cs.primary),
                     const SizedBox(width: AppSpacing.sm),
-                    Text('Call: 0315-3507075', style: TextStyle(
-                      color: cs.primary, fontWeight: FontWeight.w600, fontSize: 14,
-                    )),
+                    Text(
+                      'Call: 0315-3507075',
+                      style: TextStyle(
+                        color: cs.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -543,9 +606,14 @@ class _SupportCard extends StatelessWidget {
               children: [
                 Icon(Icons.language, size: 18, color: cs.onSurfaceVariant),
                 const SizedBox(width: AppSpacing.sm),
-                Text('Codynest.com', style: TextStyle(
-                  color: cs.onSurfaceVariant, fontWeight: FontWeight.w500, fontSize: 14,
-                )),
+                Text(
+                  'Codynest.com',
+                  style: TextStyle(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
               ],
             ),
           ],
@@ -560,8 +628,21 @@ class _SupportCard extends StatelessWidget {
 // ────────────────────────────────────────────────────────────
 
 String _formatDate(DateTime date) {
-  const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return '${date.day} ${months[date.month]} ${date.year}';
 }
 
@@ -571,7 +652,10 @@ void _openWhatsApp(BuildContext context, String plan) async {
     'Hi, I want to purchase Codynest POS license.\nPlan: $plan\nApp: Codynest POS',
   );
   if (!success && context.mounted) {
-    Get.snackbar('Contact Us', 'WhatsApp/Call: 0315-3507075',
-      snackPosition: SnackPosition.BOTTOM);
+    Get.snackbar(
+      'Contact Us',
+      'WhatsApp/Call: 0315-3507075',
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 }

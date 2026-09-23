@@ -878,9 +878,12 @@ class _ShopInfoFormState extends State<_ShopInfoForm> {
                 "Shop information updated",
                 snackPosition: SnackPosition.BOTTOM,
               );
+              // Dismiss keyboard after saving
+              FocusScope.of(context).unfocus();
             },
             icon: const Icon(Icons.save_outlined, size: 18),
             label: const Text("Save Shop Info"),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.seed),
           ),
         ),
       ],
