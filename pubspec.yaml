@@ -4,7 +4,7 @@ description: "A new Flutter project."
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.10.8
@@ -21,6 +21,7 @@ dependencies:
   hive_flutter: ^1.1.0
   path_provider: ^2.1.6
   share_plus: ^10.0.0
+  url_launcher: ^6.3.1
   file_picker: ^8.0.0
   mobile_scanner: ^7.2.1
   print_bluetooth_thermal: ^1.2.1
@@ -38,6 +39,8 @@ dependencies:
   googleapis: ^16.0.0
   googleapis_auth: ^2.3.3
   http: ^1.6.0
+  lottie: ^3.3.1
+  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +67,7 @@ flutter:
   # Assets
   assets:
     - lib/assets/images/
+    - lib/assets/animations/
 
 # Flutter Launcher Icons configuration
 flutter_launcher_icons:

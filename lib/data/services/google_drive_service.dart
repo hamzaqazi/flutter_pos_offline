@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
+import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 
@@ -63,6 +65,19 @@ class GoogleDriveService {
   static bool _initialized = false;
   static GoogleSignInAccount? _account;
 
+  /// Description of the last sign-in / Drive error (e.g. "providerError:
+  /// ApiException: 10"). Shown in Settings so release-build problems
+  /// (usually a missing SHA-1 fingerprint) can be diagnosed on-device
+  /// without attaching a debugger. Empty when there is no error.
+  static String lastErrorMessage = '';
+
+  static void _recordError(Object e) {
+    lastErrorMessage = e is GoogleSignInException
+        ? '${e.code.name}${e.description == null ? '' : ' — ${e.description}'}'
+        : e.toString();
+    debugPrint('⚠️ GoogleDrive error: $lastErrorMessage');
+  }
+
   // ─── State getters ───────────────────────────────────────────
 
   /// Whether the user opted in to also upload auto-backups to Drive.
@@ -72,17 +87,35 @@ class GoogleDriveService {
   /// Whether a Google account is currently connected.
   static bool get isSignedIn => _account != null || accountEmail.isNotEmpty;
 
-  /// Email of the connected account (persisted; available before init).
-  static String get accountEmail =>
-      _settings.get(_keyDriveEmail, defaultValue: '') as String;
+  /// Bumped whenever the connected account changes, so widgets can rebuild
+  /// with [Obx] instead of showing stale (or empty) account details.
+  static final RxInt revision = 0.obs;
 
-  /// Display name of the connected account.
-  static String get accountName =>
-      _settings.get(_keyDriveName, defaultValue: '') as String;
+  /// Email of the connected account.
+  ///
+  /// Prefers the live [GoogleSignInAccount] and falls back to the persisted
+  /// value. Previously this read Hive only: if the stored copy was wiped
+  /// (e.g. by restoring a backup) the Settings tile showed an empty name,
+  /// photo and email while still claiming to be signed in.
+  static String get accountEmail {
+    final live = _account?.email ?? '';
+    if (live.isNotEmpty) return live;
+    return _settings.get(_keyDriveEmail, defaultValue: '') as String;
+  }
 
-  /// Photo URL of the connected account (may be empty).
-  static String get accountPhoto =>
-      _settings.get(_keyDrivePhoto, defaultValue: '') as String;
+  /// Display name of the connected account (live, else persisted).
+  static String get accountName {
+    final live = _account?.displayName ?? '';
+    if (live.isNotEmpty) return live;
+    return _settings.get(_keyDriveName, defaultValue: '') as String;
+  }
+
+  /// Photo URL of the connected account (may be empty; live, else persisted).
+  static String get accountPhoto {
+    final live = _account?.photoUrl ?? '';
+    if (live.isNotEmpty) return live;
+    return _settings.get(_keyDrivePhoto, defaultValue: '') as String;
+  }
 
   /// ISO8601 of last successful Drive upload.
   static String get lastDriveBackupIso =>
@@ -123,20 +156,25 @@ class GoogleDriveService {
             : kGoogleServerClientId,
       );
 
-      GoogleSignIn.instance.authenticationEvents.listen((event) {
-        if (event is GoogleSignInAuthenticationEventSignIn) {
-          _account = event.user;
-          _persistAccount(event.user);
-        } else if (event is GoogleSignInAuthenticationEventSignOut) {
-          _account = null;
-          _clearPersistedAccount();
-        }
-      });
+      GoogleSignIn.instance.authenticationEvents.listen(
+        (event) {
+          if (event is GoogleSignInAuthenticationEventSignIn) {
+            _account = event.user;
+            _persistAccount(event.user);
+          } else if (event is GoogleSignInAuthenticationEventSignOut) {
+            _account = null;
+            _clearPersistedAccount();
+          }
+        },
+        onError: (e) {
+          debugPrint('⚠️ GoogleDrive auth event error: $e');
+        },
+      );
 
       // Silently restore the previous session (fires a sign-in event on success).
       await GoogleSignIn.instance.attemptLightweightAuthentication();
     } catch (e) {
-      debugPrint('⚠️ GoogleDrive init failed: $e');
+      _recordError(e);
     }
   }
 
@@ -153,6 +191,7 @@ class GoogleDriveService {
       );
       _account = account;
       _persistAccount(account);
+      lastErrorMessage = '';
       // Ensure Drive scope is granted up front.
       final headers = await account.authorizationClient.authorizationHeaders(
         const [_driveScope],
@@ -164,10 +203,10 @@ class GoogleDriveService {
       }
       return true;
     } on GoogleSignInException catch (e) {
-      debugPrint('⚠️ GoogleDrive sign-in error: ${e.code} ${e.description}');
+      _recordError(e);
       return false;
     } catch (e) {
-      debugPrint('⚠️ GoogleDrive sign-in error: $e');
+      _recordError(e);
       return false;
     }
   }
@@ -187,12 +226,15 @@ class GoogleDriveService {
     _settings.put(_keyDriveEmail, account.email);
     _settings.put(_keyDriveName, account.displayName ?? '');
     _settings.put(_keyDrivePhoto, account.photoUrl ?? '');
+    revision.value++;
   }
 
   static void _clearPersistedAccount() {
     _settings.delete(_keyDriveEmail);
     _settings.delete(_keyDriveName);
     _settings.delete(_keyDrivePhoto);
+    _account = null;
+    revision.value++;
   }
 
   // ─── Drive API plumbing ──────────────────────────────────────
@@ -374,6 +416,31 @@ class GoogleDriveService {
       return data;
     } catch (e) {
       debugPrint('⚠️ GoogleDrive download failed: $e');
+      return null;
+    }
+  }
+
+  /// Download a backup's raw bytes by Drive file ID (for saving the file
+  /// to the user's device). Unlike [downloadBackup], this does not parse
+  /// or validate the JSON — it returns the file exactly as stored.
+  static Future<Uint8List?> downloadBackupBytes(String fileId) async {
+    final api = await _driveApi();
+    if (api == null) return null;
+    try {
+      final media =
+          await api.files.get(
+                fileId,
+                downloadOptions: drive.DownloadOptions.fullMedia,
+              )
+              as drive.Media;
+
+      final builder = BytesBuilder(copy: false);
+      await for (final chunk in media.stream) {
+        builder.add(chunk);
+      }
+      return builder.takeBytes();
+    } catch (e) {
+      debugPrint('⚠️ GoogleDrive raw download failed: $e');
       return null;
     }
   }

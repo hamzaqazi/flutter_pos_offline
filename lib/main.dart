@@ -70,8 +70,18 @@ class _PosAppState extends State<PosApp> {
   }
 
   Future<void> _determineStartRoute() async {
-    if (!LicenseService.isActivated) {
-      // Not activated → show activation screen
+    // ── First install: go to activation screen ──
+    // User must choose: Free Trial (with phone verification) or License Key.
+    // No auto-start trial — user must explicitly choose and verify phone.
+    if (LicenseService.isFirstInstall) {
+      // Check Firestore to see if trial card should be shown
+      final eligible = await LicenseService.checkDeviceTrialEligibility();
+      if (eligible == false) {
+        // Device already used a trial (data was cleared) — block repeat trial
+        await LicenseService.markTrialAlreadyUsed();
+        debugPrint('⚠️ Device already used trial — repeat trial blocked');
+      }
+      // Always go to activation screen — user makes the choice
       setState(() {
         _initialRoute = Routes.activation;
         _checking = false;
@@ -79,7 +89,37 @@ class _PosAppState extends State<PosApp> {
       return;
     }
 
-    // Already activated — verify with Firestore (with 8-second timeout)
+    // ── Check if trial just expired ──
+    if (LicenseService.trialJustExpired) {
+      LicenseService.expireTrial();
+      debugPrint('⚠️ Trial expired — downgraded to free tier');
+    }
+
+    // ── Trial active (no license key needed) → go to app ──
+    if (LicenseService.isTrialActive && !LicenseService.isActivated) {
+      setState(() {
+        _initialRoute = LicenseService.isPinEnabled
+            ? Routes.pinLock
+            : Routes.dashboard;
+        _checking = false;
+      });
+      // Auto-backup check
+      if (AutoBackupService.isEnabled) {
+        AutoBackupService.checkAndRunIfNeeded();
+      }
+      return;
+    }
+
+    // ── Not activated (no trial, no license) → activation screen ──
+    if (!LicenseService.isActivated) {
+      setState(() {
+        _initialRoute = Routes.activation;
+        _checking = false;
+      });
+      return;
+    }
+
+    // ── Activated — verify with Firestore (with 8-second timeout) ──
     bool stillValid;
     try {
       stillValid = await LicenseService.verifyActiveLicense().timeout(
@@ -139,9 +179,11 @@ class _PosAppState extends State<PosApp> {
                 const SizedBox(height: 24),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
-                const Text(
-                  'Verifying license...',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                Text(
+                  LicenseService.isFirstInstall
+                      ? 'Setting up your trial...'
+                      : 'Verifying license...',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),

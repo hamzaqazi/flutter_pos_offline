@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/held_cart_model.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
+import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
@@ -15,10 +16,43 @@ class CartController extends GetxController {
     super.onInit();
   }
 
-  void addToCart(ProductModel product) {
+  /// Live available stock for [product] — reads the latest value from
+  /// ProductsController (the cart may hold a stale snapshot taken when
+  /// the item was first added).
+  int _availableStock(ProductModel product) {
+    if (Get.isRegistered<ProductsController>()) {
+      final live = Get.find<ProductsController>().products.firstWhereOrNull(
+        (p) => p.id == product.id,
+      );
+      if (live != null) return live.stock;
+    }
+    return product.stock;
+  }
+
+  void _showStockLimitSnackbar(ProductModel product, int stock, int inCart) {
+    Get.snackbar(
+      "Not enough stock",
+      stock <= 0
+          ? "\"${product.name}\" is out of stock"
+          : "Only $stock in stock — you already have $inCart in the cart",
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
+  }
+
+  /// Add one unit of [product] to the cart, respecting available stock.
+  /// Returns true if added, false if the stock limit was reached.
+  bool addToCart(ProductModel product) {
     final existingIndex = cartItems.indexWhere(
       (item) => item.product.id == product.id,
     );
+    final inCart = existingIndex != -1 ? cartItems[existingIndex].quantity : 0;
+    final stock = _availableStock(product);
+
+    if (inCart + 1 > stock) {
+      _showStockLimitSnackbar(product, stock, inCart);
+      return false;
+    }
 
     if (existingIndex != -1) {
       cartItems[existingIndex].quantity++;
@@ -26,10 +60,19 @@ class CartController extends GetxController {
     } else {
       cartItems.add(CartItemModel(product: product, quantity: 1));
     }
+    return true;
   }
 
   void increaseQuantity(int index) {
-    cartItems[index].quantity++;
+    final item = cartItems[index];
+    final stock = _availableStock(item.product);
+
+    if (item.quantity + 1 > stock) {
+      _showStockLimitSnackbar(item.product, stock, item.quantity);
+      return;
+    }
+
+    item.quantity++;
     cartItems.refresh();
   }
 

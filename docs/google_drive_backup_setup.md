@@ -37,7 +37,7 @@ Google Cloud Console before sign-in will work. Until this is done, the
 3. **Create OAuth 2.0 credentials**
    - APIs & Services → Credentials → Create Credentials → OAuth client ID.
    - **Android client**: package name = your `applicationId`
-     (currently `com.example.ad_shop_pos` — see
+     (currently `com.codynest.pos` — see
      `android/app/build.gradle.kts`), plus the SHA-1 of your signing key:
      ```
      # debug key
@@ -56,10 +56,94 @@ Google Cloud Console before sign-in will work. Until this is done, the
 
 ## Notes
 
-- The current `applicationId` is the placeholder `com.example.ad_shop_pos`.
-  If you change it to a real ID, register that package name in the Android
-  OAuth client too.
+- The `applicationId` is `com.codynest.pos` — it must be registered in the
+  Android OAuth client together with every SHA-1 below.
 - iOS additionally needs a `GoogleService-Info.plist` / URL scheme and an iOS
   OAuth client if you ship on iOS.
 - Packages added: `google_sign_in ^7.2`, `googleapis ^16`, `googleapis_auth`,
   `http`.
+
+## ⚠️ Release builds installed from Google Play (most common failure)
+
+Google re-signs your app with the **Play App Signing** key when you upload an
+AAB. That key's SHA-1 is *different* from your upload key and from the debug
+key, so a build that signs in perfectly in debug fails with a configuration
+error once installed from Play.
+
+Register **all three** SHA-1s on the Android app in Firebase
+(Project settings → Your apps → Android app → SHA certificate fingerprints),
+then re-download `google-services.json` into `android/app/`:
+
+| Key | Where to find the SHA-1 |
+|---|---|
+| Debug | `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android` |
+| Upload (your `codynest-upload.jks`) | `keytool -list -v -keystore ~/codynest-upload.jks -alias upload` — also shown in-app by `flutter run --release` |
+| **Play App Signing** | Play Console → *Codynest POS* → Setup → App integrity → App signing key certificate → **SHA-1** |
+
+All three are different keys. A local `flutter run --release` is signed with the
+**upload** key, so its sign-in failure says nothing about the Play build — and
+it will keep failing until the upload key's SHA-1 is registered too. Register
+all three so every build flavour can sign in.
+
+Check what's currently registered:
+
+```bash
+python3 -c "import json;d=json.load(open('android/app/google-services.json'));\
+[print(c['client_info']['android_client_info'].get('package_name'),\
+ [o.get('android_info',{}).get('certificate_hash') for o in c.get('oauth_client',[])]) for c in d['client']]"
+```
+
+### ⚠️ Quantum-ready app signing (Play's hidden fourth certificate)
+
+If Play Console labels your app signing key **"Quantum-ready (beta)"**, Play
+manages **three** certificates for your app. The SHA-1 buttons on the App
+signing page (Classical key / Post-quantum key) are **not** the certificate
+Android verifies at runtime — the *deployment* certificate is, and it has no
+button on that page.
+
+Google's own guidance: *"If your app uses quantum-ready hybrid signing, you
+must copy the fingerprints for three keys and register each of them."*
+
+1. Play Console → **Protected with Play → Play app signing** (or
+   *Release → Setup → App integrity*) → **Download certificates** → `certificates.zip`
+2. Read each fingerprint:
+   ```bash
+   unzip certificates.zip -d play-certs && cd play-certs
+   # preferred
+   openssl x509 -inform DER -in deployment_cert.der       -noout -fingerprint -sha1
+   openssl x509 -inform DER -in hybrid_classical_cert.der  -noout -fingerprint -sha1
+   # fallback that also works for the ML-DSA (post-quantum) cert — a DER
+   # certificate's fingerprint is just the SHA-1 of the file:
+   shasum deployment_cert.der hybrid_classical_cert.der hybrid_pqc_cert.der
+   ```
+3. Register **every** resulting SHA-1 (with package `com.codynest.pos`) in
+   *Google Cloud Console → APIs & Services → Credentials* as Android OAuth
+   clients, **and** add them to the Firebase Android app → re-download
+   `google-services.json` → replace `android/app/google-services.json` →
+   rebuild (the json is compiled into the app).
+
+Shortcut: the app prints the SHA-1 of whatever certificate the *installed*
+build actually carries (**Settings → Data & Backup → Google Drive Backup**,
+next to the error). Register that exact value instead of guessing.
+
+### Error → cause
+
+The app now shows the exact Google error under **Settings → Data & Backup →
+Google Drive Backup** (selectable text, no logcat needed).
+
+| Error | Cause | Fix |
+|---|---|---|
+| `ApiException: 10` / `providerConfigurationError` | SHA-1 or package name not registered for the signing key actually used | add the **Play App Signing** SHA-1, re-download `google-services.json`, rebuild |
+| `ApiException: 12500` | same as above, or missing support email on the consent screen | add fingerprints + fill in the consent screen |
+| `access_denied` / `403` | consent screen in **Testing** and the account isn't a test user, or Drive API disabled | add the account under OAuth consent screen → *Audience → Test users*; enable **Google Drive API** |
+| `App not verified` | `drive.file` is a *sensitive* scope | keep the app in Testing with your testers listed, or submit for verification |
+| `network_error` / `ApiException: 7` | connectivity or Play Services outdated | retry on a working network |
+
+### Checklist before testing a Play build
+
+- [ ] Drive API enabled in project `my-portfolio-78ae4`
+- [ ] OAuth consent screen: scope `.../auth/drive.file` present, support email set
+- [ ] Every tester's Google account listed as a **test user** (while unpublished)
+- [ ] Debug + upload + **Play App Signing** SHA-1s registered in Firebase
+- [ ] `android/app/google-services.json` re-downloaded after adding them
+- [ ] Web client ID in `kGoogleServerClientId` matches the project

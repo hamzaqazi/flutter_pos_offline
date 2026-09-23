@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
@@ -16,16 +19,16 @@ class InvoicePreviewPage extends StatelessWidget {
   final List<CartItemModel> items;
   final double subtotal;
   final double checkoutDiscount; // checkout discount percentage
-  final double taxRate;         // tax rate %
-  final bool taxInclusive;      // whether tax is included in price
-  final double taxAmount;       // calculated tax amount
+  final double taxRate; // tax rate %
+  final bool taxInclusive; // whether tax is included in price
+  final double taxAmount; // calculated tax amount
   final double total;
   final double cash;
   final double change;
   final double totalSavings;
-  final String customerId;      // linked customer
-  final String cashierId;       // staff who processed this sale
-  final String invoiceNumber;   // e.g. "INV-0001"
+  final String customerId; // linked customer
+  final String cashierId; // staff who processed this sale
+  final String invoiceNumber; // e.g. "INV-0001"
 
   /// When true, this is a past receipt being viewed (no sale completion).
   final bool readOnly;
@@ -65,7 +68,23 @@ class InvoicePreviewPage extends StatelessWidget {
   }
 
   Future<void> _printInvoice() async {
-    final pdfBytes = await InvoicePdfService.generateInvoice(
+    final pdfBytes = await _generatePdfBytes();
+    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
+  }
+
+  /// Share the receipt as a PDF file via the native share sheet
+  /// (WhatsApp, email, Bluetooth, etc.).
+  Future<void> _shareInvoice() async {
+    final pdfBytes = await _generatePdfBytes();
+    final safeInv = invoiceNumber.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '-');
+    final filename = safeInv.isNotEmpty
+        ? 'receipt_$safeInv.pdf'
+        : 'receipt.pdf';
+    await Printing.sharePdf(bytes: pdfBytes, filename: filename);
+  }
+
+  Future<Uint8List> _generatePdfBytes() {
+    return InvoicePdfService.generateInvoice(
       items: items,
       subtotal: subtotal,
       checkoutDiscount: checkoutDiscount,
@@ -80,7 +99,6 @@ class InvoicePreviewPage extends StatelessWidget {
       cashierName: _cashierName,
       invoiceNumber: invoiceNumber,
     );
-    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   }
 
   @override
@@ -89,7 +107,23 @@ class InvoicePreviewPage extends StatelessWidget {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(readOnly ? "Receipt" : "Invoice Preview")),
+      appBar: AppBar(
+        title: Text(readOnly ? "Receipt" : "Invoice Preview"),
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primaryContainer,
+                  Theme.of(context).colorScheme.surface,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Center(
@@ -110,10 +144,14 @@ class InvoicePreviewPage extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: cs.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusMd),
+                                AppSpacing.radiusMd,
+                              ),
                             ),
-                            child: Icon(Icons.storefront,
-                                color: cs.primary, size: 28),
+                            child: Icon(
+                              Icons.storefront,
+                              color: cs.primary,
+                              size: 28,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.md),
                           Obx(() {
@@ -161,7 +199,8 @@ class InvoicePreviewPage extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: cs.primary.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusSm),
+                                  AppSpacing.radiusSm,
+                                ),
                               ),
                               child: Text(
                                 invoiceNumber,
@@ -189,8 +228,11 @@ class InvoicePreviewPage extends StatelessWidget {
                     if (customerId.isNotEmpty && _customerName.isNotEmpty) ...[
                       Row(
                         children: [
-                          Icon(Icons.person_outline,
-                              size: 16, color: cs.onSurfaceVariant),
+                          Icon(
+                            Icons.person_outline,
+                            size: 16,
+                            color: cs.onSurfaceVariant,
+                          ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
                             "Customer: $_customerName",
@@ -209,8 +251,11 @@ class InvoicePreviewPage extends StatelessWidget {
                     if (cashierId.isNotEmpty && _cashierName.isNotEmpty) ...[
                       Row(
                         children: [
-                          Icon(Icons.badge_outlined,
-                              size: 16, color: cs.onSurfaceVariant),
+                          Icon(
+                            Icons.badge_outlined,
+                            size: 16,
+                            color: cs.onSurfaceVariant,
+                          ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
                             "Cashier: $_cashierName",
@@ -228,8 +273,9 @@ class InvoicePreviewPage extends StatelessWidget {
                     // ---------- Items ----------
                     if (items.isEmpty)
                       Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
                         child: Text(
                           "Item details not available",
                           textAlign: TextAlign.center,
@@ -242,7 +288,8 @@ class InvoicePreviewPage extends StatelessWidget {
                       ...items.map(
                         (item) => Padding(
                           padding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.sm),
+                            vertical: AppSpacing.sm,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -262,19 +309,19 @@ class InvoicePreviewPage extends StatelessWidget {
                                             item.product.brand,
                                             style: theme.textTheme.bodySmall
                                                 ?.copyWith(
-                                              color: cs.onSurfaceVariant,
-                                              fontSize: 10,
-                                            ),
+                                                  color: cs.onSurfaceVariant,
+                                                  fontSize: 10,
+                                                ),
                                           ),
                                         if (item.product.hasSku)
                                           Text(
                                             "SKU: ${item.product.sku}",
                                             style: theme.textTheme.bodySmall
                                                 ?.copyWith(
-                                              color: cs.onSurfaceVariant,
-                                              fontSize: 9,
-                                              fontFamily: 'monospace',
-                                            ),
+                                                  color: cs.onSurfaceVariant,
+                                                  fontSize: 9,
+                                                  fontFamily: 'monospace',
+                                                ),
                                           ),
                                       ],
                                     ),
@@ -297,7 +344,9 @@ class InvoicePreviewPage extends StatelessWidget {
                               if (item.product.discount > 0)
                                 Padding(
                                   padding: const EdgeInsets.only(
-                                      top: 2, left: AppSpacing.xs),
+                                    top: 2,
+                                    left: AppSpacing.xs,
+                                  ),
                                   child: Text(
                                     "Original: ${Formatters.currency(item.product.price)} each (-${item.product.discount.toStringAsFixed(0)}%)",
                                     style: theme.textTheme.bodySmall?.copyWith(
@@ -352,8 +401,12 @@ class InvoicePreviewPage extends StatelessWidget {
                     ],
                     const Divider(height: 1),
                     const SizedBox(height: AppSpacing.sm),
-                    _row(theme, "Total", Formatters.currency(total),
-                        emphasize: true),
+                    _row(
+                      theme,
+                      "Total",
+                      Formatters.currency(total),
+                      emphasize: true,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     _row(theme, "Cash", Formatters.currency(cash)),
                     const SizedBox(height: AppSpacing.sm),
@@ -396,20 +449,29 @@ class InvoicePreviewPage extends StatelessWidget {
                             onPressed: _printInvoice,
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: _shareInvoice,
+                          icon: const Icon(Icons.share_outlined, size: 20),
+                          tooltip: "Share receipt as PDF",
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Obx(() {
                             final settings = Get.find<SettingsController>();
-                            final hasPrinter = settings.receiptSettings.value.hasPrinter;
+                            final hasPrinter =
+                                settings.receiptSettings.value.hasPrinter;
                             return FilledButton.tonalIcon(
                               icon: Icon(
                                 Icons.bluetooth,
                                 color: hasPrinter ? AppColors.accent : null,
                               ),
-                              label: Text(hasPrinter ? "Thermal Print" : "Pair Printer"),
+                              label: Text(
+                                hasPrinter ? "Thermal Print" : "Pair Printer",
+                              ),
                               onPressed: () async {
                                 if (!hasPrinter) {
-                                  Get.toNamed('/settings');
+                                  ShellController.to.goSettings();
                                   return;
                                 }
                                 await ThermalPrinterService.printReceipt(
@@ -448,9 +510,16 @@ class InvoicePreviewPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
+                        IconButton.outlined(
+                          onPressed: _shareInvoice,
+                          icon: const Icon(Icons.share_outlined, size: 20),
+                          tooltip: "Share receipt as PDF",
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
                         Obx(() {
                           final settings = Get.find<SettingsController>();
-                          final hasPrinter = settings.receiptSettings.value.hasPrinter;
+                          final hasPrinter =
+                              settings.receiptSettings.value.hasPrinter;
                           return Expanded(
                             child: FilledButton.tonalIcon(
                               icon: Icon(
@@ -461,7 +530,7 @@ class InvoicePreviewPage extends StatelessWidget {
                               label: Text(hasPrinter ? "Thermal" : "Pair"),
                               onPressed: () async {
                                 if (!hasPrinter) {
-                                  Get.toNamed('/settings');
+                                  ShellController.to.goSettings();
                                   return;
                                 }
                                 await ThermalPrinterService.printReceipt(
@@ -509,8 +578,13 @@ class InvoicePreviewPage extends StatelessWidget {
     );
   }
 
-  Widget _row(ThemeData theme, String label, String value,
-      {bool emphasize = false, Color? valueColor}) {
+  Widget _row(
+    ThemeData theme,
+    String label,
+    String value, {
+    bool emphasize = false,
+    Color? valueColor,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

@@ -1,9 +1,14 @@
+import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
+import 'package:ad_shop_pos/widgets/product_image_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:ad_shop_pos/app/shell/shell_controller.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
@@ -18,8 +23,14 @@ class ProductsPage extends GetView<ProductsController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Products"),
+      appBar: AppShellAppBar(
+        title: Obx(() {
+          // Rebuild the product cap counter when the plan changes.
+          LicenseService.revision.value;
+          if (LicenseService.isPremium) return const Text("Products");
+          final count = controller.products.length;
+          return Text("Products ($count/${LicenseService.freeMaxProducts})");
+        }),
         actions: [
           // Barcode scanner button
           IconButton(
@@ -37,7 +48,7 @@ class ProductsPage extends GetView<ProductsController> {
                   clipBehavior: Clip.none,
                   children: [
                     IconButton.filledTonal(
-                      onPressed: () => Get.toNamed('/cart'),
+                      onPressed: () => ShellController.to.goCart(),
                       icon: const Icon(Icons.shopping_cart_outlined),
                     ),
                     if (cart.cartItems.isNotEmpty)
@@ -73,10 +84,17 @@ class ProductsPage extends GetView<ProductsController> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddProductDialog(context),
-        icon: const Icon(Icons.add),
-        label: const Text("Add product"),
+
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddProductDialog(context),
+          icon: const Icon(Icons.add),
+          label: const Text("Add product"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.huge),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -109,12 +127,16 @@ class ProductsPage extends GetView<ProductsController> {
           SizedBox(
             height: 44,
             child: Obx(() {
-              final cats = ['All', ...Get.find<CategoryController>().categoryNames];
+              final cats = [
+                'All',
+                ...Get.find<CategoryController>().categoryNames,
+              ];
               return ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 itemCount: cats.length,
-                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (_, i) => _categoryChip(cats[i], cs),
               );
             }),
@@ -122,26 +144,50 @@ class ProductsPage extends GetView<ProductsController> {
 
           // ---------- Grid ----------
           Expanded(
-            child: Obx(() {
-              final items = controller.filteredProducts;
-              if (items.isEmpty) {
-                return _EmptyState(
-                  hasProducts: controller.products.isNotEmpty,
+            child: RefreshIndicator(
+              onRefresh: controller.refreshProducts,
+              color: cs.primary,
+              child: Obx(() {
+                final items = controller.filteredProducts;
+                if (items.isEmpty) {
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Center(
+                            child: _EmptyState(
+                              hasProducts: controller.products.isNotEmpty,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+                return GridView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    // Floating nav clearance + room for the FAB above it
+                    AppSpacing.navClearance + AppSpacing.huge,
+                  ),
+                  itemCount: items.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.65,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                  ),
+                  itemBuilder: (_, index) => ProductCard(product: items[index]),
                 );
-              }
-              return GridView.builder(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: items.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.65,
-                  crossAxisSpacing: AppSpacing.md,
-                  mainAxisSpacing: AppSpacing.md,
-                ),
-                itemBuilder: (_, index) =>
-                    ProductCard(product: items[index]),
-              );
-            }),
+              }),
+            ),
           ),
         ],
       ),
@@ -174,7 +220,9 @@ class ProductsPage extends GetView<ProductsController> {
     final purchasePriceController = TextEditingController();
     final discountController = TextEditingController();
     final stockController = TextEditingController();
-    String selectedCategory = Get.find<CategoryController>().categoryNames.firstOrNull ?? "General";
+    String? imagePath;
+    String selectedCategory =
+        Get.find<CategoryController>().categoryNames.firstOrNull ?? "General";
 
     // Auto-generate SKU when category changes
     void updateAutoSku(String category) {
@@ -202,10 +250,12 @@ class ProductsPage extends GetView<ProductsController> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.sm),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusSm),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.12,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
                           child: Icon(
                             Icons.add_box_outlined,
@@ -213,11 +263,15 @@ class ProductsPage extends GetView<ProductsController> {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
-                        Text("Add Product",
-                            style: theme.textTheme.titleLarge),
+                        Text("Add Product", style: theme.textTheme.titleLarge),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
+                    ProductImagePicker(
+                      imagePath: imagePath,
+                      onChanged: (path) => setState(() => imagePath = path),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
                     TextField(
                       controller: nameController,
                       textCapitalization: TextCapitalization.words,
@@ -281,7 +335,8 @@ class ProductsPage extends GetView<ProductsController> {
                         const SizedBox(width: AppSpacing.sm),
                         IconButton.outlined(
                           onPressed: () async {
-                            final result = await BarcodeScannerHelper.scanAndLookupRaw();
+                            final result =
+                                await BarcodeScannerHelper.scanAndLookupRaw();
                             if (result != null && result.isNotEmpty) {
                               setState(() => barcodeController.text = result);
                             }
@@ -352,12 +407,13 @@ class ProductsPage extends GetView<ProductsController> {
                         labelText: "Category",
                         prefixIcon: Icon(Icons.category_outlined),
                       ),
-                      items: Get.find<CategoryController>()
-                          .categoryNames
-                          .map((name) => DropdownMenuItem(
-                                value: name,
-                                child: Text(name),
-                              ))
+                      items: Get.find<CategoryController>().categoryNames
+                          .map(
+                            (name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(name),
+                            ),
+                          )
                           .toList(),
                       onChanged: (value) {
                         setState(() => selectedCategory = value!);
@@ -389,8 +445,7 @@ class ProductsPage extends GetView<ProductsController> {
                               }
 
                               final discountVal =
-                                  double.tryParse(discountController.text) ??
-                                      0;
+                                  double.tryParse(discountController.text) ?? 0;
                               if (discountVal < 0 || discountVal > 100) {
                                 Get.snackbar(
                                   "Invalid discount",
@@ -408,13 +463,16 @@ class ProductsPage extends GetView<ProductsController> {
                                   category: selectedCategory,
                                   price:
                                       double.tryParse(priceController.text) ??
-                                          0,
-                                  purchasePrice: double.tryParse(
-                                          purchasePriceController.text) ??
+                                      0,
+                                  purchasePrice:
+                                      double.tryParse(
+                                        purchasePriceController.text,
+                                      ) ??
                                       0,
                                   discount: discountVal,
                                   stock:
                                       int.tryParse(stockController.text) ?? 0,
+                                  image: imagePath,
                                   sku: skuController.text.trim(),
                                   barcode: barcodeController.text.trim(),
                                 ),
@@ -443,43 +501,12 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                hasProducts ? Icons.search_off : Icons.inventory_2_outlined,
-                size: 48,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              hasProducts ? "No matching products" : "No products yet",
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              hasProducts
-                  ? "Try a different search or category"
-                  : "Tap \"Add product\" to get started",
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: hasProducts ? Icons.search_off : Icons.inventory_2_outlined,
+      title: hasProducts ? 'No matching products' : 'No products yet',
+      subtitle: hasProducts
+          ? 'Try a different search or category'
+          : 'Tap "Add product" to get started',
     );
   }
 }

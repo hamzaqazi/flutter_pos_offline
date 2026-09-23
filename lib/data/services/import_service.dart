@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
@@ -10,26 +12,102 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:ad_shop_pos/modules/settings/settings_controller.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 /// Service for importing data from a JSON backup file.
 class ImportService {
   /// Pick a JSON backup file and return its parsed content.
   /// Returns null if user cancels or file is invalid.
+  // static Future<Map<String, dynamic>?> pickBackupFile() async {
+  //   try {
+  //     final result = await FilePicker.platform.pickFiles(
+  //       type: FileType.any,
+  //       // allowedExtensions: ['json'],
+  //       dialogTitle: 'Select Backup File',
+  //     );
+
+  //     if (result == null || result.files.isEmpty) return null;
+
+  //     final file = File(result.files.single.path!);
+  //     final content = await file.readAsString();
+
+  //     final data = jsonDecode(content) as Map<String, dynamic>;
+
+  //     // Validate it's a valid backup
+  //     if (data['app'] != 'ad_shop_pos') {
+  //       Get.snackbar(
+  //         "Invalid file",
+  //         "This is not a valid Shop POS backup file",
+  //         snackPosition: SnackPosition.BOTTOM,
+  //       );
+  //       return null;
+  //     }
+
+  //     return data;
+  //   } catch (e) {
+  //     Get.snackbar(
+  //       "Error",
+  //       "Failed to read backup file: $e",
+  //       snackPosition: SnackPosition.BOTTOM,
+  //     );
+  //     return null;
+  //   }
+  // }
+
   static Future<Map<String, dynamic>?> pickBackupFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.any,
         // allowedExtensions: ['json'],
+        withData: true,
         dialogTitle: 'Select Backup File',
       );
 
-      if (result == null || result.files.isEmpty) return null;
+      // if not a json file, show error and return null
+      if (result != null && result.files.single.extension != 'json') {
+        Get.snackbar(
+          "Invalid file",
+          backgroundColor: AppColors.danger.withOpacity(0.3),
+          "Please select a valid JSON backup file.",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return null;
+      }
 
-      final file = File(result.files.single.path!);
-      final content = await file.readAsString();
+      if (result == null || result.files.isEmpty) {
+        return null;
+      }
 
-      final data = jsonDecode(content) as Map<String, dynamic>;
+      final platformFile = result.files.single;
+
+      // Read file using bytes.
+      // This works on Flutter Web as well as mobile/desktop.
+      final bytes = platformFile.bytes;
+
+      if (bytes == null) {
+        Get.snackbar(
+          "Error",
+          "Unable to read the selected backup file.",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return null;
+      }
+
+      final content = utf8.decode(bytes);
+
+      final decoded = jsonDecode(content);
+
+      if (decoded is! Map<String, dynamic>) {
+        Get.snackbar(
+          "Invalid file",
+          "The selected file is not a valid JSON backup.",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return null;
+      }
+
+      final data = decoded;
 
       // Validate it's a valid backup
       if (data['app'] != 'ad_shop_pos') {
@@ -48,6 +126,7 @@ class ImportService {
         "Failed to read backup file: $e",
         snackPosition: SnackPosition.BOTTOM,
       );
+
       return null;
     }
   }
@@ -63,6 +142,7 @@ class ImportService {
       returnCount: (data['returns'] as List?)?.length ?? 0,
       customerCount: (data['customers'] as List?)?.length ?? 0,
       staffCount: (data['staff'] as List?)?.length ?? 0,
+      categoryCount: (data['categories'] as List?)?.length ?? 0,
       hasSettings: data.containsKey('settings'),
     );
   }
@@ -158,16 +238,63 @@ class ImportService {
         );
       }
 
-      // Import categories
-      if (data['categories'] != null) {
-        final catBox = Hive.box('categories');
-        catBox.put('items', data['categories']);
+      // Import categories — normalise each entry so Hive stores plain maps
+      // (JSON decoding produces _Map<String, dynamic>, which CategoryModel
+      // reads back fine, but explicit conversion keeps the box consistent).
+      final categories = (data['categories'] as List?) ?? [];
+      final catBox = Hive.box('categories');
+      if (categories.isEmpty) {
+        // Old backup without categories: drop whatever is in the box so
+        // CategoryController re-seeds its defaults on reload instead of
+        // keeping categories that weren't part of the backup.
+        await catBox.delete('items');
+      } else {
+        await catBox.put(
+          'items',
+          categories
+              .map((c) => Map<String, dynamic>.from(c as Map))
+              .toList(),
+        );
       }
 
       // Import last invoice number
       if (data['lastInvoiceNumber'] != null) {
         final settingsBox = Hive.box('settings');
         settingsBox.put('lastInvoiceNumber', data['lastInvoiceNumber']);
+      }
+
+      // ── Prevent trial reset exploit ──
+      // If the backup has an earlier (expired) trial_startDate, it means the
+      // user exported from an expired trial, cleared data, started a fresh trial,
+      // and is now importing the backup. We override the fresh trial with the
+      // older expired one so the exploit fails.
+      final settingsBox = Hive.box('settings');
+      final currentTrialStart = settingsBox.get('trial_startDate') as String?;
+      final backupTrialStart = data['trial_startDate'] as String?;
+      if (currentTrialStart != null && backupTrialStart != null) {
+        final currentDate = DateTime.tryParse(currentTrialStart);
+        final backupDate = DateTime.tryParse(backupTrialStart);
+        if (currentDate != null &&
+            backupDate != null &&
+            backupDate.isBefore(currentDate)) {
+          // Backup trial is older (expired) — use it instead of fresh one
+          await settingsBox.put('trial_startDate', backupTrialStart);
+          final backupExpired = data['trial_expired'] as bool?;
+          await settingsBox.put('trial_expired', backupExpired ?? true);
+          debugPrint(
+            '🔒 Trial reset exploit blocked — older trial date restored from backup',
+          );
+        }
+      } else if (backupTrialStart != null) {
+        // Backup has trial data but current doesn't — restore from backup
+        await settingsBox.put('trial_startDate', backupTrialStart);
+        await settingsBox.put('trial_expired', data['trial_expired'] ?? false);
+        if (data['trial_customerPhone'] != null) {
+          await settingsBox.put(
+            'trial_customerPhone',
+            data['trial_customerPhone'],
+          );
+        }
       }
 
       // Reload all controllers
@@ -196,14 +323,28 @@ class ImportService {
       'license_key',
       'license_shopName',
       'license_expiresAt',
+      'license_plan',
+      'license_lastVerified',
       'license_pin',
       'license_pinEnabled',
       'license_deactivationReason',
+      'trial_startDate',
+      'trial_expired',
+      'trial_customerPhone',
+      'trial_registrationPending',
       'autoBackup_enabled',
       'autoBackup_frequency',
       'autoBackup_lastBackup',
       'autoBackup_maxBackups',
       'autoBackup_keepLast',
+      'web_deviceId', // Preserve web browser fingerprint across imports
+      // Keep the Google Drive connection intact across a restore,
+      // otherwise the account tile shows an empty name/photo/email.
+      'driveBackup_enabled',
+      'driveBackup_email',
+      'driveBackup_name',
+      'driveBackup_photo',
+      'driveBackup_lastBackup',
     ]) {
       final value = settingsBox.get(key);
       if (value != null) {
@@ -217,6 +358,7 @@ class ImportService {
     await HiveService.returnsBox.clear();
     await HiveService.customersBox.clear();
     await HiveService.staffBox.clear();
+    await Hive.box('categories').clear();
     await settingsBox.clear();
 
     // Restore preserved license + auto-backup data
@@ -248,6 +390,9 @@ class ImportService {
     try {
       Get.find<SettingsController>().loadSettings();
     } catch (_) {}
+    try {
+      Get.find<CategoryController>().loadCategories();
+    } catch (_) {}
   }
 }
 
@@ -261,6 +406,7 @@ class BackupSummary {
   final int returnCount;
   final int customerCount;
   final int staffCount;
+  final int categoryCount;
   final bool hasSettings;
 
   BackupSummary({
@@ -272,6 +418,7 @@ class BackupSummary {
     required this.returnCount,
     required this.customerCount,
     required this.staffCount,
+    required this.categoryCount,
     required this.hasSettings,
   });
 
@@ -280,6 +427,7 @@ class BackupSummary {
       saleCount +
       expenseCount +
       returnCount +
+      categoryCount +
       customerCount +
       staffCount;
 
