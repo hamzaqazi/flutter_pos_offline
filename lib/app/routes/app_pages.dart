@@ -6,6 +6,8 @@ import 'package:ad_shop_pos/modules/activation/pin_setup_screen.dart';
 import 'package:ad_shop_pos/modules/customers/customers_page.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_page.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_page.dart';
+import 'package:ad_shop_pos/modules/manual/manual_article_page.dart';
+import 'package:ad_shop_pos/modules/manual/manual_home_page.dart';
 import 'package:ad_shop_pos/modules/products/low_stock_page.dart';
 import 'package:ad_shop_pos/modules/reports/reports_page.dart';
 import 'package:ad_shop_pos/modules/returns/returns_page.dart';
@@ -98,6 +100,20 @@ class AppPages {
     GetPage(
       name: Routes.license,
       page: () => const LicensePage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    // User manual — the hub listing every guide…
+    GetPage(
+      name: Routes.manual,
+      page: () => const ManualHomePage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    // …and a single guide, opened with `parameters: {'id': '<guide id>'}`.
+    GetPage(
+      name: Routes.manualArticle,
+      page: () => const ManualArticlePage(),
       transition: Transition.fadeIn,
       transitionDuration: AppDuration.page,
     ),
