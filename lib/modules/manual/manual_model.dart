@@ -22,10 +22,10 @@ enum ManualCategory {
     Icons.rocket_launch_outlined,
     AppColors.seed,
   ),
-  selling('Selling', Icons.point_of_sale_outlined, AppColors.info),
+  selling('Selling', Icons.point_of_sale_outlined, AppColors.warning),
   inventory('Inventory', Icons.inventory_2_outlined, AppColors.accent),
   money('Money & Reports', Icons.insights_outlined, AppColors.violet),
-  printing('Receipts & Printing', Icons.print_outlined, AppColors.warning),
+  printing('Receipts & Printing', Icons.print_outlined, AppColors.info),
   data('Data & Backup', Icons.cloud_sync_outlined, AppColors.success),
   security('Security & Plan', Icons.shield_outlined, AppColors.danger),
   support(

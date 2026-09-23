@@ -36,7 +36,6 @@ class ManualGuides {
 
   static const List<ManualGuide> all = [
     // ═══════════════ GETTING STARTED ═══════════════
-
     ManualGuide(
       id: 'getting-started',
       title: 'Getting Started',
@@ -50,47 +49,43 @@ class ManualGuides {
           'Welcome to Codynest POS. This guide walks you through everything '
           'you need for your first sale — it takes about ten minutes.',
         ),
-        ManualSteps(
-          title: 'Set-up checklist',
-          steps: [
-            ManualStep(
-              'Choose your plan on the first screen',
-              detail:
-                  'Start a free trial, activate a license key, or continue on '
-                  'the free plan. You can change this later from the license '
-                  'screen.',
-            ),
-            ManualStep(
-              'Enter your shop details',
-              detail:
-                  'More tab → Shop Information. Your shop name, address and '
-                  'phone number print on every receipt.',
-            ),
-            ManualStep(
-              'Add your products',
-              detail:
-                  'Products tab → "Add product". Add at least a name, sell '
-                  'price and stock quantity.',
-            ),
-            ManualStep(
-              'Set your tax rate (optional)',
-              detail:
-                  'More tab → Tax Settings, if you charge sales tax or VAT.',
-            ),
-            ManualStep(
-              'Ring up your first sale',
-              detail:
-                  'Cart tab → tap products to add them → Checkout → choose a '
-                  'payment method.',
-            ),
-            ManualStep(
-              'Turn on backups',
-              detail:
-                  'More tab → Export & Backup. Your data lives on this device, '
-                  'so a backup is your safety net.',
-            ),
-          ],
-        ),
+        ManualSteps([
+          ManualStep(
+            'Choose your plan on the first screen',
+            detail:
+                'Start a free trial, activate a license key, or continue on '
+                'the free plan. You can change this later from the license '
+                'screen.',
+          ),
+          ManualStep(
+            'Enter your shop details',
+            detail:
+                'More tab → Shop Information. Your shop name, address and '
+                'phone number print on every receipt.',
+          ),
+          ManualStep(
+            'Add your products',
+            detail:
+                'Products tab → "Add product". Add at least a name, sell '
+                'price and stock quantity.',
+          ),
+          ManualStep(
+            'Set your tax rate (optional)',
+            detail: 'More tab → Tax Settings, if you charge sales tax or VAT.',
+          ),
+          ManualStep(
+            'Ring up your first sale',
+            detail:
+                'Cart tab → tap products to add them → Checkout → choose a '
+                'payment method.',
+          ),
+          ManualStep(
+            'Turn on backups',
+            detail:
+                'More tab → Export & Backup. Your data lives on this device, '
+                'so a backup is your safety net.',
+          ),
+        ]),
         const ManualCallout(
           ManualCalloutKind.tip,
           'Everything you enter is stored locally on this device and works '
@@ -119,12 +114,14 @@ class ManualGuides {
           ManualStep('Fill in your shop name, address and phone number'),
           ManualStep(
             'Set the currency symbol',
-            detail: 'For example Rs, ₹, \$ or AED. It is used everywhere '
+            detail:
+                'For example Rs, ₹, \$ or AED. It is used everywhere '
                 'prices are shown.',
           ),
           ManualStep(
             'Add a receipt footer message (optional)',
-            detail: 'A thank-you note or return policy, printed at the '
+            detail:
+                'A thank-you note or return policy, printed at the '
                 'bottom of the receipt.',
           ),
           ManualStep('Tap Save'),
@@ -174,7 +171,6 @@ class ManualGuides {
     ),
 
     // ═══════════════ SELLING ═══════════════
-
     ManualGuide(
       id: 'make-a-sale',
       title: 'Making a Sale',
@@ -184,47 +180,44 @@ class ManualGuides {
       keywords: ['sale', 'sell', 'checkout', 'cart', 'pos', 'payment', 'till'],
       relatedIds: ['hold-cart', 'returns', 'receipt-customization'],
       blocks: [
-        const ManualParagraph(
+        ManualParagraph(
           'The Cart tab is your point of sale. Sales work offline — you never '
           'need a connection to complete one.',
         ),
-        const ManualSteps(
-          title: 'To ring up a sale',
-          steps: [
-            ManualStep(
-              'Add items to the cart',
-              detail:
-                  'Open the Cart tab and tap products, or search for them, or '
-                  'use the barcode scanner.',
-            ),
-            ManualStep(
-              'Adjust quantities',
-              detail: 'Use the + and − controls on each cart line.',
-            ),
-            ManualStep(
-              'Apply a discount (optional)',
-              detail:
-                  'Enter a checkout discount percentage at checkout. You can '
-                  'also set a standing Discount % on an individual product.',
-            ),
-            ManualStep(
-              'Attach a customer (optional)',
-              detail:
-                  'Pick a customer from the dropdown, or add a new one on the '
-                  'spot.',
-            ),
-            ManualStep(
-              'Tap Checkout and confirm the total',
-              detail: 'Review the subtotal, discount and tax before saving.',
-            ),
-            ManualStep(
-              'Complete the sale and print',
-              detail:
-                  'After saving you can print the receipt to your paired '
-                  'thermal printer, or share it.',
-            ),
-          ],
-        ),
+        ManualSteps([
+          ManualStep(
+            'Add items to the cart',
+            detail:
+                'Open the Cart tab and tap products, or search for them, or '
+                'use the barcode scanner.',
+          ),
+          ManualStep(
+            'Adjust quantities',
+            detail: 'Use the + and − controls on each cart line.',
+          ),
+          ManualStep(
+            'Apply a discount (optional)',
+            detail:
+                'Enter a checkout discount percentage at checkout. You can '
+                'also set a standing Discount % on an individual product.',
+          ),
+          ManualStep(
+            'Attach a customer (optional)',
+            detail:
+                'Pick a customer from the dropdown, or add a new one on the '
+                'spot.',
+          ),
+          ManualStep(
+            'Tap Checkout and confirm the total',
+            detail: 'Review the subtotal, discount and tax before saving.',
+          ),
+          ManualStep(
+            'Complete the sale and print',
+            detail:
+                'After saving you can print the receipt to your paired '
+                'thermal printer, or share it.',
+          ),
+        ]),
         const ManualCallout(
           ManualCalloutKind.tip,
           'Sold the wrong item? Don\'t delete the sale — record a return '
@@ -248,9 +241,7 @@ class ManualGuides {
           'clearing it. You can serve someone else and come back later.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Add the items to the cart as usual',
-          ),
+          ManualStep('Add the items to the cart as usual'),
           ManualStep(
             'Tap "Hold" in the Cart app bar',
             detail: 'The Hold button only appears when the cart has items.',
@@ -332,18 +323,14 @@ class ManualGuides {
           'reconcile the return.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open Returns from the dashboard or the More tab',
-          ),
+          ManualStep('Open Returns from the dashboard or the More tab'),
           ManualStep(
             'Select the original sale',
             detail:
                 'Search by invoice number or customer so the return is linked '
                 'to the right transaction.',
           ),
-          ManualStep(
-            'Choose the items and quantities being returned',
-          ),
+          ManualStep('Choose the items and quantities being returned'),
           ManualStep(
             'Confirm the return',
             detail:
@@ -364,7 +351,8 @@ class ManualGuides {
     ManualGuide(
       id: 'scanner',
       title: 'Using the Barcode Scanner',
-      summary: 'Scan a barcode to find a product or add it straight to the cart.',
+      summary:
+          'Scan a barcode to find a product or add it straight to the cart.',
       category: ManualCategory.selling,
       icon: Icons.qr_code_scanner_rounded,
       keywords: ['barcode', 'scan', 'scanner', 'qr', 'camera', 'sku'],
@@ -387,9 +375,7 @@ class ManualGuides {
                 'Keep the code inside the frame. The app reads it '
                 'automatically.',
           ),
-          ManualStep(
-            'Tap the flash icon if the room is dark',
-          ),
+          ManualStep('Tap the flash icon if the room is dark'),
           ManualStep(
             'The app finds the matching product',
             detail:
@@ -411,7 +397,6 @@ class ManualGuides {
     ),
 
     // ═══════════════ INVENTORY ═══════════════
-
     ManualGuide(
       id: 'add-product',
       title: 'Adding a Product',
@@ -435,17 +420,14 @@ class ManualGuides {
           'before you can make a sale.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open the Products tab and tap "Add product"',
-          ),
+          ManualStep('Open the Products tab and tap "Add product"'),
           ManualStep(
             'Enter the product name',
-            detail: 'This is the only field you must fill in — everything '
+            detail:
+                'This is the only field you must fill in — everything '
                 'else is optional.',
           ),
-          ManualStep(
-            'Add a brand (optional)',
-          ),
+          ManualStep('Add a brand (optional)'),
           ManualStep(
             'Set the SKU and barcode',
             detail:
@@ -467,9 +449,7 @@ class ManualGuides {
             'Set a product-level discount % (optional)',
             detail: 'Useful for items you always sell at a reduced price.',
           ),
-          ManualStep(
-            'Enter the current stock quantity',
-          ),
+          ManualStep('Enter the current stock quantity'),
           ManualStep(
             'Choose a category',
             detail: 'Categories make products easier to find and report on.',
@@ -493,7 +473,8 @@ class ManualGuides {
     ManualGuide(
       id: 'edit-delete-product',
       title: 'Editing & Deleting Products',
-      summary: 'Update prices or stock, or remove a product you no longer sell.',
+      summary:
+          'Update prices or stock, or remove a product you no longer sell.',
       category: ManualCategory.inventory,
       icon: Icons.edit_outlined,
       keywords: ['edit', 'delete', 'remove', 'update', 'price change'],
@@ -506,9 +487,7 @@ class ManualGuides {
                 'Use the search field to filter by name, brand, SKU or '
                 'barcode.',
           ),
-          ManualStep(
-            'Tap the product to open it',
-          ),
+          ManualStep('Tap the product to open it'),
           ManualStep(
             'Change any details and tap Save',
             detail:
@@ -556,9 +535,7 @@ class ManualGuides {
                 'When adding or editing a product, pick its category from the '
                 'dropdown.',
           ),
-          ManualStep(
-            'Filter the Products tab by category',
-          ),
+          ManualStep('Filter the Products tab by category'),
         ]),
         const ManualCallout(
           ManualCalloutKind.tip,
@@ -574,45 +551,43 @@ class ManualGuides {
       summary: 'Get warned before items run out, and record new stock.',
       category: ManualCategory.inventory,
       icon: Icons.warning_amber_rounded,
-      keywords: ['low', 'stock', 'restock', 'out of stock', 'inventory', 'alert'],
+      keywords: [
+        'low',
+        'stock',
+        'restock',
+        'out of stock',
+        'inventory',
+        'alert',
+      ],
       relatedIds: ['add-product', 'reports'],
       blocks: [
         const ManualParagraph(
           'The app warns you when stock drops to a level you choose, so you '
           'can reorder before an item sells out.',
         ),
-        const ManualSteps(
-          title: 'Set the warning level',
-          steps: [
-            ManualStep('Open the More tab, then tap "Low Stock Alert"'),
-            ManualStep(
-              'Enter your low stock threshold',
-              detail:
-                  'For example 5 units. Any product at or below this level '
-                  'raises an alert.',
-            ),
-            ManualStep('Tap Save'),
-          ],
-        ),
-        const ManualSteps(
-          title: 'Restock an item',
-          steps: [
-            ManualStep(
-              'Open the low stock list',
-              detail:
-                  'Products at or below the threshold appear under "Low '
-                  'Stock", and zero-stock items under "Out of Stock".',
-            ),
-            ManualStep(
-              'Tap "Restock" on the product you received',
-            ),
-            ManualStep(
-              'Enter the quantity you are adding and tap Add',
-              detail:
-                  'The quantity is added to the existing stock level.',
-            ),
-          ],
-        ),
+        const ManualSteps([
+          ManualStep('Open the More tab, then tap "Low Stock Alert"'),
+          ManualStep(
+            'Enter your low stock threshold',
+            detail:
+                'For example 5 units. Any product at or below this level '
+                'raises an alert.',
+          ),
+          ManualStep('Tap Save'),
+        ]),
+        const ManualSteps([
+          ManualStep(
+            'Open the low stock list',
+            detail:
+                'Products at or below the threshold appear under "Low '
+                'Stock", and zero-stock items under "Out of Stock".',
+          ),
+          ManualStep('Tap "Restock" on the product you received'),
+          ManualStep(
+            'Enter the quantity you are adding and tap Add',
+            detail: 'The quantity is added to the existing stock level.',
+          ),
+        ]),
         const ManualCallout(
           ManualCalloutKind.note,
           'Stock is reduced automatically every time you complete a sale, and '
@@ -622,7 +597,6 @@ class ManualGuides {
     ),
 
     // ═══════════════ MONEY & REPORTS ═══════════════
-
     ManualGuide(
       id: 'sales-history',
       title: 'Finding Past Sales',
@@ -637,9 +611,7 @@ class ManualGuides {
           'any transaction later.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open the Sales tab',
-          ),
+          ManualStep('Open the Sales tab'),
           ManualStep(
             'Search for a sale',
             detail:
@@ -730,16 +702,10 @@ class ManualGuides {
           'on. Recording them makes your profit figures realistic.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open Expenses from the dashboard or the More tab',
-          ),
+          ManualStep('Open Expenses from the dashboard or the More tab'),
           ManualStep('Tap "Add expense"'),
-          ManualStep(
-            'Enter the amount',
-          ),
-          ManualStep(
-            'Choose a category',
-          ),
+          ManualStep('Enter the amount'),
+          ManualStep('Choose a category'),
           ManualStep(
             'Add a description',
             detail: 'For example "October electricity bill".',
@@ -776,28 +742,21 @@ class ManualGuides {
             'Enter the full name',
             detail: 'This is required — the other fields are optional.',
           ),
-          ManualStep(
-            'Add their phone number, email and address as needed',
-          ),
+          ManualStep('Add their phone number, email and address as needed'),
           ManualStep('Tap Save'),
         ]),
-        ManualSteps(
-          title: 'Editing or removing a customer',
-          steps: [
-            ManualStep(
-              'Tap the customer in the list',
-            ),
-            ManualStep(
-              'Choose Edit to update their details, or Delete to remove them',
-            ),
-            ManualStep(
-              'Confirm the deletion',
-              detail:
-                  'Past sales that name this customer are not affected — they '
-                  'keep the details recorded at the time of sale.',
-            ),
-          ],
-        ),
+        ManualSteps([
+          ManualStep('Tap the customer in the list'),
+          ManualStep(
+            'Choose Edit to update their details, or Delete to remove them',
+          ),
+          ManualStep(
+            'Confirm the deletion',
+            detail:
+                'Past sales that name this customer are not affected — they '
+                'keep the details recorded at the time of sale.',
+          ),
+        ]),
         const ManualAction('Open Customers', route: Routes.customers),
       ],
     ),
@@ -816,9 +775,7 @@ class ManualGuides {
           'of who is currently working.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open the More tab, then tap "Staff & Cashiers"',
-          ),
+          ManualStep('Open the More tab, then tap "Staff & Cashiers"'),
           ManualStep('Tap "Add Staff"'),
           ManualStep(
             'Enter the full name',
@@ -830,9 +787,7 @@ class ManualGuides {
                 'The role defaults to Cashier. Pick the role that matches '
                 'what this person should be able to do.',
           ),
-          ManualStep(
-            'Add their phone number (optional)',
-          ),
+          ManualStep('Add their phone number (optional)'),
           ManualStep('Tap Save'),
         ]),
         const ManualCallout(
@@ -846,7 +801,6 @@ class ManualGuides {
     ),
 
     // ═══════════════ PRINTING ═══════════════
-
     ManualGuide(
       id: 'receipt-customization',
       title: 'Customising Your Receipt',
@@ -870,9 +824,7 @@ class ManualGuides {
           'what a printed receipt will look like before you print one.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open the More tab, then tap "Receipt Customization"',
-          ),
+          ManualStep('Open the More tab, then tap "Receipt Customization"'),
           ManualStep(
             'Choose your paper size',
             detail:
@@ -885,9 +837,7 @@ class ManualGuides {
                 'Small, Normal or Large. Larger text is easier to read but '
                 'uses more paper.',
           ),
-          ManualStep(
-            'Switch the logo on and choose an image (optional)',
-          ),
+          ManualStep('Switch the logo on and choose an image (optional)'),
           ManualStep(
             'Turn individual lines on or off',
             detail:
@@ -895,9 +845,7 @@ class ManualGuides {
                 'cashier, customer, SKU, brand, barcode, discount details, '
                 'tax details and the footer message.',
           ),
-          ManualStep(
-            'Check the preview, then leave the screen to save',
-          ),
+          ManualStep('Check the preview, then leave the screen to save'),
         ]),
         const ManualCallout(
           ManualCalloutKind.tip,
@@ -919,61 +867,56 @@ class ManualGuides {
       summary: 'Connect a Bluetooth receipt printer and run a test print.',
       category: ManualCategory.printing,
       icon: Icons.print_outlined,
-      keywords: ['printer', 'bluetooth', 'pair', 'thermal', 'connect', 'test print'],
+      keywords: [
+        'printer',
+        'bluetooth',
+        'pair',
+        'thermal',
+        'connect',
+        'test print',
+      ],
       relatedIds: ['receipt-customization', 'make-a-sale'],
       blocks: [
         const ManualParagraph(
           'Codynest POS prints to Bluetooth thermal receipt printers. Pair the '
           'printer once and it stays connected for future receipts.',
         ),
-        const ManualSteps(
-          title: 'Before you start',
-          steps: [
-            ManualStep(
-              'Turn the printer on and load paper',
-            ),
-            ManualStep(
-              'Make sure it is not already connected to another phone',
-              detail:
-                  'If another device is holding the connection, turn that '
-                  'device\'s Bluetooth off or unpair the printer there first.',
-            ),
-            ManualStep(
-              'Turn the printer\'s Bluetooth pairing mode on',
-              detail: 'Most printers show a blinking light when ready.',
-            ),
-          ],
-        ),
-        const ManualSteps(
-          title: 'Pair it in the app',
-          steps: [
-            ManualStep(
-              'Open the More tab, then tap "Thermal Printer"',
-            ),
-            ManualStep(
-              'Grant the Bluetooth permissions when asked',
-              detail:
-                  'The app needs permission to scan for nearby devices. If '
-                  'you tapped Deny, allow Bluetooth access for Codynest POS '
-                  'in your phone\'s settings and try again.',
-            ),
-            ManualStep(
-              'Tap "Scan for Printers"',
-            ),
-            ManualStep(
-              'Tap your printer in the list to pair it',
-              detail:
-                  'The app shows the printer as "Paired Printer" with its MAC '
-                  'address once connected.',
-            ),
-            ManualStep(
-              'Tap "Test Print"',
-              detail:
-                  'A test receipt goes to the printer. If it prints, you are '
-                  'ready to go.',
-            ),
-          ],
-        ),
+        const ManualSteps([
+          ManualStep('Turn the printer on and load paper'),
+          ManualStep(
+            'Make sure it is not already connected to another phone',
+            detail:
+                'If another device is holding the connection, turn that '
+                'device\'s Bluetooth off or unpair the printer there first.',
+          ),
+          ManualStep(
+            'Turn the printer\'s Bluetooth pairing mode on',
+            detail: 'Most printers show a blinking light when ready.',
+          ),
+        ]),
+        const ManualSteps([
+          ManualStep('Open the More tab, then tap "Thermal Printer"'),
+          ManualStep(
+            'Grant the Bluetooth permissions when asked',
+            detail:
+                'The app needs permission to scan for nearby devices. If '
+                'you tapped Deny, allow Bluetooth access for Codynest POS '
+                'in your phone\'s settings and try again.',
+          ),
+          ManualStep('Tap "Scan for Printers"'),
+          ManualStep(
+            'Tap your printer in the list to pair it',
+            detail:
+                'The app shows the printer as "Paired Printer" with its MAC '
+                'address once connected.',
+          ),
+          ManualStep(
+            'Tap "Test Print"',
+            detail:
+                'A test receipt goes to the printer. If it prints, you are '
+                'ready to go.',
+          ),
+        ]),
         const ManualCallout(
           ManualCalloutKind.tip,
           'If the printer does not appear, keep it within a metre of the phone '
@@ -989,11 +932,11 @@ class ManualGuides {
     ),
 
     // ═══════════════ DATA & BACKUP ═══════════════
-
     ManualGuide(
       id: 'backup-export',
       title: 'Backing Up & Exporting Data',
-      summary: 'Save a full backup, or export products, sales and expenses to CSV.',
+      summary:
+          'Save a full backup, or export products, sales and expenses to CSV.',
       category: ManualCategory.data,
       icon: Icons.file_download_outlined,
       keywords: ['backup', 'export', 'csv', 'json', 'save', 'data'],
@@ -1003,39 +946,31 @@ class ManualGuides {
           'Your data is stored only on this device. A backup is your insurance '
           'if the phone is lost, replaced or reset.',
         ),
-        ManualSteps(
-          title: 'Make a full backup',
-          steps: [
-            ManualStep(
-              'Open the More tab, then tap "Export & Backup"',
-            ),
-            ManualStep(
-              'Tap "Full Backup"',
-              detail:
-                  'This exports everything — products, sales, expenses, '
-                  'returns, customers, staff, categories and settings — as a '
-                  'single restorable file.',
-            ),
-            ManualStep(
-              'Choose where to save or share the file',
-              detail:
-                  'Send it to yourself on WhatsApp or email, or save it to '
-                  'cloud storage. Keep it somewhere other than this phone.',
-            ),
-          ],
-        ),
-        ManualSteps(
-          title: 'Export a spreadsheet',
-          steps: [
-            ManualStep(
-              'Tap "Export Products", "Export Sales" or "Export Expenses"',
-            ),
-            ManualStep(
-              'Open the CSV in Excel, Google Sheets or any spreadsheet app',
-              detail: 'Useful for accounting and for your own analysis.',
-            ),
-          ],
-        ),
+        ManualSteps([
+          ManualStep('Open the More tab, then tap "Export & Backup"'),
+          ManualStep(
+            'Tap "Full Backup"',
+            detail:
+                'This exports everything — products, sales, expenses, '
+                'returns, customers, staff, categories and settings — as a '
+                'single restorable file.',
+          ),
+          ManualStep(
+            'Choose where to save or share the file',
+            detail:
+                'Send it to yourself on WhatsApp or email, or save it to '
+                'cloud storage. Keep it somewhere other than this phone.',
+          ),
+        ]),
+        ManualSteps([
+          ManualStep(
+            'Tap "Export Products", "Export Sales" or "Export Expenses"',
+          ),
+          ManualStep(
+            'Open the CSV in Excel, Google Sheets or any spreadsheet app',
+            detail: 'Useful for accounting and for your own analysis.',
+          ),
+        ]),
         const ManualCallout(
           ManualCalloutKind.warning,
           'A CSV export is for reading and accounting only — it cannot be '
@@ -1070,21 +1005,15 @@ class ManualGuides {
                 'If you sent it to yourself, download it from WhatsApp, email '
                 'or your cloud drive first.',
           ),
-          ManualStep(
-            'Open the More tab, then tap "Import & Restore"',
-          ),
-          ManualStep(
-            'Tap "Restore from Backup" and pick the backup file',
-          ),
+          ManualStep('Open the More tab, then tap "Import & Restore"'),
+          ManualStep('Tap "Restore from Backup" and pick the backup file'),
           ManualStep(
             'Review the summary of what the backup contains',
             detail:
                 'Check the counts and the date before you continue, so you '
                 'know exactly what you are restoring.',
           ),
-          ManualStep(
-            'Confirm the restore',
-          ),
+          ManualStep('Confirm the restore'),
         ]),
         const ManualCallout(
           ManualCalloutKind.warning,
@@ -1106,7 +1035,14 @@ class ManualGuides {
       summary: 'Schedule daily or weekly backups automatically.',
       category: ManualCategory.data,
       icon: Icons.schedule_outlined,
-      keywords: ['auto', 'automatic', 'schedule', 'daily', 'weekly', 'reminder'],
+      keywords: [
+        'auto',
+        'automatic',
+        'schedule',
+        'daily',
+        'weekly',
+        'reminder',
+      ],
       relatedIds: ['backup-export', 'drive-backup'],
       blocks: [
         const ManualParagraph(
@@ -1114,15 +1050,9 @@ class ManualGuides {
           'your data does not depend on remembering to do it.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open the More tab, then tap "Auto Backup"',
-          ),
-          ManualStep(
-            'Switch auto backup on',
-          ),
-          ManualStep(
-            'Choose daily or weekly',
-          ),
+          ManualStep('Open the More tab, then tap "Auto Backup"'),
+          ManualStep('Switch auto backup on'),
+          ManualStep('Choose daily or weekly'),
           ManualStep(
             'Look for the backup shortcut on the dashboard',
             detail:
@@ -1160,12 +1090,11 @@ class ManualGuides {
           'internet connection; everything else in the app works offline.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open the More tab, then tap "Google Drive Backup"',
-          ),
+          ManualStep('Open the More tab, then tap "Google Drive Backup"'),
           ManualStep(
             'Sign in with your Google account when prompted',
-            detail: 'You choose which account to use — it is your Drive, not '
+            detail:
+                'You choose which account to use — it is your Drive, not '
                 'ours.',
           ),
           ManualStep(
@@ -1194,7 +1123,6 @@ class ManualGuides {
     ),
 
     // ═══════════════ SECURITY & PLAN ═══════════════
-
     ManualGuide(
       id: 'pin-lock',
       title: 'Locking the App with a PIN',
@@ -1210,31 +1138,18 @@ class ManualGuides {
           'device.',
         ),
         const ManualSteps([
-          ManualStep(
-            'Open the More tab, then tap "App Security"',
-          ),
-          ManualStep(
-            'Switch on "Enable PIN lock"',
-          ),
-          ManualStep(
-            'Choose a 4-digit PIN you will remember',
-          ),
+          ManualStep('Open the More tab, then tap "App Security"'),
+          ManualStep('Switch on "Enable PIN lock"'),
+          ManualStep('Choose a 4-digit PIN you will remember'),
           ManualStep(
             'Confirm the PIN',
             detail: 'The app asks for it the next time it opens.',
           ),
         ]),
-        ManualSteps(
-          title: 'Changing your PIN',
-          steps: [
-            ManualStep(
-              'Open App Security again and tap "Change PIN"',
-            ),
-            ManualStep(
-              'Enter a new 4-digit PIN and confirm it',
-            ),
-          ],
-        ),
+        ManualSteps([
+          ManualStep('Open App Security again and tap "Change PIN"'),
+          ManualStep('Enter a new 4-digit PIN and confirm it'),
+        ]),
         const ManualCallout(
           ManualCalloutKind.warning,
           'There is no "forgot PIN" reset from inside the app — it is a lock, '
@@ -1282,24 +1197,19 @@ class ManualGuides {
           'Licensed plans — Monthly, Yearly or Lifetime, with the product cap '
               'removed.',
         ]),
-        const ManualSteps(
-          title: 'Activating a license',
-          steps: [
-            ManualStep(
-              'Open the More tab, then tap "App Security" and the plan row',
-              detail: 'Or open the License & Plans screen directly.',
-            ),
-            ManualStep(
-              'Tap "Activate License"',
-            ),
-            ManualStep(
-              'Enter the license key you received and confirm',
-              detail:
-                  'Activation checks the key online — you need an internet '
-                  'connection for this one step.',
-            ),
-          ],
-        ),
+        const ManualSteps([
+          ManualStep(
+            'Open the More tab, then tap "App Security" and the plan row',
+            detail: 'Or open the License & Plans screen directly.',
+          ),
+          ManualStep('Tap "Activate License"'),
+          ManualStep(
+            'Enter the license key you received and confirm',
+            detail:
+                'Activation checks the key online — you need an internet '
+                'connection for this one step.',
+          ),
+        ]),
         const ManualCallout(
           ManualCalloutKind.tip,
           'Your plan and remaining days are shown on the App Security screen '
@@ -1310,7 +1220,6 @@ class ManualGuides {
     ),
 
     // ═══════════════ SUPPORT ═══════════════
-
     ManualGuide(
       id: 'troubleshooting',
       title: 'Troubleshooting Common Issues',
@@ -1333,42 +1242,42 @@ class ManualGuides {
           ManualFaqItem(
             'The printer will not connect or nothing prints',
             'Keep the printer within a metre of the phone and make sure it is '
-            'switched on with paper loaded. Check that no other phone is '
-            'connected to it — a thermal printer usually accepts only one '
-            'device. Then re-open Thermal Printer in the More tab and scan '
-            'again.',
+                'switched on with paper loaded. Check that no other phone is '
+                'connected to it — a thermal printer usually accepts only one '
+                'device. Then re-open Thermal Printer in the More tab and scan '
+                'again.',
           ),
           ManualFaqItem(
             'The scanner does not read anything',
             'Grant camera permission to Codynest POS in your phone\'s '
-            'settings and reopen the scanner. Make sure the product actually '
-            'has a barcode saved, and clean the camera lens. Very dim light '
-            'or a scratched, crumpled barcode can also stop it reading — use '
-            'the flash or type the code in manually.',
+                'settings and reopen the scanner. Make sure the product actually '
+                'has a barcode saved, and clean the camera lens. Very dim light '
+                'or a scratched, crumpled barcode can also stop it reading — use '
+                'the flash or type the code in manually.',
           ),
           ManualFaqItem(
             'A product or sale is missing',
             'Check the search and date filters first — a filter left on from '
-            'earlier hides data that is still there. If it has genuinely '
-            'disappeared, you may have restored an older backup: restoring '
-            'replaces everything with the state of that backup file.',
+                'earlier hides data that is still there. If it has genuinely '
+                'disappeared, you may have restored an older backup: restoring '
+                'replaces everything with the state of that backup file.',
           ),
           ManualFaqItem(
             'My profit numbers look too high',
             'This almost always means products have no purchase price '
-            'recorded. Add the purchase price to each product so the app can '
-            'subtract your cost of goods from revenue.',
+                'recorded. Add the purchase price to each product so the app can '
+                'subtract your cost of goods from revenue.',
           ),
           ManualFaqItem(
             'The app is asking for a PIN I do not know',
             'The PIN is not recoverable from inside the app. Contact support '
-            'using the details in the next guide.',
+                'using the details in the next guide.',
           ),
           ManualFaqItem(
             'I cannot add more products',
             'You have probably reached your plan\'s product allowance. The '
-            'Products title shows your usage, for example "Products (50/50)". '
-            'Activate a license to remove the cap.',
+                'Products title shows your usage, for example "Products (50/50)". '
+                'Activate a license to remove the cap.',
           ),
         ]),
       ],
@@ -1387,17 +1296,10 @@ class ManualGuides {
           'If this manual does not solve your problem, the support team can '
           'help directly on WhatsApp or by phone.',
         ),
-        const ManualBullets([
-          '0315-3507075',
-          '0345-3333316',
-        ]),
+        const ManualBullets(['0315-3507075', '0345-3333316']),
         const ManualSteps([
-          ManualStep(
-            'Open the More tab and scroll to "Support & WhatsApp"',
-          ),
-          ManualStep(
-            'Tap it to start a WhatsApp chat with the support team',
-          ),
+          ManualStep('Open the More tab and scroll to "Support & WhatsApp"'),
+          ManualStep('Tap it to start a WhatsApp chat with the support team'),
         ]),
         const ManualCallout(
           ManualCalloutKind.tip,
@@ -1471,9 +1373,7 @@ class ManualGuides {
         titleHits.add(guide);
         continue;
       }
-      final inKeywords = guide.keywords.any(
-        (k) => k.toLowerCase().contains(q),
-      );
+      final inKeywords = guide.keywords.any((k) => k.toLowerCase().contains(q));
       if (inKeywords) {
         keywordHits.add(guide);
         continue;
