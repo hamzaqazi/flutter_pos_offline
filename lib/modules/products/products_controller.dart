@@ -85,6 +85,20 @@ class ProductsController extends GetxController {
     }
   }
 
+  /// Reduce the stock of [id] by [qty], working from the product's *current*
+  /// level rather than a caller's possibly-stale snapshot.
+  ///
+  /// Completing a sale uses this: the cart holds a copy of the product from
+  /// the moment it was added, so subtracting from that copy would throw away
+  /// any restock made while the item sat in the cart. Never goes below zero.
+  void decrementStock(String id, int qty) {
+    final index = products.indexWhere((p) => p.id == id);
+    if (index == -1) return;
+
+    final next = products[index].stock - qty;
+    updateStock(id, next < 0 ? 0 : next);
+  }
+
   void deleteProduct(String id) {
     // Clean up the stored product photo (if any) before removing the record.
     final index = products.indexWhere((e) => e.id == id);

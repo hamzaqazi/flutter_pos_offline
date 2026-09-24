@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
+import 'package:ad_shop_pos/data/services/order_totals.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
@@ -364,30 +365,37 @@ class CartPage extends GetView<CartController> {
             builder: (context, setState) {
               final theme = Theme.of(context);
 
-              // Parse checkout discount %
-              final checkoutDiscountPct =
-                  double.tryParse(checkoutDiscountController.text.trim()) ?? 0;
-              // Discount applies on subtotal (before tax for tax-exclusive, on total for tax-inclusive)
-              final checkoutDiscountAmount =
-                  cart.subtotalAmount * checkoutDiscountPct / 100;
-              // For tax-exclusive: discount reduces subtotal, then tax is recalculated
               final settings = SettingsService.getSettings();
-              final discountedSubtotal =
-                  cart.subtotalAmount - checkoutDiscountAmount;
-              final taxOnDiscounted = settings.taxInclusive
-                  ? discountedSubtotal -
-                        (discountedSubtotal / (1 + settings.taxRate / 100))
-                  : discountedSubtotal * settings.taxRate / 100;
-              final grandTotal = settings.taxInclusive
-                  ? discountedSubtotal // tax already included
-                  : discountedSubtotal + taxOnDiscounted;
+
+              // ── Checkout discount (hard-blocked outside 0–100) ──
+              // Above 100% the payable total would go negative, and an
+              // unparseable value would silently read as "no discount".
+              // Both are refused rather than quietly recorded.
+              final discountText = checkoutDiscountController.text.trim();
+              final parsedDiscount = double.tryParse(discountText);
+              final discountInvalid =
+                  discountText.isNotEmpty &&
+                  (parsedDiscount == null ||
+                      parsedDiscount < 0 ||
+                      parsedDiscount > 100);
+              final checkoutDiscountPct = discountInvalid
+                  ? 0
+                  : parsedDiscount ?? 0;
+
+              // ── Totals ──
+              // OrderTotals is the single source of truth for this maths, and
+              // SalesController.completeSale runs the very same helper — so
+              // the total shown and collected here is the total that gets
+              // stored against the sale.
+              final totals = OrderTotals.calculate(
+                items: cart.cartItems,
+                settings: settings,
+                checkoutDiscountPct: checkoutDiscountPct,
+              );
 
               final cash = double.tryParse(cashController.text.trim()) ?? 0;
-              final change = cash - grandTotal;
-              final enough = cash >= grandTotal;
-
-              final totalAllSavings =
-                  cart.totalSavings + checkoutDiscountAmount;
+              final change = cash - totals.total;
+              final enough = cash >= totals.total && !discountInvalid;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -484,7 +492,7 @@ class CartPage extends GetView<CartController> {
                                   ),
                                 ),
                                 Text(
-                                  "-${Formatters.currency(checkoutDiscountAmount)}",
+                                  "-${Formatters.currency(totals.checkoutDiscountAmount)}",
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: AppColors.danger,
                                     fontWeight: FontWeight.w700,
@@ -505,7 +513,7 @@ class CartPage extends GetView<CartController> {
                                 style: theme.textTheme.titleMedium,
                               ),
                               Text(
-                                Formatters.currency(grandTotal),
+                                Formatters.currency(totals.total),
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.w800,
@@ -513,13 +521,13 @@ class CartPage extends GetView<CartController> {
                               ),
                             ],
                           ),
-                          if (totalAllSavings > 0) ...[
+                          if (totals.savings > 0) ...[
                             const SizedBox(height: AppSpacing.sm),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                  "Total saved: ${Formatters.currency(totalAllSavings)}",
+                                  "Total saved: ${Formatters.currency(totals.savings)}",
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: AppColors.success,
                                     fontWeight: FontWeight.w600,
@@ -544,6 +552,21 @@ class CartPage extends GetView<CartController> {
                       ),
                       onChanged: (_) => setState(() {}),
                     ),
+                    // Hard block: shown while the entered discount is out of
+                    // range, and Pay stays disabled until it is fixed.
+                    if (discountInvalid)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: AppSpacing.xs,
+                          left: AppSpacing.sm,
+                        ),
+                        child: Text(
+                          "Enter a discount between 0 and 100",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.danger,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.sm),
                     Wrap(
                       spacing: AppSpacing.sm,
@@ -658,19 +681,19 @@ class CartPage extends GetView<CartController> {
                       children: [
                         _quickChip(
                           "Exact",
-                          grandTotal,
+                          totals.total,
                           cashController,
                           setState,
                         ),
                         _quickChip(
                           "+500",
-                          grandTotal + 500,
+                          totals.total + 500,
                           cashController,
                           setState,
                         ),
                         _quickChip(
                           "+1000",
-                          grandTotal + 1000,
+                          totals.total + 1000,
                           cashController,
                           setState,
                         ),
@@ -715,21 +738,19 @@ class CartPage extends GetView<CartController> {
                                     Get.to(
                                       () => InvoicePreviewPage(
                                         items: cart.cartItems,
-                                        subtotal: cart.subtotalAmount,
-                                        checkoutDiscount: checkoutDiscountPct,
+                                        subtotal: totals.subtotal,
+                                        // The helper's clamped percentage, so
+                                        // the preview can never disagree with
+                                        // what gets stored.
+                                        checkoutDiscount:
+                                            totals.checkoutDiscountPct,
                                         taxRate: settings.taxRate,
                                         taxInclusive: settings.taxInclusive,
-                                        taxAmount: settings.taxInclusive
-                                            ? (grandTotal -
-                                                  grandTotal /
-                                                      (1 +
-                                                          settings.taxRate /
-                                                              100))
-                                            : taxOnDiscounted,
-                                        total: grandTotal,
+                                        taxAmount: totals.taxAmount,
+                                        total: totals.total,
                                         cash: cash,
                                         change: change,
-                                        totalSavings: totalAllSavings,
+                                        totalSavings: totals.savings,
                                         customerId: selectedCustomerId ?? '',
                                         cashierId:
                                             Get.find<StaffController>()

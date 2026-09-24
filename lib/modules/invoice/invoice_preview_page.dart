@@ -559,11 +559,14 @@ class InvoicePreviewPage extends StatelessWidget {
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text("Complete sale"),
                       onPressed: () {
+                        // completeSale recomputes the totals with
+                        // OrderTotals — the same helper this preview was
+                        // built from — so the saved sale matches what was
+                        // shown here.
                         Get.find<SalesController>().completeSale(
                           cash: cash,
                           change: change,
                           checkoutDiscount: checkoutDiscount,
-                          taxAmount: taxAmount,
                           customerId: customerId,
                           cashierId: cashierId,
                           invoiceNumber: invoiceNumber,

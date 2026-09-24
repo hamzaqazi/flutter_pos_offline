@@ -702,26 +702,44 @@ class ProductCard extends StatelessWidget {
                                 return;
                               }
 
+                              // Same hard block as the "add product" form:
+                              // refuse unparseable or negative numbers instead
+                              // of quietly falling back to a previous value.
+                              final priceVal = double.tryParse(
+                                priceController.text.trim(),
+                              );
+                              final purchaseText =
+                                  purchasePriceController.text.trim();
+                              final purchaseVal = purchaseText.isEmpty
+                                  ? 0.0
+                                  : double.tryParse(purchaseText);
+                              final stockVal = int.tryParse(
+                                stockController.text.trim(),
+                              );
+                              if (priceVal == null ||
+                                  purchaseVal == null ||
+                                  stockVal == null ||
+                                  priceVal < 0 ||
+                                  purchaseVal < 0 ||
+                                  stockVal < 0) {
+                                Get.snackbar(
+                                  "Invalid value",
+                                  "Enter a valid sell price, purchase price and stock — none can be negative",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                return;
+                              }
+
                               controller.updateProduct(
                                 product
                                     .copyWith(
                                       name: nameController.text,
                                       brand: brandController.text,
                                       category: selectedCategory,
-                                      price:
-                                          double.tryParse(
-                                            priceController.text,
-                                          ) ??
-                                          product.price,
-                                      purchasePrice:
-                                          double.tryParse(
-                                            purchasePriceController.text,
-                                          ) ??
-                                          0,
+                                      price: priceVal,
+                                      purchasePrice: purchaseVal,
                                       discount: discountVal,
-                                      stock:
-                                          int.tryParse(stockController.text) ??
-                                          product.stock,
+                                      stock: stockVal,
                                       sku: skuController.text.trim(),
                                       barcode: barcodeController.text.trim(),
                                     )
