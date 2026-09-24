@@ -29,6 +29,19 @@ class AppStatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // The trend chip's colours, resolved once. `trendUp` is nullable and null
+    // means "no comparison", which reads as neutral grey.
+    final trendColor = trendUp == true
+        ? AppColors.success
+        : trendUp == false
+        ? AppColors.danger
+        : AppColors.textSecondary;
+    final trendIcon = trendUp == true
+        ? Icons.trending_up_rounded
+        : trendUp == false
+        ? Icons.trending_down_rounded
+        : Icons.trending_flat_rounded;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -43,6 +56,12 @@ class AppStatCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // ── Icon row ──
+              // A card can put three things here: the leading icon tile, a
+              // trend chip and the tooltip button. On a narrow card the three
+              // together outgrow the space, so exactly one of them is allowed
+              // to give ground: the chip, whose text can be shortened without
+              // hiding information. The tile and the tooltip button keep their
+              // full size, so the row never overflows its card.
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -54,64 +73,63 @@ class AppStatCard extends StatelessWidget {
                     ),
                     child: Icon(icon, color: color, size: 20),
                   ),
-                  if (trend != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            (trendUp == true
-                                    ? AppColors.success
-                                    : trendUp == false
-                                    ? AppColors.danger
-                                    : AppColors.textSecondary)
-                                .withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusXs,
-                        ),
-                      ),
+                  if (trend != null || tooltip != null)
+                    Flexible(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            trendUp == true
-                                ? Icons.trending_up_rounded
-                                : trendUp == false
-                                ? Icons.trending_down_rounded
-                                : Icons.trending_flat_rounded,
-                            size: 12,
-                            color: trendUp == true
-                                ? AppColors.success
-                                : trendUp == false
-                                ? AppColors.danger
-                                : AppColors.textSecondary,
-                          ),
-                          const SizedBox(width: 2),
-                          Text(
-                            trend!,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: trendUp == true
-                                  ? AppColors.success
-                                  : trendUp == false
-                                  ? AppColors.danger
-                                  : AppColors.textSecondary,
-                              fontWeight: FontWeight.w700,
+                          if (trend != null)
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.sm,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: trendColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusXs,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      trendIcon,
+                                      size: 12,
+                                      color: trendColor,
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Flexible(
+                                      child: Text(
+                                        trend!,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: trendColor,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                          if (trend != null && tooltip != null)
+                            const SizedBox(width: AppSpacing.xs),
 
-                  // tool tip icon
-                  if (tooltip != null)
-                    Tooltip(
-                      message: tooltip!,
-                      child: const Icon(
-                        Icons.info_outline,
-                        size: 16,
-                        color: AppColors.textSecondary,
+                          // tool tip icon
+                          if (tooltip != null)
+                            Tooltip(
+                              message: tooltip!,
+                              child: const Icon(
+                                Icons.info_outline,
+                                size: 16,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                 ],
