@@ -999,6 +999,7 @@ class _TaxFormState extends State<_TaxForm> {
             },
             icon: const Icon(Icons.save_outlined, size: 18),
             label: const Text("Save Tax Settings"),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.seed),
           ),
         ),
       ],
@@ -1353,6 +1354,9 @@ class _ToggleGroup extends StatelessWidget {
     ValueChanged<bool> onChanged,
   ) {
     return SwitchListTile(
+      activeThumbColor: AppColors.seed,
+      activeTrackColor: AppColors.seed.withValues(alpha: 0.2),
+
       value: value,
       onChanged: onChanged,
       title: Row(
