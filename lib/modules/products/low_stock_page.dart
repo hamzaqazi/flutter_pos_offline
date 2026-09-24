@@ -305,7 +305,7 @@ class _LowStockTile extends StatelessWidget {
                     final add = int.tryParse(addController.text.trim()) ?? 0;
                     if (add > 0) {
                       final controller = Get.find<ProductsController>();
-                      controller.updateStock(product.id, product.stock + add);
+                      controller.incrementStock(product.id, add);
                       Navigator.of(ctx).pop();
                       Get.snackbar(
                         "Restocked",
@@ -320,7 +320,7 @@ class _LowStockTile extends StatelessWidget {
                 final add = int.tryParse(value.trim()) ?? 0;
                 if (add > 0) {
                   final controller = Get.find<ProductsController>();
-                  controller.updateStock(product.id, product.stock + add);
+                  controller.incrementStock(product.id, add);
                   Navigator.of(ctx).pop();
                   Get.snackbar(
                     "Restocked",
@@ -342,7 +342,7 @@ class _LowStockTile extends StatelessWidget {
               final add = int.tryParse(addController.text.trim()) ?? 0;
               if (add > 0) {
                 final controller = Get.find<ProductsController>();
-                controller.updateStock(product.id, product.stock + add);
+                controller.incrementStock(product.id, add);
                 Navigator.of(ctx).pop();
                 Get.snackbar(
                   "Restocked",
