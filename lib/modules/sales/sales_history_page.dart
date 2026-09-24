@@ -9,6 +9,7 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/data/services/order_totals.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:get/get.dart';
 
@@ -354,6 +355,17 @@ class SalesHistoryPage extends GetView<SalesController> {
                   );
                   final saleNetProfit = sale.profit - saleProfitReversed;
 
+                  // A sale that lost money showed nothing at all here before —
+                  // the profit chip only ever appeared above zero. Returns give
+                  // back the margin on the units they take, so a reversal
+                  // shrinks a loss the same way it shrinks a profit.
+                  final saleLoss = OrderTotals.lossFrom(saleNetProfit);
+                  final saleProfitLabel = saleProfitReversed > 0
+                      ? "${Formatters.currency(saleNetProfit)} net profit"
+                      : "+${Formatters.currency(sale.profit)} profit";
+                  final saleLossLabel =
+                      "−${Formatters.currency(saleLoss)} loss";
+
                   // Return status, for the badge on the amount and for
                   // disabling the return action once nothing is left to give
                   // back.
@@ -560,37 +572,16 @@ class SalesHistoryPage extends GetView<SalesController> {
                                                 ),
                                           ),
                                           if (sale.profit > 0)
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: AppSpacing.xs,
-                                                    vertical: 1,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    (saleProfitReversed > 0
-                                                            ? AppColors.warning
-                                                            : AppColors.success)
-                                                        .withValues(
-                                                          alpha: 0.12,
-                                                        ),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      AppSpacing.radiusSm,
-                                                    ),
-                                              ),
-                                              child: Text(
-                                                saleProfitReversed > 0
-                                                    ? "${Formatters.currency(saleNetProfit)} net profit"
-                                                    : "+${Formatters.currency(sale.profit)} profit",
-                                                style: TextStyle(
-                                                  color: saleProfitReversed > 0
-                                                      ? AppColors.warning
-                                                      : AppColors.success,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
+                                            _SaleChip(
+                                              label: saleProfitLabel,
+                                              color: saleProfitReversed > 0
+                                                  ? AppColors.warning
+                                                  : AppColors.success,
+                                            ),
+                                          if (saleLoss > 0)
+                                            _SaleChip(
+                                              label: saleLossLabel,
+                                              color: AppColors.danger,
                                             ),
                                         ],
                                       ),
@@ -879,6 +870,36 @@ class _EmptySales extends StatelessWidget {
       icon: Icons.receipt_long_outlined,
       title: 'No sales yet',
       subtitle: 'Completed sales will appear here',
+    );
+  }
+}
+
+/// Small tinted pill for the figures on a sale card — profit, or a loss.
+class _SaleChip extends StatelessWidget {
+  const _SaleChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 1,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

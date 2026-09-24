@@ -658,6 +658,14 @@ class ManualGuides {
           'Looking for a refund? Open the sale and record a return from there — '
           'see the Returns & Refunds guide.',
         ),
+        const ManualCallout(
+          ManualCalloutKind.note,
+          'Each result shows the date and the profit that sale made. A sale '
+          'that lost money shows the amount in red instead, a fully refunded '
+          'sale is marked "Returned" with its total struck through, and a '
+          'partly refunded one "Partial return" with the refunded amount '
+          'listed beneath it.',
+        ),
         const ManualAction('Go to Sales', tabIndex: 3),
       ],
     ),

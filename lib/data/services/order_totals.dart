@@ -115,12 +115,21 @@ class OrderTotals {
   /// sale still covers what the stock cost.
   double get belowCostAmount {
     final shortfall = cost - total;
-    return shortfall > _moneyTolerance ? shortfall : 0;
+    return shortfall > moneyTolerance ? shortfall : 0;
   }
 
+  /// A loss as a positive figure: 0 when [profit] broke even or was positive.
+  ///
+  /// Profit is stored signed, and a card that reads "−Rs 90 loss" is clearer
+  /// than one showing a negative profit. Anything within [moneyTolerance] of
+  /// break-even counts as break-even.
+  static double lossFrom(double profit) =>
+      profit < -moneyTolerance ? -profit : 0;
+
   /// Anything closer together than this counts as the same amount of money, so
-  /// a rounding artefact cannot turn a break-even bill into a reported loss.
-  static const double _moneyTolerance = 0.005;
+  /// a rounding artefact cannot turn a break-even figure into a profit or a
+  /// loss. `ProductModel` mirrors this value for its per-unit checks.
+  static const double moneyTolerance = 0.005;
 
   /// Translates a completed sale's stored figures into the per-unit amounts a
   /// return should use.

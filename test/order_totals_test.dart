@@ -291,6 +291,25 @@ void main() {
     });
   });
 
+  group('lossFrom', () {
+    test('is 0 for a sale that broke even or made money', () {
+      expect(OrderTotals.lossFrom(120), 0);
+      expect(OrderTotals.lossFrom(0), 0);
+    });
+
+    test('reports a loss as a positive figure', () {
+      // Stored profit is signed; a card reading "-Rs 90 loss" beats one
+      // showing a negative profit.
+      expect(OrderTotals.lossFrom(-90), 90);
+      expect(OrderTotals.lossFrom(-0.01), 0.01);
+    });
+
+    test('treats float dust around break-even as break-even', () {
+      expect(OrderTotals.lossFrom(-0.004), 0);
+      expect(OrderTotals.lossFrom(-0.006), closeTo(0.006, 1e-9));
+    });
+  });
+
   group('returnAllocation', () {
     // The reported case: sell price 3,000 with a 40% product discount gives an
     // 1,800 line, 2% tax-exclusive adds 36, and Rs 90 off leaves 1,746
