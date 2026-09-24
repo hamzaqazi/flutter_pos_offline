@@ -2,6 +2,7 @@ import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
+import '../../data/models/return_model.dart';
 import '../../data/models/sale_model.dart';
 import '../expenses/expenses_controller.dart';
 import '../products/products_controller.dart';
@@ -69,8 +70,40 @@ class ReportsController extends GetxController {
   double get totalDiscount =>
       filteredSales.fold(0, (sum, s) => sum + s.discount);
 
-  double get totalTax =>
-      filteredSales.fold(0, (sum, s) => sum + s.taxAmount);
+  /// Tax the shop is still holding: tax charged in the period, less the tax
+  /// handed back with refunds.
+  double get totalTax => totalTaxCharged - totalTaxRefunded;
+
+  /// Tax charged on the sales in this period, before refunds.
+  double get totalTaxCharged =>
+      filteredSales.fold(0.0, (sum, s) => sum + s.taxAmount);
+
+  /// Tax given back with the refunds recorded in this period.
+  ///
+  /// The refunds figure already nets these out of revenue; leaving them out of
+  /// the tax figure meant a shop that refunded an item still reported the tax
+  /// on it as collected, and would think it owed more than it did.
+  double get totalTaxRefunded => taxRefundedBy(
+    _returnsController.returnsInRange(startDate.value, endDate.value),
+    _salesController.sales,
+  );
+
+  /// Tax returned by [returns] against [sales].
+  ///
+  /// Static and free of Hive and GetX so the arithmetic can be tested on its
+  /// own. A return whose sale cannot be found reverses nothing rather than
+  /// guessing.
+  static double taxRefundedBy(
+    List<ReturnModel> returns,
+    List<SaleModel> sales,
+  ) {
+    var refunded = 0.0;
+    for (final ret in returns) {
+      final sale = sales.firstWhereOrNull((s) => s.id == ret.saleId);
+      if (sale != null) refunded += sale.taxShareOf(ret.refundAmount);
+    }
+    return refunded;
+  }
 
   double get totalCOGS {
     final cogs = filteredSales.fold(0.0, (sum, s) {

@@ -103,29 +103,25 @@ class ReturnsController extends GetxController {
   double get totalProfitReversed =>
       returns.fold(0, (sum, r) => sum + r.refundProfit);
 
-  /// Total refunds in a date range.
-  double totalRefundsInRange(DateTime start, DateTime end) {
+  /// Returns recorded between [start] and the end of the [end] day.
+  List<ReturnModel> returnsInRange(DateTime start, DateTime end) {
+    final endOfRange = end.add(const Duration(days: 1));
     return returns
-        .where((r) =>
-            r.date.isAfter(start) && r.date.isBefore(end.add(const Duration(days: 1))))
-        .fold(0, (sum, r) => sum + r.refundAmount);
+        .where((r) => r.date.isAfter(start) && r.date.isBefore(endOfRange))
+        .toList();
   }
+
+  /// Total refunds in a date range.
+  double totalRefundsInRange(DateTime start, DateTime end) =>
+      returnsInRange(start, end).fold(0, (sum, r) => sum + r.refundAmount);
 
   /// Total profit reversed in a date range.
-  double totalProfitReversedInRange(DateTime start, DateTime end) {
-    return returns
-        .where((r) =>
-            r.date.isAfter(start) && r.date.isBefore(end.add(const Duration(days: 1))))
-        .fold(0, (sum, r) => sum + r.refundProfit);
-  }
+  double totalProfitReversedInRange(DateTime start, DateTime end) =>
+      returnsInRange(start, end).fold(0, (sum, r) => sum + r.refundProfit);
 
   /// Number of return transactions in a date range.
-  int returnCountInRange(DateTime start, DateTime end) {
-    return returns
-        .where((r) =>
-            r.date.isAfter(start) && r.date.isBefore(end.add(const Duration(days: 1))))
-        .length;
-  }
+  int returnCountInRange(DateTime start, DateTime end) =>
+      returnsInRange(start, end).length;
 
   /// Check how many units of a product have already been returned from a sale.
   int alreadyReturnedQty(String saleId, String productId) {

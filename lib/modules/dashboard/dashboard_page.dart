@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
+import 'package:ad_shop_pos/app/widgets/tooltip_label.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
@@ -226,6 +227,7 @@ class DashboardPage extends GetView<DashboardController> {
                 value: sales.toString(),
                 icon: Icons.receipt_long_outlined,
                 color: AppColors.seed,
+                tooltip: FinancialTooltips.todaySales,
                 onTap: () => ShellController.to.goSales(),
               ),
             ),
@@ -236,9 +238,7 @@ class DashboardPage extends GetView<DashboardController> {
                 value: Formatters.currency(revenue),
                 icon: Icons.payments_outlined,
                 color: AppColors.success,
-                tooltip: expenses > 0
-                    ? 'Revenue includes expenses of ${Formatters.currency(expenses)}'
-                    : null,
+                tooltip: FinancialTooltips.todayRevenue,
               ),
             ),
           ],
@@ -248,10 +248,11 @@ class DashboardPage extends GetView<DashboardController> {
           children: [
             Expanded(
               child: AppStatCard(
-                label: 'Gross Profit',
+                label: 'Profit',
                 value: Formatters.currency(profit),
                 icon: Icons.trending_up_outlined,
                 color: AppColors.violet,
+                tooltip: FinancialTooltips.todayProfit,
               ),
             ),
             if (expenses > 0) ...[
@@ -264,6 +265,7 @@ class DashboardPage extends GetView<DashboardController> {
                   color: (profit - expenses) >= 0
                       ? AppColors.success
                       : AppColors.danger,
+                  tooltip: FinancialTooltips.netProfit,
                   trend: expenses > 0
                       ? 'Exp: ${Formatters.currency(expenses)}'
                       : null,
@@ -301,10 +303,11 @@ class DashboardPage extends GetView<DashboardController> {
         color: AppColors.success,
       ),
       AppStatCard(
-        label: 'Gross Profit',
+        label: 'Profit',
         value: Formatters.currency(controller.totalProfit.value),
         icon: Icons.trending_up_outlined,
         color: AppColors.violet,
+        tooltip: FinancialTooltips.profit,
       ),
       AppStatCard(
         label: 'Low Stock',

@@ -50,6 +50,15 @@ class SaleModel {
       ? subtotal * checkoutDiscount / 100
       : checkoutDiscount;
 
+  /// The tax portion of [amount] paid on this sale.
+  ///
+  /// A refund hands back what the customer paid, tax included, so the tax
+  /// charged on those units stops being collected. Taking the share from the
+  /// sale's own figures makes a full refund reverse exactly the tax that was
+  /// charged, and a partial one reverse its proportion.
+  double taxShareOf(double amount) =>
+      total <= 0 ? 0 : amount * taxAmount / total;
+
   bool get hasCustomer => customerId.isNotEmpty;
   bool get hasCashier => cashierId.isNotEmpty;
   bool get hasInvoiceNumber => invoiceNumber.isNotEmpty;

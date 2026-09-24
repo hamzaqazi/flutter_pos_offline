@@ -168,6 +168,13 @@ class ManualGuides {
           'Changing tax settings does not alter past sales. Already-recorded '
           'sales keep the tax they were made with.',
         ),
+        const ManualCallout(
+          ManualCalloutKind.note,
+          'Reports show the tax you are still holding: the tax charged on the '
+          'sales in the period, less the tax given back when those items were '
+          'refunded. Refunding everything from a sale takes its tax back to '
+          'zero.',
+        ),
       ],
     ),
 
@@ -692,8 +699,8 @@ class ManualGuides {
           'from the dashboard.',
         ),
         ManualBullets([
-          'Summary — headline figures: revenue, net profit, net margin and '
-              'average sale value.',
+          'Summary — headline figures: revenue, profit, net profit, net '
+              'margin and average sale value.',
           'Charts — revenue and profit over time, so you can spot slow days '
               'and good weeks.',
           'Top Products — your best sellers by revenue and quantity.',
