@@ -393,9 +393,16 @@ class CartPage extends GetView<CartController> {
                 checkoutDiscountPct: checkoutDiscountPct,
               );
 
+              // Compare with a half-unit tolerance: a total like 1,744.20
+              // arrives from the "Exact" chip as 1744.2, which floating-point
+              // arithmetic can place a hair below the computed 1,744.2 and
+              // wrongly report as short.
+              const cashTolerance = 0.005;
               final cash = double.tryParse(cashController.text.trim()) ?? 0;
-              final change = cash - totals.total;
-              final enough = cash >= totals.total && !discountInvalid;
+              final rawChange = cash - totals.total;
+              final change = rawChange < 0 ? 0.0 : rawChange;
+              final enough =
+                  cash + cashTolerance >= totals.total && !discountInvalid;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -877,7 +884,13 @@ class CartPage extends GetView<CartController> {
     return ActionChip(
       label: Text(label),
       onPressed: () {
-        controller.text = value.toStringAsFixed(0);
+        // Fill the value to the smallest unit. Rounding here handed back less
+        // than the total (e.g. 1,744 against 1,744.20), which the checkout then
+        // reported as "insufficient".
+        final isWhole = (value - value.roundToDouble()).abs() < 0.005;
+        controller.text = isWhole
+            ? value.toStringAsFixed(0)
+            : value.toStringAsFixed(2);
         setState(() {});
       },
     );
