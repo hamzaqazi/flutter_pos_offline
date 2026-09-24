@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
+import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
@@ -431,6 +432,14 @@ class ProductCard extends StatelessWidget {
           child: StatefulBuilder(
             builder: (context, setState) {
               final theme = Theme.of(context);
+              // Live figures for the below-cost warning: an empty or
+              // unparseable box counts as 0, matching what Save will store.
+              final priceNow =
+                  double.tryParse(priceController.text.trim()) ?? 0;
+              final purchaseNow =
+                  double.tryParse(purchasePriceController.text.trim()) ?? 0;
+              final discountNow =
+                  double.tryParse(discountController.text.trim()) ?? 0;
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
@@ -547,6 +556,7 @@ class ProductCard extends StatelessWidget {
                           child: TextField(
                             controller: priceController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Sell price",
                               prefixIcon: Icon(Icons.sell_outlined),
@@ -558,6 +568,7 @@ class ProductCard extends StatelessWidget {
                           child: TextField(
                             controller: purchasePriceController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Purchase price",
                               prefixIcon: Icon(Icons.payments_outlined),
@@ -573,6 +584,7 @@ class ProductCard extends StatelessWidget {
                           child: TextField(
                             controller: discountController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Discount %",
                               prefixIcon: Icon(Icons.discount_outlined),
@@ -594,6 +606,13 @@ class ProductCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    // A standing discount can quietly put the item under
+                    // what it cost — say so while the numbers are typed.
+                    BelowCostWarning(
+                      price: priceNow,
+                      purchasePrice: purchaseNow,
+                      discountPercent: discountNow,
+                    ),
                     DropdownButtonFormField<String>(
                       value: selectedCategory,
                       isExpanded: true,

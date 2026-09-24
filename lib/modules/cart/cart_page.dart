@@ -984,6 +984,15 @@ class _CartTile extends StatelessWidget {
                         ),
                       ),
                     ],
+                    // A line that loses money is worth flagging at the till,
+                    // not only where the discount was set.
+                    if (item.product.sellsBelowCost) ...[
+                      const SizedBox(height: 4),
+                      AppBadge.warning(
+                        label: "Below cost",
+                        icon: Icons.trending_down,
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       Formatters.currency(item.total),

@@ -243,6 +243,14 @@ class ProductsPage extends GetView<ProductsController> {
           child: StatefulBuilder(
             builder: (context, setState) {
               final theme = Theme.of(context);
+              // Live figures for the below-cost warning: an empty or
+              // unparseable box counts as 0, matching what Save will store.
+              final priceNow =
+                  double.tryParse(priceController.text.trim()) ?? 0;
+              final purchaseNow =
+                  double.tryParse(purchasePriceController.text.trim()) ?? 0;
+              final discountNow =
+                  double.tryParse(discountController.text.trim()) ?? 0;
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
@@ -357,6 +365,7 @@ class ProductsPage extends GetView<ProductsController> {
                           child: TextField(
                             controller: priceController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Sell price",
                               prefixIcon: Icon(Icons.sell_outlined),
@@ -368,6 +377,7 @@ class ProductsPage extends GetView<ProductsController> {
                           child: TextField(
                             controller: purchasePriceController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Purchase price",
                               prefixIcon: Icon(Icons.payments_outlined),
@@ -383,6 +393,7 @@ class ProductsPage extends GetView<ProductsController> {
                           child: TextField(
                             controller: discountController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Discount %",
                               prefixIcon: Icon(Icons.discount_outlined),
@@ -404,6 +415,13 @@ class ProductsPage extends GetView<ProductsController> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    // A standing discount can quietly put the item under
+                    // what it cost — say so while the numbers are typed.
+                    BelowCostWarning(
+                      price: priceNow,
+                      purchasePrice: purchaseNow,
+                      discountPercent: discountNow,
+                    ),
                     DropdownButtonFormField<String>(
                       value: selectedCategory,
                       isExpanded: true,

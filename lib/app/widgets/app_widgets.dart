@@ -11,5 +11,6 @@ export 'app_badge.dart';
 export 'app_detail_row.dart';
 export 'app_search_bar.dart';
 export 'app_banner.dart';
+export 'below_cost_warning.dart';
 export 'app_animations.dart';
 export 'app_shimmer.dart';

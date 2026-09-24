@@ -203,7 +203,8 @@ class ManualGuides {
                 'Enter a checkout discount as a fixed amount at checkout — '
                 'for example Rs 100 off the bill, or tap one of the quick '
                 'amounts. You can also set a standing Discount % on an '
-                'individual product.',
+                'individual product — if one ever drops the price below what '
+                'the item cost, the cart flags that line as "Below cost".',
           ),
           ManualStep(
             'Attach a customer (optional)',
@@ -464,6 +465,14 @@ class ManualGuides {
           ManualCalloutKind.tip,
           'Fill in the purchase price for every product. Without it, profit '
           'reports for that item show the full sale amount as profit.',
+        ),
+        const ManualCallout(
+          ManualCalloutKind.warning,
+          'A discount that drops the sell price below the purchase price makes '
+          'the form warn you that you would lose money on every unit sold. It '
+          'is only a warning — you can still save it, for example to clear '
+          'old stock — and the cart flags those items as "Below cost" when '
+          'they are sold.',
         ),
         const ManualCallout(
           ManualCalloutKind.note,
