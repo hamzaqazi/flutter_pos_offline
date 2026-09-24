@@ -318,6 +318,13 @@ class SalesHistoryPage extends GetView<SalesController> {
             Expanded(
               child: Obx(() {
                 final sales = controller.filteredSales;
+                final returnsController = Get.find<ReturnsController>();
+                // Subscribe to the returns list here. The per-card reads below
+                // happen inside itemBuilder, which runs during layout rather
+                // than inside this builder, so they are not tracked — without
+                // this line a card's return badge would not appear until
+                // something else happened to rebuild the list.
+                returnsController.returns.length;
                 return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
@@ -336,7 +343,6 @@ class SalesHistoryPage extends GetView<SalesController> {
                   );
 
                   // Check if there are returns for this sale
-                  final returnsController = Get.find<ReturnsController>();
                   final saleReturns = returnsController.returnsForSale(sale.id);
                   final totalRefund = saleReturns.fold<double>(
                     0,
@@ -347,6 +353,13 @@ class SalesHistoryPage extends GetView<SalesController> {
                     (sum, r) => sum + r.refundProfit,
                   );
                   final saleNetProfit = sale.profit - saleProfitReversed;
+
+                  // Return status, for the badge on the amount and for
+                  // disabling the return action once nothing is left to give
+                  // back.
+                  final fullyReturned = returnsController.isFullyReturned(sale);
+                  final partiallyReturned =
+                      !fullyReturned && returnsController.hasReturns(sale.id);
 
                   return RepaintBoundary(
                     child: Card(
@@ -397,15 +410,48 @@ class SalesHistoryPage extends GetView<SalesController> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
+                                      Wrap(
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: AppSpacing.sm,
                                         children: [
                                           Text(
                                             Formatters.currency(sale.total),
                                             style: theme.textTheme.titleMedium
                                                 ?.copyWith(
                                                   fontWeight: FontWeight.w800,
+                                                  // A fully refunded sale kept
+                                                  // its amount, but it is no
+                                                  // longer money taken —
+                                                  // strike it through so the
+                                                  // badge is not contradicted
+                                                  // by a live-looking total.
+                                                  decoration: fullyReturned
+                                                      ? TextDecoration
+                                                            .lineThrough
+                                                      : null,
+                                                  color: fullyReturned
+                                                      ? cs.onSurfaceVariant
+                                                      : null,
                                                 ),
                                           ),
+                                          // Return status badge, on the same
+                                          // line as the amount so a refunded
+                                          // sale is obvious at a glance. It
+                                          // drops to the next line by itself
+                                          // when the amount is wide.
+                                          if (fullyReturned)
+                                            AppBadge.danger(
+                                              label: 'Returned',
+                                              icon: Icons
+                                                  .assignment_return_outlined,
+                                            ),
+                                          if (partiallyReturned)
+                                            AppBadge.warning(
+                                              label: 'Partial return',
+                                              icon: Icons
+                                                  .assignment_return_outlined,
+                                            ),
                                           // if (sale.hasInvoiceNumber) ...[
                                           //   const SizedBox(width: AppSpacing.sm),
                                           //   Container(
@@ -631,13 +677,21 @@ class SalesHistoryPage extends GetView<SalesController> {
                                         //   ),
                                         // ),
                                         child: IconButton.filled(
-                                          onPressed: () {
-                                            if (!LicenseService.isPremium) {
-                                              _showUpgradeDialog(context);
-                                              return;
-                                            }
-                                            showReturnDialog(sale);
-                                          },
+                                          // Nothing left to give back once the
+                                          // whole sale has been returned, so
+                                          // the action is disabled rather than
+                                          // opening a dialog that can only say
+                                          // "no valid items to return".
+                                          onPressed: fullyReturned
+                                              ? null
+                                              : () {
+                                                  if (!LicenseService
+                                                      .isPremium) {
+                                                    _showUpgradeDialog(context);
+                                                    return;
+                                                  }
+                                                  showReturnDialog(sale);
+                                                },
                                           icon: const Icon(
                                             Icons.assignment_return_outlined,
                                             size: 20,

@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/data/models/return_model.dart';
+import 'package:ad_shop_pos/data/models/sale_model.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:get/get.dart';
@@ -138,6 +139,24 @@ class ReturnsController extends GetxController {
       }
     }
     return total;
+  }
+
+  /// Whether anything at all has been given back from [saleId].
+  bool hasReturns(String saleId) => returnsForSale(saleId).isNotEmpty;
+
+  /// True once every unit sold in [sale] has been given back.
+  ///
+  /// Compares per product rather than by a total, so a sale with two of one
+  /// item and one of another is only "fully returned" when all three are back —
+  /// returning one unit of each would otherwise look like a complete return.
+  bool isFullyReturned(SaleModel sale) {
+    if (sale.items.isEmpty) return false;
+    for (final item in sale.items) {
+      if (alreadyReturnedQty(sale.id, item.product.id) < item.quantity) {
+        return false;
+      }
+    }
+    return true;
   }
 
   String _fmtCurrency(double value) {
