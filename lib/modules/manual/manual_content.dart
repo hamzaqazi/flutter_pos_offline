@@ -49,6 +49,7 @@ class ManualGuides {
           'Welcome to Codynest POS. This guide walks you through everything '
           'you need for your first sale — it takes about ten minutes.',
         ),
+        const ManualSubheading('Set-up checklist'),
         ManualSteps([
           ManualStep(
             'Choose your plan on the first screen',
@@ -184,6 +185,7 @@ class ManualGuides {
           'The Cart tab is your point of sale. Sales work offline — you never '
           'need a connection to complete one.',
         ),
+        const ManualSubheading('To ring up a sale'),
         ManualSteps([
           ManualStep(
             'Add items to the cart',
@@ -565,7 +567,8 @@ class ManualGuides {
           'The app warns you when stock drops to a level you choose, so you '
           'can reorder before an item sells out.',
         ),
-        const ManualSteps([
+        const ManualSubheading('Set the warning level'),
+        ManualSteps([
           ManualStep('Open the More tab, then tap "Low Stock Alert"'),
           ManualStep(
             'Enter your low stock threshold',
@@ -575,7 +578,8 @@ class ManualGuides {
           ),
           ManualStep('Tap Save'),
         ]),
-        const ManualSteps([
+        const ManualSubheading('Restock an item'),
+        ManualSteps([
           ManualStep(
             'Open the low stock list',
             detail:
@@ -745,6 +749,7 @@ class ManualGuides {
           ManualStep('Add their phone number, email and address as needed'),
           ManualStep('Tap Save'),
         ]),
+        const ManualSubheading('Editing or removing a customer'),
         ManualSteps([
           ManualStep('Tap the customer in the list'),
           ManualStep(
@@ -881,7 +886,8 @@ class ManualGuides {
           'Codynest POS prints to Bluetooth thermal receipt printers. Pair the '
           'printer once and it stays connected for future receipts.',
         ),
-        const ManualSteps([
+        const ManualSubheading('Before you start'),
+        ManualSteps([
           ManualStep('Turn the printer on and load paper'),
           ManualStep(
             'Make sure it is not already connected to another phone',
@@ -894,7 +900,8 @@ class ManualGuides {
             detail: 'Most printers show a blinking light when ready.',
           ),
         ]),
-        const ManualSteps([
+        const ManualSubheading('Pair it in the app'),
+        ManualSteps([
           ManualStep('Open the More tab, then tap "Thermal Printer"'),
           ManualStep(
             'Grant the Bluetooth permissions when asked',
@@ -946,6 +953,7 @@ class ManualGuides {
           'Your data is stored only on this device. A backup is your insurance '
           'if the phone is lost, replaced or reset.',
         ),
+        const ManualSubheading('Make a full backup'),
         ManualSteps([
           ManualStep('Open the More tab, then tap "Export & Backup"'),
           ManualStep(
@@ -962,6 +970,7 @@ class ManualGuides {
                 'cloud storage. Keep it somewhere other than this phone.',
           ),
         ]),
+        const ManualSubheading('Export a spreadsheet'),
         ManualSteps([
           ManualStep(
             'Tap "Export Products", "Export Sales" or "Export Expenses"',
@@ -1146,6 +1155,7 @@ class ManualGuides {
             detail: 'The app asks for it the next time it opens.',
           ),
         ]),
+        const ManualSubheading('Changing your PIN'),
         ManualSteps([
           ManualStep('Open App Security again and tap "Change PIN"'),
           ManualStep('Enter a new 4-digit PIN and confirm it'),
@@ -1197,7 +1207,8 @@ class ManualGuides {
           'Licensed plans — Monthly, Yearly or Lifetime, with the product cap '
               'removed.',
         ]),
-        const ManualSteps([
+        const ManualSubheading('Activating a license'),
+        ManualSteps([
           ManualStep(
             'Open the More tab, then tap "App Security" and the plan row',
             detail: 'Or open the License & Plans screen directly.',
@@ -1405,6 +1416,8 @@ class ManualGuides {
             if (step.title.toLowerCase().contains(q)) return true;
             if (step.detail?.toLowerCase().contains(q) ?? false) return true;
           }
+        case ManualSubheading h:
+          if (h.text.toLowerCase().contains(q)) return true;
         case ManualCallout c:
           if (c.text.toLowerCase().contains(q)) return true;
         case ManualBullets b:

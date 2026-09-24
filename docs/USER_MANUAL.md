@@ -50,7 +50,8 @@ To feature it on the hub's quick-start row, add its id to
 | Block | Renders as |
 |-------|------------|
 | `ManualParagraph(text)` | Body paragraph. |
-| `ManualSteps([ManualStep(...)], title: ...)` | Numbered step list; each step has an optional `detail`. |
+| `ManualSubheading('Set the warning level')` | Small labelled heading, for breaking a guide into labelled parts. |
+| `ManualSteps([ManualStep(...)])` | Numbered step list; each step has an optional `detail`. |
 | `ManualCallout(kind, text)` | Highlighted box — `tip` (green), `note` (blue) or `warning` (amber). |
 | `ManualBullets([...])` | Bulleted list. |
 | `ManualFaq([ManualFaqItem(q, a)])` | Collapsible question & answer card. |

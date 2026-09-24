@@ -131,7 +131,35 @@ class _ManualArticlePageState extends State<ManualArticlePage> {
           ),
         ),
       ),
-      ManualSteps s => _StepsBlock(steps: s.steps, title: s.title),
+      ManualSubheading h => Padding(
+        padding: const EdgeInsets.only(
+          top: AppSpacing.sm,
+          bottom: AppSpacing.md,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 3,
+              height: 16,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                h.text,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      ManualSteps s => _StepsBlock(steps: s.steps),
       ManualCallout c => _CalloutBox(kind: c.kind, text: c.text),
       ManualBullets b => _BulletsBlock(items: b.items),
       ManualFaq f => _FaqBlock(items: f.items),
@@ -270,10 +298,9 @@ class _ArticleHeader extends StatelessWidget {
 // ────────────────────────────────────────────────────────────
 
 class _StepsBlock extends StatelessWidget {
-  const _StepsBlock({required this.steps, this.title});
+  const _StepsBlock({required this.steps});
 
   final List<ManualStep> steps;
-  final String? title;
 
   @override
   Widget build(BuildContext context) {
@@ -284,15 +311,6 @@ class _StepsBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (title != null) ...[
-            Text(
-              title!,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
           for (var i = 0; i < steps.length; i++)
             Padding(
               padding: EdgeInsets.only(

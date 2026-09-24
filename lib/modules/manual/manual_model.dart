@@ -61,14 +61,24 @@ class ManualParagraph extends ManualBlock {
   final String text;
 }
 
+/// A sub-heading that breaks a guide into labelled parts.
+///
+/// Use one before each group of steps when a guide covers more than one
+/// procedure — e.g. "Set the warning level" then "Restock an item". Kept as
+/// its own block (rather than a field on [ManualSteps]) so a heading can
+/// introduce any combination of content, not just the steps directly beneath
+/// it.
+class ManualSubheading extends ManualBlock {
+  const ManualSubheading(this.text);
+
+  final String text;
+}
+
 /// An ordered, numbered set of steps — the backbone of most guides.
 class ManualSteps extends ManualBlock {
-  const ManualSteps(this.steps, {this.title});
+  const ManualSteps(this.steps);
 
   final List<ManualStep> steps;
-
-  /// Optional heading above the steps (e.g. "To make a sale").
-  final String? title;
 }
 
 /// One numbered step: a short imperative title plus optional detail.
