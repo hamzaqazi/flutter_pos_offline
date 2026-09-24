@@ -75,6 +75,9 @@ class SalesController extends GetxController {
           items: items,
           subtotal: (e['subtotal'] ?? e['total'] ?? 0).toDouble(),
           checkoutDiscount: (e['checkoutDiscount'] ?? 0).toDouble(),
+          // Records written before checkout discounts became fixed amounts
+          // stored a percentage; absent flag means exactly that.
+          checkoutDiscountIsPercent: e['checkoutDiscountIsPercent'] ?? true,
           taxAmount: (e['taxAmount'] ?? 0).toDouble(),
           total: (e['total'] ?? 0).toDouble(),
           cash: (e['cash'] ?? 0).toDouble(),
@@ -124,6 +127,7 @@ class SalesController extends GetxController {
     String cashierId = '',
     String invoiceNumber = '',
   }) {
+    // `checkoutDiscount` is an absolute amount off the bill (see OrderTotals).
     final cart = Get.find<CartController>();
     final products = Get.find<ProductsController>();
 
@@ -139,7 +143,7 @@ class SalesController extends GetxController {
     final totals = OrderTotals.calculate(
       items: cart.cartItems,
       settings: SettingsService.getSettings(),
-      checkoutDiscountPct: checkoutDiscount,
+      checkoutDiscountAmount: checkoutDiscount,
     );
 
     // Generate invoice number — always increment the counter
@@ -158,7 +162,7 @@ class SalesController extends GetxController {
       invoiceNumber: invNum,
       items: List.from(cart.cartItems),
       subtotal: totals.subtotal,
-      checkoutDiscount: totals.checkoutDiscountPct,
+      checkoutDiscount: totals.checkoutDiscountAmount,
       taxAmount: totals.taxAmount,
       total: totals.total,
       cash: cash,
@@ -201,6 +205,9 @@ class SalesController extends GetxController {
           .toList(),
       'subtotal': sale.subtotal,
       'checkoutDiscount': sale.checkoutDiscount,
+      // Written explicitly (false for new sales) so `loadSales` can tell an
+      // amount apart from the percentages legacy records stored.
+      'checkoutDiscountIsPercent': sale.checkoutDiscountIsPercent,
       'taxAmount': sale.taxAmount,
       'total': sale.total,
       'cash': sale.cash,

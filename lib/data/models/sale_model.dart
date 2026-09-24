@@ -5,7 +5,18 @@ class SaleModel {
   final String invoiceNumber; // e.g. "INV-0001"
   final List<CartItemModel> items;
   final double subtotal;
+
+  /// The checkout discount. Normally an absolute amount in the shop's
+  /// currency — read it through [checkoutDiscountAmount], which also handles
+  /// older records that stored a percentage here.
   final double checkoutDiscount;
+
+  /// True only for sales recorded back when a checkout discount was entered as
+  /// a percentage. New sales always store an amount, so this is false
+  /// everywhere going forward; it exists so historical records are still read
+  /// with the meaning they were written with.
+  final bool checkoutDiscountIsPercent;
+
   final double taxAmount;
   final double total;
   final double cash;
@@ -22,6 +33,7 @@ class SaleModel {
     required this.items,
     required this.subtotal,
     this.checkoutDiscount = 0,
+    this.checkoutDiscountIsPercent = false,
     this.taxAmount = 0,
     required this.total,
     required this.cash,
@@ -32,6 +44,11 @@ class SaleModel {
     this.cashierId = '',
     required this.date,
   });
+
+  /// The checkout discount as money, whichever way the record stored it.
+  double get checkoutDiscountAmount => checkoutDiscountIsPercent
+      ? subtotal * checkoutDiscount / 100
+      : checkoutDiscount;
 
   bool get hasCustomer => customerId.isNotEmpty;
   bool get hasCashier => cashierId.isNotEmpty;
@@ -60,6 +77,10 @@ class SaleModel {
           .toList(),
       'subtotal': subtotal,
       'checkoutDiscount': checkoutDiscount,
+      // Marks the meaning of the field above and is always written, so a
+      // backup/restore round-trip keeps it. A *missing* key is what identifies
+      // records written before checkout discounts became fixed amounts.
+      'checkoutDiscountIsPercent': checkoutDiscountIsPercent,
       'taxAmount': taxAmount,
       'total': total,
       'cash': cash,
@@ -79,6 +100,9 @@ class SaleModel {
       items: [],
       subtotal: (data['subtotal'] ?? data['total'] ?? 0).toDouble(),
       checkoutDiscount: (data['checkoutDiscount'] ?? 0).toDouble(),
+      // Legacy records have no flag and stored a percentage; everything
+      // written from now on stores an amount.
+      checkoutDiscountIsPercent: data['checkoutDiscountIsPercent'] ?? true,
       taxAmount: (data['taxAmount'] ?? 0).toDouble(),
       total: data['total'],
       cash: data['cash'],

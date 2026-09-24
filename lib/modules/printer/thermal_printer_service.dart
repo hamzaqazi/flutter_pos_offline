@@ -329,7 +329,8 @@ class ThermalPrinterService {
     // --- Totals ---
     bytes += generator.text('Subtotal: $cur ${subtotal.toStringAsFixed(0)}');
 
-    final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
+    // Passed in as money off the bill, not a percentage.
+    final checkoutDiscountAmount = checkoutDiscount;
     final productDiscountAmount = totalSavings - checkoutDiscountAmount;
 
     if (receiptSettings.showDiscountDetails) {
@@ -338,9 +339,9 @@ class ThermalPrinterService {
           'Product disc: -$cur ${productDiscountAmount.toStringAsFixed(0)}',
         );
       }
-      if (checkoutDiscount > 0) {
+      if (checkoutDiscountAmount > 0) {
         bytes += generator.text(
-          'Checkout disc (${checkoutDiscount.toStringAsFixed(0)}%): -$cur ${checkoutDiscountAmount.toStringAsFixed(0)}',
+          'Checkout disc: -$cur ${checkoutDiscountAmount.toStringAsFixed(0)}',
         );
       }
     }

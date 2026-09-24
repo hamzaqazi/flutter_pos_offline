@@ -33,41 +33,37 @@ void main() {
   }
 
   group('tax-exclusive pricing', () {
-    test('discount is applied before tax, not after', () {
+    test('a product discount reduces the taxable value', () {
+      // A product's own discount changes its price, so tax follows it down:
+      // 1,000 less 10% = 900, taxed at 17% = 153.
       final totals = OrderTotals.calculate(
-        items: [item()],
+        items: [item(discount: 10)],
         settings: ShopSettingsModel(taxRate: 17, taxInclusive: false),
-        checkoutDiscountPct: 10,
       );
 
-      expect(totals.subtotal, closeTo(1000, 0.001));
-      expect(totals.checkoutDiscountAmount, closeTo(100, 0.001));
-      // Tax is charged on the discounted 900, not the full 1000.
+      expect(totals.subtotal, closeTo(900, 0.001));
       expect(totals.taxAmount, closeTo(153, 0.001));
       expect(totals.total, closeTo(1053, 0.001));
     });
 
-    test('the recorded total equals the amount shown at checkout', () {
-      // The original bug stored 1070 here (1000 + 170 tax − 100 discount)
-      // while the cashier charged 1053.
+    test('a checkout discount does not change the tax', () {
+      // A checkout discount is a reduction of the amount due, not of the
+      // goods' value — the tax stays as charged on the line prices.
       final totals = OrderTotals.calculate(
         items: [item()],
         settings: ShopSettingsModel(taxRate: 17, taxInclusive: false),
-        checkoutDiscountPct: 10,
+        checkoutDiscountAmount: 100,
       );
 
-      expect(totals.total, isNot(closeTo(1070, 0.001)));
-      // The saved record must add up on its own terms.
-      final reconciled =
-          totals.subtotal - totals.checkoutDiscountAmount + totals.taxAmount;
-      expect(reconciled, closeTo(totals.total, 0.001));
+      expect(totals.taxAmount, closeTo(170, 0.001));
+      expect(totals.total, closeTo(1070, 0.001));
     });
 
     test('tax rate of 0 adds nothing', () {
       final totals = OrderTotals.calculate(
         items: [item()],
         settings: ShopSettingsModel(taxRate: 0, taxInclusive: false),
-        checkoutDiscountPct: 0,
+        checkoutDiscountAmount: 0,
       );
 
       expect(totals.taxAmount, 0);
@@ -76,28 +72,69 @@ void main() {
   });
 
   group('tax-inclusive pricing', () {
-    test('customer pays the discounted subtotal', () {
+    test('the amount comes off the inclusive bill', () {
+      // Price already includes tax, so the bill is 1,000 and Rs 100 off
+      // leaves 900 payable. The tax portion is unchanged by the discount.
       final totals = OrderTotals.calculate(
         items: [item()],
         settings: ShopSettingsModel(taxRate: 17, taxInclusive: true),
-        checkoutDiscountPct: 10,
+        checkoutDiscountAmount: 100,
       );
 
       expect(totals.total, closeTo(900, 0.001));
-      // Tax is the portion already inside the 900.
-      expect(totals.taxAmount, closeTo(900 - (900 / 1.17), 0.001));
+      expect(totals.taxAmount, closeTo(1000 - (1000 / 1.17), 0.001));
     });
   });
 
-  group('discount guardrails', () {
-    test('a discount above 100% cannot produce a negative total', () {
+  group('checkout discount is a fixed amount', () {
+    test('comes off the bill and leaves the tax alone', () {
+      // 1,000 of goods, 17% tax-exclusive (170), Rs 100 off the bill.
       final totals = OrderTotals.calculate(
         items: [item()],
         settings: ShopSettingsModel(taxRate: 17, taxInclusive: false),
-        checkoutDiscountPct: 150,
+        checkoutDiscountAmount: 100,
       );
 
-      expect(totals.checkoutDiscountPct, 100);
+      expect(totals.subtotal, closeTo(1000, 0.001));
+      expect(totals.taxAmount, closeTo(170, 0.001));
+      expect(totals.checkoutDiscountAmount, closeTo(100, 0.001));
+      expect(totals.total, closeTo(1070, 0.001));
+    });
+
+    test('the reported case: 1,800 line, 2% tax, Rs 90 off', () {
+      // Sell 3,000 with a 40% product discount = 1,800; 2% tax = 36.
+      // The bill is 1,836, and Rs 90 off makes it 1,746.
+      final totals = OrderTotals.calculate(
+        items: [item(price: 3000, purchasePrice: 1800, discount: 40)],
+        settings: ShopSettingsModel(taxRate: 2, taxInclusive: false),
+        checkoutDiscountAmount: 90,
+      );
+
+      expect(totals.subtotal, closeTo(1800, 0.001));
+      expect(totals.taxAmount, closeTo(36, 0.001));
+      expect(totals.total, closeTo(1746, 0.001));
+    });
+
+    test('the saved record still reconciles with itself', () {
+      final totals = OrderTotals.calculate(
+        items: [item()],
+        settings: ShopSettingsModel(taxRate: 17, taxInclusive: false),
+        checkoutDiscountAmount: 100,
+      );
+
+      final reconciled =
+          totals.subtotal - totals.checkoutDiscountAmount + totals.taxAmount;
+      expect(reconciled, closeTo(totals.total, 0.001));
+    });
+
+    test('a discount larger than the bill cannot go negative', () {
+      final totals = OrderTotals.calculate(
+        items: [item()],
+        settings: ShopSettingsModel(taxRate: 17, taxInclusive: false),
+        checkoutDiscountAmount: 5000,
+      );
+
+      expect(totals.total, 0);
       expect(totals.total, greaterThanOrEqualTo(0));
     });
 
@@ -105,10 +142,19 @@ void main() {
       final totals = OrderTotals.calculate(
         items: [item()],
         settings: ShopSettingsModel(taxRate: 17, taxInclusive: false),
-        checkoutDiscountPct: -20,
+        checkoutDiscountAmount: -20,
       );
 
-      expect(totals.checkoutDiscountPct, 0);
+      expect(totals.checkoutDiscountAmount, 0);
+      expect(totals.total, closeTo(1170, 0.001));
+    });
+
+    test('no discount leaves the bill untouched', () {
+      final totals = OrderTotals.calculate(
+        items: [item()],
+        settings: ShopSettingsModel(taxRate: 17, taxInclusive: false),
+      );
+
       expect(totals.checkoutDiscountAmount, 0);
       expect(totals.total, closeTo(1170, 0.001));
     });
@@ -116,11 +162,11 @@ void main() {
 
   group('savings and profit', () {
     test('product discount and checkout discount both count as savings', () {
-      // 10% off a 1000 product, plus a further 10% at checkout.
+      // 10% off a 1000 product (= 900), plus Rs 90 off at checkout.
       final totals = OrderTotals.calculate(
         items: [item(discount: 10)],
         settings: ShopSettingsModel(taxRate: 0, taxInclusive: false),
-        checkoutDiscountPct: 10,
+        checkoutDiscountAmount: 90,
       );
 
       expect(totals.subtotal, closeTo(900, 0.001)); // 1000 less 10%
@@ -134,7 +180,7 @@ void main() {
       final totals = OrderTotals.calculate(
         items: [item(qty: 3), item(price: 250, purchasePrice: 100, qty: 2)],
         settings: ShopSettingsModel(taxRate: 0, taxInclusive: false),
-        checkoutDiscountPct: 0,
+        checkoutDiscountAmount: 0,
       );
 
       expect(totals.subtotal, closeTo(3500, 0.001)); // 3000 + 500
@@ -156,20 +202,20 @@ void main() {
 
   group('returnAllocation', () {
     // The reported case: sell price 3,000 with a 40% product discount gives an
-    // 1,800 line, 2% tax-exclusive adds 36, then a 5% checkout discount takes
-    // the payable total to 1,744.20. The return dialog used to offer 1,800 —
-    // the list price — which over-refunded by 55.80.
+    // 1,800 line, 2% tax-exclusive adds 36, and Rs 90 off leaves 1,746
+    // payable. The return dialog used to offer 1,800 — the list price — which
+    // over-refunded by 54.
     test('refunds what the customer paid, not the list price', () {
       final allocation = OrderTotals.returnAllocation(
         discountedPrice: 1800,
         purchasePrice: 1800,
         saleSubtotal: 1800,
-        saleTotal: 1744.2,
-        saleCheckoutDiscountPct: 5,
+        saleTotal: 1746,
+        saleCheckoutDiscountAmount: 90,
         saleTotalUnits: 1,
       );
 
-      expect(allocation.refundPerUnit, closeTo(1744.2, 0.001));
+      expect(allocation.refundPerUnit, closeTo(1746, 0.001));
       expect(allocation.refundPerUnit, isNot(closeTo(1800, 0.001)));
     });
 
@@ -180,8 +226,8 @@ void main() {
         discountedPrice: 1800,
         purchasePrice: 1800,
         saleSubtotal: 1800,
-        saleTotal: 1744.2,
-        saleCheckoutDiscountPct: 5,
+        saleTotal: 1746,
+        saleCheckoutDiscountAmount: 90,
         saleTotalUnits: 1,
       );
 
@@ -197,7 +243,7 @@ void main() {
         purchasePrice: 1000,
         saleSubtotal: 1800,
         saleTotal: 1836,
-        saleCheckoutDiscountPct: 0,
+        saleCheckoutDiscountAmount: 0,
         saleTotalUnits: 1,
       );
 
@@ -206,19 +252,20 @@ void main() {
     });
 
     test('checkout discount is spread across every unit in the sale', () {
-      // Two different products, 4 units total, 100 off at checkout.
+      // Two products, 4 units total, Rs 100 off at checkout.
       final allocation = OrderTotals.returnAllocation(
         discountedPrice: 500,
         purchasePrice: 300,
         saleSubtotal: 2000,
         saleTotal: 1900,
-        saleCheckoutDiscountPct: 5,
+        saleCheckoutDiscountAmount: 100,
         saleTotalUnits: 4,
       );
 
       // 100 spread over 4 units = 25 per unit off the margin.
       expect(allocation.profitPerUnit, closeTo(200 - 25, 0.001));
-      expect(allocation.refundPerUnit, closeTo(500 * 0.95, 0.001));
+      // Refund is the paid share: 500 × (1900 / 2000).
+      expect(allocation.refundPerUnit, closeTo(475, 0.001));
     });
 
     test('a zero subtotal cannot divide by zero', () {
@@ -227,7 +274,7 @@ void main() {
         purchasePrice: 100,
         saleSubtotal: 0,
         saleTotal: 0,
-        saleCheckoutDiscountPct: 0,
+        saleCheckoutDiscountAmount: 0,
         saleTotalUnits: 0,
       );
 

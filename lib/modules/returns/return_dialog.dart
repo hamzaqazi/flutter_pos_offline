@@ -41,7 +41,9 @@ void showReturnDialog(SaleModel sale) {
       purchasePrice: item.product.purchasePrice,
       saleSubtotal: sale.subtotal,
       saleTotal: sale.total,
-      saleCheckoutDiscountPct: sale.checkoutDiscount,
+      // Resolved through the model so sales recorded when the discount was a
+      // percentage still allocate correctly.
+      saleCheckoutDiscountAmount: sale.checkoutDiscountAmount,
       saleTotalUnits: saleTotalUnits,
     );
   }

@@ -357,7 +357,9 @@ class SalesHistoryPage extends GetView<SalesController> {
                               () => InvoicePreviewPage(
                                 items: sale.items,
                                 subtotal: sale.subtotal,
-                                checkoutDiscount: sale.checkoutDiscount,
+                                // Resolves the legacy percentage records, so
+                                // an old receipt reprints correctly.
+                                checkoutDiscount: sale.checkoutDiscountAmount,
                                 taxAmount: sale.taxAmount,
                                 total: sale.total,
                                 cash: sale.cash,

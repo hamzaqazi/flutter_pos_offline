@@ -367,20 +367,21 @@ class CartPage extends GetView<CartController> {
 
               final settings = SettingsService.getSettings();
 
-              // ── Checkout discount (hard-blocked outside 0–100) ──
-              // Above 100% the payable total would go negative, and an
-              // unparseable value would silently read as "no discount".
-              // Both are refused rather than quietly recorded.
+              // ── Checkout discount (a fixed amount, hard-blocked when out of
+              // range) ──
+              // More than the subtotal would make the bill negative, and an
+              // unparseable value would silently read as "no discount". Both
+              // are refused rather than quietly recorded.
               final discountText = checkoutDiscountController.text.trim();
               final parsedDiscount = double.tryParse(discountText);
               final discountInvalid =
                   discountText.isNotEmpty &&
                   (parsedDiscount == null ||
                       parsedDiscount < 0 ||
-                      parsedDiscount > 100);
-              final checkoutDiscountPct = discountInvalid
-                  ? 0
-                  : parsedDiscount ?? 0;
+                      parsedDiscount > cart.subtotalAmount);
+              final checkoutDiscountAmount = discountInvalid
+                  ? 0.0
+                  : parsedDiscount ?? 0.0;
 
               // ── Totals ──
               // OrderTotals is the single source of truth for this maths, and
@@ -390,7 +391,7 @@ class CartPage extends GetView<CartController> {
               final totals = OrderTotals.calculate(
                 items: cart.cartItems,
                 settings: settings,
-                checkoutDiscountPct: checkoutDiscountPct,
+                checkoutDiscountAmount: checkoutDiscountAmount,
               );
 
               // Compare with a half-unit tolerance: a total like 1,744.20
@@ -487,13 +488,13 @@ class CartPage extends GetView<CartController> {
                             ),
                           ],
                           // Checkout discount
-                          if (checkoutDiscountPct > 0) ...[
+                          if (totals.checkoutDiscountAmount > 0) ...[
                             const SizedBox(height: AppSpacing.sm),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Checkout discount ($checkoutDiscountPct%)",
+                                  "Checkout discount",
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: AppColors.danger,
                                   ),
@@ -549,13 +550,14 @@ class CartPage extends GetView<CartController> {
                     const SizedBox(height: AppSpacing.lg),
 
                     // ---------- Checkout discount field ----------
+                    // A flat amount off the bill, not a percentage.
                     TextField(
                       controller: checkoutDiscountController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: "Additional discount %",
-                        prefixIcon: Icon(Icons.discount_outlined),
-                        suffixText: "%",
+                      decoration: InputDecoration(
+                        labelText: "Additional discount",
+                        prefixIcon: const Icon(Icons.discount_outlined),
+                        prefixText: '${settings.currencySymbol} ',
                       ),
                       onChanged: (_) => setState(() {}),
                     ),
@@ -568,52 +570,27 @@ class CartPage extends GetView<CartController> {
                           left: AppSpacing.sm,
                         ),
                         child: Text(
-                          "Enter a discount between 0 and 100",
+                          "Enter an amount between 0 and "
+                          "${Formatters.currency(cart.subtotalAmount)}",
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: AppColors.danger,
                           ),
                         ),
                       ),
                     const SizedBox(height: AppSpacing.sm),
+                    // Quick amounts, in the shop's currency.
                     Wrap(
                       spacing: AppSpacing.sm,
                       children: [
-                        _discountChip(
-                          "0%",
-                          "0",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "5%",
-                          "5",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "10%",
-                          "10",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "15%",
-                          "15",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "20%",
-                          "20",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "25%",
-                          "25",
-                          checkoutDiscountController,
-                          setState,
-                        ),
+                        for (final amount in const [0, 100, 150, 200])
+                          _discountChip(
+                            amount == 0
+                                ? 'None'
+                                : '${settings.currencySymbol} $amount',
+                            '$amount',
+                            checkoutDiscountController,
+                            setState,
+                          ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -746,11 +723,11 @@ class CartPage extends GetView<CartController> {
                                       () => InvoicePreviewPage(
                                         items: cart.cartItems,
                                         subtotal: totals.subtotal,
-                                        // The helper's clamped percentage, so
-                                        // the preview can never disagree with
-                                        // what gets stored.
+                                        // The helper's clamped amount, so the
+                                        // preview can never disagree with what
+                                        // gets stored.
                                         checkoutDiscount:
-                                            totals.checkoutDiscountPct,
+                                            totals.checkoutDiscountAmount,
                                         taxRate: settings.taxRate,
                                         taxInclusive: settings.taxInclusive,
                                         taxAmount: totals.taxAmount,

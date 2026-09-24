@@ -200,8 +200,10 @@ class ManualGuides {
           ManualStep(
             'Apply a discount (optional)',
             detail:
-                'Enter a checkout discount percentage at checkout. You can '
-                'also set a standing Discount % on an individual product.',
+                'Enter a checkout discount as a fixed amount at checkout — '
+                'for example Rs 100 off the bill, or tap one of the quick '
+                'amounts. You can also set a standing Discount % on an '
+                'individual product.',
           ),
           ManualStep(
             'Attach a customer (optional)',

@@ -59,7 +59,7 @@ class ExportService {
           .join('; ');
       buffer.writeln(
         '"${s.invoiceNumber}","${s.id}","${Formatters.dateTime(s.date)}",${s.subtotal},'
-        '${s.checkoutDiscount},${s.taxAmount},${s.total},'
+        '${s.checkoutDiscountAmount},${s.taxAmount},${s.total},'
         '${s.cash},${s.change},${s.discount},${s.profit},'
         '"${s.customerId}","$itemsSummary"',
       );
