@@ -56,7 +56,15 @@ class ReturnItemModel {
   final double discount;       // discount % on the product
   final int originalQty;       // qty in original sale
   final int returnQty;         // qty being returned now
-  final double refundPerUnit;  // discountedPrice at time of sale
+
+  /// What the customer is refunded per unit. This is the price they actually
+  /// paid — the line price after the product discount, scaled for any
+  /// checkout discount and tax on the original sale — not the list price.
+  final double refundPerUnit;
+
+  /// Profit reversed per unit: the pre-tax margin less that unit's share of
+  /// any checkout discount.
+  final double profitPerUnit;
 
   ReturnItemModel({
     required this.productId,
@@ -68,13 +76,15 @@ class ReturnItemModel {
     required this.originalQty,
     required this.returnQty,
     required this.refundPerUnit,
-  });
+    double? profitPerUnit,
+  }) : profitPerUnit =
+           profitPerUnit ?? (refundPerUnit - purchasePrice);
 
   /// Total refund for this line = returnQty × refundPerUnit
   double get totalRefund => returnQty * refundPerUnit;
 
-  /// Profit reversed for this line = returnQty × (refundPerUnit - purchasePrice)
-  double get profitReversed => returnQty * (refundPerUnit - purchasePrice);
+  /// Profit reversed for this line = returnQty × profitPerUnit
+  double get profitReversed => returnQty * profitPerUnit;
 
   Map<String, dynamic> toMap() {
     return {
@@ -87,6 +97,7 @@ class ReturnItemModel {
       'originalQty': originalQty,
       'returnQty': returnQty,
       'refundPerUnit': refundPerUnit,
+      'profitPerUnit': profitPerUnit,
     };
   }
 
@@ -101,11 +112,26 @@ class ReturnItemModel {
       originalQty: data['originalQty'] ?? 1,
       returnQty: data['returnQty'] ?? 1,
       refundPerUnit: (data['refundPerUnit'] ?? 0).toDouble(),
+      // Returns recorded before profit per unit was tracked fall back to the
+      // old derivation so historical records still load.
+      profitPerUnit: data['profitPerUnit'] != null
+          ? (data['profitPerUnit'] as num).toDouble()
+          : null,
     );
   }
 
-  /// Create from a CartItemModel (sale item)
-  factory ReturnItemModel.fromCartItem(CartItemModel item, {int returnQty = 0}) {
+  /// Create from a CartItemModel (sale item).
+  ///
+  /// [refundPerUnit] and [profitPerUnit] should be the values from
+  /// `OrderTotals.returnAllocation`, which knows what the customer actually
+  /// paid. They default to the line price for callers with no checkout-level
+  /// adjustment to account for.
+  factory ReturnItemModel.fromCartItem(
+    CartItemModel item, {
+    int returnQty = 0,
+    double? refundPerUnit,
+    double? profitPerUnit,
+  }) {
     return ReturnItemModel(
       productId: item.product.id,
       name: item.product.name,
@@ -115,7 +141,8 @@ class ReturnItemModel {
       discount: item.product.discount,
       originalQty: item.quantity,
       returnQty: returnQty,
-      refundPerUnit: item.product.discountedPrice,
+      refundPerUnit: refundPerUnit ?? item.product.discountedPrice,
+      profitPerUnit: profitPerUnit,
     );
   }
 }

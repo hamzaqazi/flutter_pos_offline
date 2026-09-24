@@ -6,6 +6,7 @@ import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
+import 'package:ad_shop_pos/data/services/order_totals.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_preview_page.dart';
@@ -29,6 +30,9 @@ class CartPage extends GetView<CartController> {
     return Scaffold(
       appBar: AppShellAppBar(
         title: const Text("Cart"),
+        // Help icon intentionally omitted: this bar gains Hold/Clear actions
+        // as soon as the cart has items, and a fifth icon crowds small
+        // screens. The manual is available from the More tab instead.
         actions: [
           Obx(() {
             if (controller.cartItems.isEmpty) return const SizedBox.shrink();
@@ -361,30 +365,55 @@ class CartPage extends GetView<CartController> {
             builder: (context, setState) {
               final theme = Theme.of(context);
 
-              // Parse checkout discount %
-              final checkoutDiscountPct =
-                  double.tryParse(checkoutDiscountController.text.trim()) ?? 0;
-              // Discount applies on subtotal (before tax for tax-exclusive, on total for tax-inclusive)
-              final checkoutDiscountAmount =
-                  cart.subtotalAmount * checkoutDiscountPct / 100;
-              // For tax-exclusive: discount reduces subtotal, then tax is recalculated
               final settings = SettingsService.getSettings();
-              final discountedSubtotal =
-                  cart.subtotalAmount - checkoutDiscountAmount;
-              final taxOnDiscounted = settings.taxInclusive
-                  ? discountedSubtotal -
-                        (discountedSubtotal / (1 + settings.taxRate / 100))
-                  : discountedSubtotal * settings.taxRate / 100;
-              final grandTotal = settings.taxInclusive
-                  ? discountedSubtotal // tax already included
-                  : discountedSubtotal + taxOnDiscounted;
 
+              // ── Checkout discount (a fixed amount, hard-blocked when out of
+              // range) ──
+              // More than the subtotal would make the bill negative, and an
+              // unparseable value would silently read as "no discount". Both
+              // are refused rather than quietly recorded.
+              final discountText = checkoutDiscountController.text.trim();
+              final parsedDiscount = double.tryParse(discountText);
+              final discountInvalid =
+                  discountText.isNotEmpty &&
+                  (parsedDiscount == null ||
+                      parsedDiscount < 0 ||
+                      parsedDiscount > cart.subtotalAmount);
+              final checkoutDiscountAmount = discountInvalid
+                  ? 0.0
+                  : parsedDiscount ?? 0.0;
+
+              // ── Totals ──
+              // OrderTotals is the single source of truth for this maths, and
+              // SalesController.completeSale runs the very same helper — so
+              // the total shown and collected here is the total that gets
+              // stored against the sale.
+              final totals = OrderTotals.calculate(
+                items: cart.cartItems,
+                settings: settings,
+                checkoutDiscountAmount: checkoutDiscountAmount,
+              );
+
+              // Compare with a half-unit tolerance: a total like 1,744.20
+              // arrives from the "Exact" chip as 1744.2, which floating-point
+              // arithmetic can place a hair below the computed 1,744.2 and
+              // wrongly report as short.
+              const cashTolerance = 0.005;
               final cash = double.tryParse(cashController.text.trim()) ?? 0;
-              final change = cash - grandTotal;
-              final enough = cash >= grandTotal;
+              final rawChange = cash - totals.total;
+              final change = rawChange < 0 ? 0.0 : rawChange;
+              final enough =
+                  cash + cashTolerance >= totals.total && !discountInvalid;
 
-              final totalAllSavings =
-                  cart.totalSavings + checkoutDiscountAmount;
+              // A bill that does not cover what the goods cost: the additional
+              // discount is the usual cause, and the cashier sees the figures
+              // they can check by hand.
+              final belowCostMessage = totals.paysBelowCost
+                  ? "${Formatters.currency(totals.total)} payable, but these "
+                        "items cost you ${Formatters.currency(totals.cost)} — "
+                        "${Formatters.currency(totals.belowCostAmount)} short "
+                        "of cost."
+                  : null;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -469,19 +498,19 @@ class CartPage extends GetView<CartController> {
                             ),
                           ],
                           // Checkout discount
-                          if (checkoutDiscountPct > 0) ...[
+                          if (totals.checkoutDiscountAmount > 0) ...[
                             const SizedBox(height: AppSpacing.sm),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Checkout discount ($checkoutDiscountPct%)",
+                                  "Checkout discount",
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: AppColors.danger,
                                   ),
                                 ),
                                 Text(
-                                  "-${Formatters.currency(checkoutDiscountAmount)}",
+                                  "-${Formatters.currency(totals.checkoutDiscountAmount)}",
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: AppColors.danger,
                                     fontWeight: FontWeight.w700,
@@ -502,7 +531,7 @@ class CartPage extends GetView<CartController> {
                                 style: theme.textTheme.titleMedium,
                               ),
                               Text(
-                                Formatters.currency(grandTotal),
+                                Formatters.currency(totals.total),
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.w800,
@@ -510,13 +539,13 @@ class CartPage extends GetView<CartController> {
                               ),
                             ],
                           ),
-                          if (totalAllSavings > 0) ...[
+                          if (totals.savings > 0) ...[
                             const SizedBox(height: AppSpacing.sm),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 Text(
-                                  "Total saved: ${Formatters.currency(totalAllSavings)}",
+                                  "Total saved: ${Formatters.currency(totals.savings)}",
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: AppColors.success,
                                     fontWeight: FontWeight.w600,
@@ -525,62 +554,66 @@ class CartPage extends GetView<CartController> {
                               ],
                             ),
                           ],
+                          // The additional discount can take the bill under
+                          // what the goods cost. Allowed — clearing stock is a
+                          // reason to — but the cashier is told before taking
+                          // payment rather than finding out in the reports.
+                          if (belowCostMessage != null)
+                            AppBanner.warning(
+                              icon: Icons.trending_down,
+                              title: "Selling below cost",
+                              subtitle: belowCostMessage,
+                              margin: const EdgeInsets.only(
+                                top: AppSpacing.md,
+                              ),
+                            ),
                         ],
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
                     // ---------- Checkout discount field ----------
+                    // A flat amount off the bill, not a percentage.
                     TextField(
                       controller: checkoutDiscountController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: "Additional discount %",
-                        prefixIcon: Icon(Icons.discount_outlined),
-                        suffixText: "%",
+                      decoration: InputDecoration(
+                        labelText: "Additional discount",
+                        prefixIcon: const Icon(Icons.discount_outlined),
+                        prefixText: '${settings.currencySymbol} ',
                       ),
                       onChanged: (_) => setState(() {}),
                     ),
+                    // Hard block: shown while the entered discount is out of
+                    // range, and Pay stays disabled until it is fixed.
+                    if (discountInvalid)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: AppSpacing.xs,
+                          left: AppSpacing.sm,
+                        ),
+                        child: Text(
+                          "Enter an amount between 0 and "
+                          "${Formatters.currency(cart.subtotalAmount)}",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.danger,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.sm),
+                    // Quick amounts, in the shop's currency.
                     Wrap(
                       spacing: AppSpacing.sm,
                       children: [
-                        _discountChip(
-                          "0%",
-                          "0",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "5%",
-                          "5",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "10%",
-                          "10",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "15%",
-                          "15",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "20%",
-                          "20",
-                          checkoutDiscountController,
-                          setState,
-                        ),
-                        _discountChip(
-                          "25%",
-                          "25",
-                          checkoutDiscountController,
-                          setState,
-                        ),
+                        for (final amount in const [0, 100, 150, 200])
+                          _discountChip(
+                            amount == 0
+                                ? 'None'
+                                : '${settings.currencySymbol} $amount',
+                            '$amount',
+                            checkoutDiscountController,
+                            setState,
+                          ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -655,19 +688,19 @@ class CartPage extends GetView<CartController> {
                       children: [
                         _quickChip(
                           "Exact",
-                          grandTotal,
+                          totals.total,
                           cashController,
                           setState,
                         ),
                         _quickChip(
                           "+500",
-                          grandTotal + 500,
+                          totals.total + 500,
                           cashController,
                           setState,
                         ),
                         _quickChip(
                           "+1000",
-                          grandTotal + 1000,
+                          totals.total + 1000,
                           cashController,
                           setState,
                         ),
@@ -712,21 +745,19 @@ class CartPage extends GetView<CartController> {
                                     Get.to(
                                       () => InvoicePreviewPage(
                                         items: cart.cartItems,
-                                        subtotal: cart.subtotalAmount,
-                                        checkoutDiscount: checkoutDiscountPct,
+                                        subtotal: totals.subtotal,
+                                        // The helper's clamped amount, so the
+                                        // preview can never disagree with what
+                                        // gets stored.
+                                        checkoutDiscount:
+                                            totals.checkoutDiscountAmount,
                                         taxRate: settings.taxRate,
                                         taxInclusive: settings.taxInclusive,
-                                        taxAmount: settings.taxInclusive
-                                            ? (grandTotal -
-                                                  grandTotal /
-                                                      (1 +
-                                                          settings.taxRate /
-                                                              100))
-                                            : taxOnDiscounted,
-                                        total: grandTotal,
+                                        taxAmount: totals.taxAmount,
+                                        total: totals.total,
                                         cash: cash,
                                         change: change,
-                                        totalSavings: totalAllSavings,
+                                        totalSavings: totals.savings,
                                         customerId: selectedCustomerId ?? '',
                                         cashierId:
                                             Get.find<StaffController>()
@@ -853,7 +884,13 @@ class CartPage extends GetView<CartController> {
     return ActionChip(
       label: Text(label),
       onPressed: () {
-        controller.text = value.toStringAsFixed(0);
+        // Fill the value to the smallest unit. Rounding here handed back less
+        // than the total (e.g. 1,744 against 1,744.20), which the checkout then
+        // reported as "insufficient".
+        final isWhole = (value - value.roundToDouble()).abs() < 0.005;
+        controller.text = isWhole
+            ? value.toStringAsFixed(0)
+            : value.toStringAsFixed(2);
         setState(() {});
       },
     );
@@ -968,6 +1005,15 @@ class _CartTile extends StatelessWidget {
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
+                      ),
+                    ],
+                    // A line that loses money is worth flagging at the till,
+                    // not only where the discount was set.
+                    if (item.product.sellsBelowCost) ...[
+                      const SizedBox(height: 4),
+                      AppBadge.warning(
+                        label: "Below cost",
+                        icon: Icons.trending_down,
                       ),
                     ],
                     const SizedBox(height: 4),

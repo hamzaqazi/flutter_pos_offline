@@ -259,6 +259,7 @@ class _SummaryTab extends GetView<ReportsController> {
                   child: _StatBox(
                     icon: Icons.receipt_outlined,
                     label: "Tax collected",
+                    tooltip: FinancialTooltips.taxCollected,
                     value: Formatters.currency(controller.totalTax),
                     color: AppColors.accent,
                   ),
@@ -584,8 +585,8 @@ class _ExpensesTab extends GetView<ReportsController> {
                     children: [
                       Expanded(
                         child: _BannerStat(
-                          label: "Gross Profit",
-                          tooltip: FinancialTooltips.grossProfit,
+                          label: "Profit",
+                          tooltip: FinancialTooltips.profit,
                           value: Formatters.currency(controller.totalProfit),
                         ),
                       ),

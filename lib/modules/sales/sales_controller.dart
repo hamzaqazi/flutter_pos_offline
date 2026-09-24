@@ -7,6 +7,8 @@ import 'package:hive/hive.dart';
 
 import '../../data/models/sale_model.dart';
 import '../../data/services/hive_service.dart';
+import '../../data/services/order_totals.dart';
+import '../../data/services/settings_service.dart';
 import '../cart/cart_controller.dart';
 import '../products/products_controller.dart';
 import '../customers/customers_controller.dart';
@@ -73,6 +75,9 @@ class SalesController extends GetxController {
           items: items,
           subtotal: (e['subtotal'] ?? e['total'] ?? 0).toDouble(),
           checkoutDiscount: (e['checkoutDiscount'] ?? 0).toDouble(),
+          // Records written before checkout discounts became fixed amounts
+          // stored a percentage; absent flag means exactly that.
+          checkoutDiscountIsPercent: e['checkoutDiscountIsPercent'] ?? true,
           taxAmount: (e['taxAmount'] ?? 0).toDouble(),
           total: (e['total'] ?? 0).toDouble(),
           cash: (e['cash'] ?? 0).toDouble(),
@@ -118,11 +123,11 @@ class SalesController extends GetxController {
     required double cash,
     required double change,
     double checkoutDiscount = 0,
-    double taxAmount = 0,
     String customerId = '',
     String cashierId = '',
     String invoiceNumber = '',
   }) {
+    // `checkoutDiscount` is an absolute amount off the bill (see OrderTotals).
     final cart = Get.find<CartController>();
     final products = Get.find<ProductsController>();
 
@@ -130,17 +135,16 @@ class SalesController extends GetxController {
 
     final saleId = DateTime.now().microsecondsSinceEpoch.toString();
 
-    final subtotal = cart.subtotalAmount;
-    final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
-    final grandTotal = cart.totalAmount - checkoutDiscountAmount;
-
-    final productSavings = cart.cartItems.fold<double>(
-      0,
-      (sum, item) => sum + item.savings,
+    // The checkout dialog computes its figures with this same helper, so the
+    // stored subtotal, tax, discount and total are exactly what the cashier
+    // saw and collected. (Previously this recomputed the total from
+    // `cart.totalAmount`, which taxed the *undiscounted* subtotal and so
+    // recorded more than the customer paid.)
+    final totals = OrderTotals.calculate(
+      items: cart.cartItems,
+      settings: SettingsService.getSettings(),
+      checkoutDiscountAmount: checkoutDiscount,
     );
-
-    final totalDiscount = productSavings + checkoutDiscountAmount;
-    final totalProfit = cart.totalProfit - checkoutDiscountAmount;
 
     // Generate invoice number — always increment the counter
     final invNum = invoiceNumber.isNotEmpty
@@ -157,23 +161,25 @@ class SalesController extends GetxController {
       id: saleId,
       invoiceNumber: invNum,
       items: List.from(cart.cartItems),
-      subtotal: subtotal,
-      checkoutDiscount: checkoutDiscount,
-      taxAmount: taxAmount,
-      total: grandTotal,
+      subtotal: totals.subtotal,
+      checkoutDiscount: totals.checkoutDiscountAmount,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
       cash: cash,
       change: change,
-      discount: totalDiscount,
-      profit: totalProfit,
+      discount: totals.savings,
+      profit: totals.profit,
       customerId: customerId,
       cashierId: cashierId,
       date: DateTime.now(),
     );
 
-    // reduce stock
+    // Reduce stock from each product's *live* level rather than the snapshot
+    // held in the cart. Using the snapshot meant that a restock performed
+    // while the item sat in the cart got overwritten by the older figure —
+    // e.g. stock 5 → 2 in cart → restocked to 50 → sale would write back 3.
     for (final item in cart.cartItems) {
-      final newStock = item.product.stock - item.quantity;
-      products.updateStock(item.product.id, newStock);
+      products.decrementStock(item.product.id, item.quantity);
     }
 
     // SAVE FULL INVOICE (IMPORTANT)
@@ -199,6 +205,9 @@ class SalesController extends GetxController {
           .toList(),
       'subtotal': sale.subtotal,
       'checkoutDiscount': sale.checkoutDiscount,
+      // Written explicitly (false for new sales) so `loadSales` can tell an
+      // amount apart from the percentages legacy records stored.
+      'checkoutDiscountIsPercent': sale.checkoutDiscountIsPercent,
       'taxAmount': sale.taxAmount,
       'total': sale.total,
       'cash': sale.cash,

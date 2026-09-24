@@ -25,14 +25,47 @@ class ProductModel {
     this.barcode = '',
   });
 
-  /// Selling price after applying discount percentage.
-  double get discountedPrice {
-    if (discount <= 0) return price;
-    return price - (price * discount / 100);
+  /// Anything closer together than this counts as the same amount of money, so
+  /// a rounding artefact cannot turn a break-even price into a reported loss —
+  /// the same tolerance the currency formatter uses to decide a value is whole.
+  static const double _moneyTolerance = 0.005;
+
+  /// Selling price after a discount of [discountPercent] applied to [price].
+  static double discountedPriceFor(double price, double discountPercent) {
+    if (discountPercent <= 0) return price;
+    return price - (price * discountPercent / 100);
   }
+
+  /// The money lost on a single unit sold at [price] after [discountPercent]
+  /// off, given what it cost.
+  ///
+  /// Zero when the unit still sells at or above cost — including when the
+  /// purchase price is unknown (0), which must never read as a loss.
+  static double lossFor({
+    required double price,
+    required double purchasePrice,
+    required double discountPercent,
+  }) {
+    final profit = discountedPriceFor(price, discountPercent) - purchasePrice;
+    return profit < -_moneyTolerance ? -profit : 0;
+  }
+
+  /// Selling price after applying discount percentage.
+  double get discountedPrice => discountedPriceFor(price, discount);
 
   /// Profit per unit (selling price after discount minus purchase price).
   double get profitPerUnit => discountedPrice - purchasePrice;
+
+  /// Money lost per unit at this price and discount; 0 when it still sells at
+  /// or above cost.
+  double get lossPerUnit => lossFor(
+    price: price,
+    purchasePrice: purchasePrice,
+    discountPercent: discount,
+  );
+
+  /// Whether this price and discount sell the item at a loss.
+  bool get sellsBelowCost => lossPerUnit > 0;
 
   /// Whether this product has a brand set.
   bool get hasBrand => brand.isNotEmpty;

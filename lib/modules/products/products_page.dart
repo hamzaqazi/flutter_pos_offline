@@ -3,6 +3,7 @@ import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
+import 'package:ad_shop_pos/modules/manual/manual_nav.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
 import 'package:ad_shop_pos/widgets/product_image_picker.dart';
@@ -31,6 +32,9 @@ class ProductsPage extends GetView<ProductsController> {
           final count = controller.products.length;
           return Text("Products ($count/${LicenseService.freeMaxProducts})");
         }),
+        // No app-bar help icon here — this bar already carries the scanner
+        // and cart actions plus the free-plan product counter. The manual is
+        // one tap away from the empty state below and from the More tab.
         actions: [
           // Barcode scanner button
           IconButton(
@@ -239,6 +243,14 @@ class ProductsPage extends GetView<ProductsController> {
           child: StatefulBuilder(
             builder: (context, setState) {
               final theme = Theme.of(context);
+              // Live figures for the below-cost warning: an empty or
+              // unparseable box counts as 0, matching what Save will store.
+              final priceNow =
+                  double.tryParse(priceController.text.trim()) ?? 0;
+              final purchaseNow =
+                  double.tryParse(purchasePriceController.text.trim()) ?? 0;
+              final discountNow =
+                  double.tryParse(discountController.text.trim()) ?? 0;
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
@@ -353,6 +365,7 @@ class ProductsPage extends GetView<ProductsController> {
                           child: TextField(
                             controller: priceController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Sell price",
                               prefixIcon: Icon(Icons.sell_outlined),
@@ -364,6 +377,7 @@ class ProductsPage extends GetView<ProductsController> {
                           child: TextField(
                             controller: purchasePriceController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Purchase price",
                               prefixIcon: Icon(Icons.payments_outlined),
@@ -379,6 +393,7 @@ class ProductsPage extends GetView<ProductsController> {
                           child: TextField(
                             controller: discountController,
                             keyboardType: TextInputType.number,
+                            onChanged: (_) => setState(() {}),
                             decoration: const InputDecoration(
                               labelText: "Discount %",
                               prefixIcon: Icon(Icons.discount_outlined),
@@ -400,6 +415,13 @@ class ProductsPage extends GetView<ProductsController> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    // A standing discount can quietly put the item under
+                    // what it cost — say so while the numbers are typed.
+                    BelowCostWarning(
+                      price: priceNow,
+                      purchasePrice: purchaseNow,
+                      discountPercent: discountNow,
+                    ),
                     DropdownButtonFormField<String>(
                       value: selectedCategory,
                       isExpanded: true,
@@ -455,23 +477,44 @@ class ProductsPage extends GetView<ProductsController> {
                                 return;
                               }
 
+                              // Reject unparseable or negative numbers rather
+                              // than letting `?? 0` silently save a free or
+                              // negatively-priced product.
+                              final priceVal = double.tryParse(
+                                priceController.text.trim(),
+                              );
+                              final purchaseText =
+                                  purchasePriceController.text.trim();
+                              final purchaseVal = purchaseText.isEmpty
+                                  ? 0.0
+                                  : double.tryParse(purchaseText);
+                              final stockVal = int.tryParse(
+                                stockController.text.trim(),
+                              );
+                              if (priceVal == null ||
+                                  purchaseVal == null ||
+                                  stockVal == null ||
+                                  priceVal < 0 ||
+                                  purchaseVal < 0 ||
+                                  stockVal < 0) {
+                                Get.snackbar(
+                                  "Invalid value",
+                                  "Enter a valid sell price, purchase price and stock — none can be negative",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                return;
+                              }
+
                               controller.addProduct(
                                 ProductModel(
                                   id: UniqueKey().toString(),
                                   name: nameController.text,
                                   brand: brandController.text,
                                   category: selectedCategory,
-                                  price:
-                                      double.tryParse(priceController.text) ??
-                                      0,
-                                  purchasePrice:
-                                      double.tryParse(
-                                        purchasePriceController.text,
-                                      ) ??
-                                      0,
+                                  price: priceVal,
+                                  purchasePrice: purchaseVal,
                                   discount: discountVal,
-                                  stock:
-                                      int.tryParse(stockController.text) ?? 0,
+                                  stock: stockVal,
                                   image: imagePath,
                                   sku: skuController.text.trim(),
                                   barcode: barcodeController.text.trim(),
@@ -507,6 +550,12 @@ class _EmptyState extends StatelessWidget {
       subtitle: hasProducts
           ? 'Try a different search or category'
           : 'Tap "Add product" to get started',
+      // Point first-time users at the manual rather than leaving them at a
+      // dead end.
+      actionLabel: hasProducts ? null : 'How to add a product',
+      onAction: hasProducts
+          ? null
+          : () => ManualNav.openGuide('add-product'),
     );
   }
 }

@@ -20,4 +20,9 @@ abstract class Routes {
   static const backupHistory = '/backup-history';
   static const driveBackup = '/drive-backup';
   static const license = '/license';
+
+  // User manual — the hub, plus a single guide (deep-link with
+  // `parameters: {'id': '<guide id>'}`).
+  static const manual = '/manual';
+  static const manualArticle = '/manual/article';
 }
