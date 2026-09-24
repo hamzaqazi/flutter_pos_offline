@@ -478,15 +478,13 @@ class LicenseService {
       }
 
       // Check expiry
-      if (data['expiresAt'] != null) {
-        final expiresAt = (data['expiresAt'] as Timestamp).toDate();
-        if (expiresAt.isBefore(DateTime.now())) {
-          return LicenseResult(
-            success: false,
-            message:
-                'License expired on ${_formatDate(expiresAt)}. Contact support to renew.',
-          );
-        }
+      final expiresAt = parseExpiry(data['expiresAt']);
+      if (expiresAt != null && expiresAt.isBefore(DateTime.now())) {
+        return LicenseResult(
+          success: false,
+          message:
+              'License expired on ${_formatDate(expiresAt)}. Contact support to renew.',
+        );
       }
 
       final shopName = data['shopName'] as String? ?? 'My Shop';
@@ -529,9 +527,7 @@ class LicenseService {
         key: key.trim().toUpperCase(),
         shopName: shopName,
         plan: plan,
-        expiresAt: data['expiresAt'] != null
-            ? (data['expiresAt'] as Timestamp).toDate()
-            : null,
+        expiresAt: expiresAt,
       );
 
       return LicenseResult(
@@ -539,9 +535,7 @@ class LicenseService {
         message: 'Activated successfully!',
         shopName: shopName,
         plan: plan,
-        expiresAt: data['expiresAt'] != null
-            ? (data['expiresAt'] as Timestamp).toDate()
-            : null,
+        expiresAt: expiresAt,
       );
     } catch (e, s) {
       debugPrint('🔥 LICENSE ERROR: $e');
@@ -605,7 +599,10 @@ class LicenseService {
         await deactivate(reason: 'License key not found. Contact support.');
         return false;
       }
-      if (doc.data()?['active'] != true) {
+
+      final data = doc.data() ?? const <String, dynamic>{};
+
+      if (data['active'] != true) {
         await deactivate(
           reason:
               'Your license has been deactivated by the administrator. Contact support to reactivate.',
@@ -614,20 +611,18 @@ class LicenseService {
       }
 
       // Check expiry
-      if (doc.data()?['expiresAt'] != null) {
-        final expiresAt = (doc.data()!['expiresAt'] as Timestamp).toDate();
-        if (expiresAt.isBefore(DateTime.now())) {
-          await deactivate(
-            reason:
-                'Your license expired on ${_formatDate(expiresAt)}. Contact support to renew your license.',
-          );
-          return false;
-        }
+      final serverExpiry = parseExpiry(data['expiresAt']);
+      if (serverExpiry != null && serverExpiry.isBefore(DateTime.now())) {
+        await deactivate(
+          reason:
+              'Your license expired on ${_formatDate(serverExpiry)}. Contact support to renew your license.',
+        );
+        return false;
       }
 
       // Check if this device is still registered
       final registeredDevices = List<String>.from(
-        doc.data()?['registeredDevices'] ?? [],
+        data['registeredDevices'] ?? [],
       );
       final currentDeviceId = await deviceId;
       if (!registeredDevices.contains(currentDeviceId)) {
@@ -639,10 +634,40 @@ class LicenseService {
         return false;
       }
 
-      // Update plan from Firestore (in case it was changed server-side)
-      final serverPlan = doc.data()?['plan'] as String? ?? storedPlan;
+      // Pull the admin's copy into the local cache.
+      //
+      // Enforcement above already ran against Firestore, but every screen
+      // reads the cached values, and only `_saveActivation` ever writes them.
+      // Without this, extending (or shortening) a license in Firestore — or
+      // renaming the shop, or switching a plan — never reached the app: it
+      // kept showing the expiry it was activated with, however often it was
+      // restarted.
+      var changed = false;
+
+      final serverPlan = data['plan'] as String? ?? storedPlan;
       if (serverPlan != storedPlan) {
         await _box.put('license_plan', serverPlan);
+        changed = true;
+      }
+
+      final serverShop = data['shopName'] as String?;
+      if (serverShop != null &&
+          serverShop.isNotEmpty &&
+          serverShop != shopName) {
+        await _box.put('license_shopName', serverShop);
+        changed = true;
+      }
+
+      if (serverExpiry == null) {
+        // No expiry on the server (a lifetime license). Drop any stale date
+        // so the app stops counting down to it.
+        if (expiresAt != null) {
+          await _box.delete('license_expiresAt');
+          changed = true;
+        }
+      } else if (serverExpiry != expiresAt) {
+        await _box.put('license_expiresAt', serverExpiry.toIso8601String());
+        changed = true;
       }
 
       // Save last verified timestamp for offline grace
@@ -651,13 +676,18 @@ class LicenseService {
       // Update "last used" timestamp for this device on the license record
       await _touchLicenseDeviceLastUsed(key, currentDeviceId);
 
+      // Screens showing the expiry read this inside an Obx, so a renewal
+      // appears as soon as verification finishes.
+      if (changed) _notifyChanged();
+
       return true;
     } catch (e) {
-      // No internet — trust the saved activation (with offline grace)
+      // No internet — trust the saved activation (with offline grace).
+      // Logged so a failed sync is diagnosable: it is the difference between
+      // "offline" and "the server said something we could not read".
+      debugPrint('License verification failed, using saved copy: $e');
       return isActivated;
     }
-
-    _notifyChanged();
   }
   // =================== Save / Deactivate ===================
 
@@ -830,6 +860,23 @@ class LicenseService {
   }
 
   // =================== Formatting ===================
+
+  /// Reads a license's `expiresAt` field from a Firestore document.
+  ///
+  /// The admin panel writes a real `Timestamp`, but a date typed into the
+  /// Firebase console by hand can arrive as an ISO string. Reading it through
+  /// one place means either shape works, and — this is the point — a cast
+  /// failure can no longer abort a whole verification and leave the app
+  /// quietly showing the dates it was activated with.
+  ///
+  /// Returns null for "no expiry" (a lifetime license) and for anything
+  /// unreadable, which is treated the same way.
+  static DateTime? parseExpiry(Object? value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
+  }
 
   static String _formatDate(DateTime date) {
     return '${date.day} ${_monthName(date.month)} ${date.year}';
