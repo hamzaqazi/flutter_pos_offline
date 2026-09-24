@@ -103,6 +103,17 @@ class AppStatCard extends StatelessWidget {
                         ],
                       ),
                     ),
+
+                  // tool tip icon
+                  if (tooltip != null)
+                    Tooltip(
+                      message: tooltip!,
+                      child: const Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -123,7 +134,7 @@ class AppStatCard extends StatelessWidget {
 
               // ── Label ──
               Text(
-                tooltip ?? label,
+                label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
