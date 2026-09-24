@@ -563,9 +563,9 @@ class CartPage extends GetView<CartController> {
                               icon: Icons.trending_down,
                               title: "Selling below cost",
                               subtitle: belowCostMessage,
-                              margin: const EdgeInsets.only(
-                                top: AppSpacing.md,
-                              ),
+                              // margin: const EdgeInsets.only(
+                              //   top: AppSpacing.md,
+                              // ),
                             ),
                         ],
                       ),
