@@ -5,7 +5,9 @@ import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../data/models/cart_item_model.dart';
 import '../../data/models/sale_model.dart';
+import '../../data/services/order_totals.dart';
 
 /// Shows a dialog to process a return/refund for a completed sale.
 void showReturnDialog(SaleModel sale) {
@@ -18,6 +20,31 @@ void showReturnDialog(SaleModel sale) {
   }
 
   final reasonController = TextEditingController();
+
+  // Units in the whole sale, used to spread any checkout discount across the
+  // lines so each unit's share of it can be reversed on a return.
+  final saleTotalUnits = sale.items.fold<int>(
+    0,
+    (sum, item) => sum + item.quantity,
+  );
+
+  /// What this line's units are actually worth to refund.
+  ///
+  /// Refunding the list price hands back more than the customer paid whenever
+  /// a checkout discount was applied — a 5% discount on an 1,800 line means
+  /// 1,744.20 came in, so 1,744.20 goes back out.
+  ({double refundPerUnit, double profitPerUnit}) allocationFor(
+    CartItemModel item,
+  ) {
+    return OrderTotals.returnAllocation(
+      discountedPrice: item.product.discountedPrice,
+      purchasePrice: item.product.purchasePrice,
+      saleSubtotal: sale.subtotal,
+      saleTotal: sale.total,
+      saleCheckoutDiscountPct: sale.checkoutDiscount,
+      saleTotalUnits: saleTotalUnits,
+    );
+  }
 
   Get.dialog(
     Dialog(
@@ -37,8 +64,9 @@ void showReturnDialog(SaleModel sale) {
               final returnQty =
                   int.tryParse(qtyControllers[i].text.trim()) ?? 0;
               if (returnQty > 0) {
-                totalRefund += returnQty * item.product.discountedPrice;
-                totalProfitReversed += returnQty * item.product.profitPerUnit;
+                final allocation = allocationFor(item);
+                totalRefund += returnQty * allocation.refundPerUnit;
+                totalProfitReversed += returnQty * allocation.profitPerUnit;
               }
             }
 
@@ -130,8 +158,11 @@ void showReturnDialog(SaleModel sale) {
                                             ),
                                       ),
                                     const SizedBox(height: 4),
+                                    // Shows what is actually refundable per
+                                    // unit, so the figure reconciles with the
+                                    // refund total below it.
                                     Text(
-                                      "Sold: ${item.quantity} × ${Formatters.currency(item.product.discountedPrice)}",
+                                      "Sold: ${item.quantity} × ${Formatters.currency(allocationFor(item).refundPerUnit)}",
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: cs.onSurfaceVariant,
@@ -300,10 +331,15 @@ void showReturnDialog(SaleModel sale) {
 
                                     if (returnQty > 0 &&
                                         returnQty <= maxReturnable) {
+                                      final allocation = allocationFor(item);
                                       returnItems.add(
                                         ReturnItemModel.fromCartItem(
                                           item,
                                           returnQty: returnQty,
+                                          refundPerUnit:
+                                              allocation.refundPerUnit,
+                                          profitPerUnit:
+                                              allocation.profitPerUnit,
                                         ),
                                       );
                                     }

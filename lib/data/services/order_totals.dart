@@ -47,6 +47,42 @@ class OrderTotals {
   /// Profit after the checkout discount, before tax.
   final double profit;
 
+  /// Translates a completed sale's stored figures into the per-unit amounts a
+  /// return should use.
+  ///
+  /// A refund must return what the customer actually paid for those units —
+  /// not the line's list price. Returning the list price over-refunds whenever
+  /// a checkout discount was applied, so the sale's `total`/`subtotal` ratio is
+  /// used as the "what they really paid" multiplier (it captures the checkout
+  /// discount and any tax in a single number).
+  ///
+  /// The profit figure is the unit's pre-tax margin less its share of the
+  /// checkout discount, which makes a full return of every line net the sale's
+  /// recorded profit back to zero.
+  ///
+  /// Returns `(refundPerUnit, profitPerUnit)`.
+  static ({double refundPerUnit, double profitPerUnit}) returnAllocation({
+    required double discountedPrice,
+    required double purchasePrice,
+    required double saleSubtotal,
+    required double saleTotal,
+    required double saleCheckoutDiscountPct,
+    required int saleTotalUnits,
+  }) {
+    final paidRatio = saleSubtotal <= 0 ? 1.0 : saleTotal / saleSubtotal;
+    final refundPerUnit = discountedPrice * paidRatio;
+
+    final checkoutDiscountAmount =
+        saleSubtotal * saleCheckoutDiscountPct / 100;
+    final discountPerUnit = saleTotalUnits > 0
+        ? checkoutDiscountAmount / saleTotalUnits
+        : 0.0;
+    final profitPerUnit =
+        (discountedPrice - purchasePrice) - discountPerUnit;
+
+    return (refundPerUnit: refundPerUnit, profitPerUnit: profitPerUnit);
+  }
+
   /// Computes every figure the checkout flow needs.
   ///
   /// [checkoutDiscountPct] is clamped to 0–100 so a bad value can never

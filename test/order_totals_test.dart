@@ -153,4 +153,86 @@ void main() {
       expect(totals.profit, 0);
     });
   });
+
+  group('returnAllocation', () {
+    // The reported case: sell price 3,000 with a 40% product discount gives an
+    // 1,800 line, 2% tax-exclusive adds 36, then a 5% checkout discount takes
+    // the payable total to 1,744.20. The return dialog used to offer 1,800 —
+    // the list price — which over-refunded by 55.80.
+    test('refunds what the customer paid, not the list price', () {
+      final allocation = OrderTotals.returnAllocation(
+        discountedPrice: 1800,
+        purchasePrice: 1800,
+        saleSubtotal: 1800,
+        saleTotal: 1744.2,
+        saleCheckoutDiscountPct: 5,
+        saleTotalUnits: 1,
+      );
+
+      expect(allocation.refundPerUnit, closeTo(1744.2, 0.001));
+      expect(allocation.refundPerUnit, isNot(closeTo(1800, 0.001)));
+    });
+
+    test('reversing profit on a full return nets the sale to zero', () {
+      // The sale recorded profit = 0 margin − 90 checkout discount = −90.
+      const saleProfit = -90.0;
+      final allocation = OrderTotals.returnAllocation(
+        discountedPrice: 1800,
+        purchasePrice: 1800,
+        saleSubtotal: 1800,
+        saleTotal: 1744.2,
+        saleCheckoutDiscountPct: 5,
+        saleTotalUnits: 1,
+      );
+
+      // Reports subtract the reversed profit from the recorded profit.
+      expect(saleProfit - allocation.profitPerUnit, closeTo(0, 0.001));
+    });
+
+    test('a sale with no checkout discount refunds the paid price', () {
+      // 1,800 line with 2% tax-exclusive and no discount: the customer paid
+      // 1,836, so that is what comes back.
+      final allocation = OrderTotals.returnAllocation(
+        discountedPrice: 1800,
+        purchasePrice: 1000,
+        saleSubtotal: 1800,
+        saleTotal: 1836,
+        saleCheckoutDiscountPct: 0,
+        saleTotalUnits: 1,
+      );
+
+      expect(allocation.refundPerUnit, closeTo(1836, 0.001));
+      expect(allocation.profitPerUnit, closeTo(800, 0.001)); // 1800 − 1000
+    });
+
+    test('checkout discount is spread across every unit in the sale', () {
+      // Two different products, 4 units total, 100 off at checkout.
+      final allocation = OrderTotals.returnAllocation(
+        discountedPrice: 500,
+        purchasePrice: 300,
+        saleSubtotal: 2000,
+        saleTotal: 1900,
+        saleCheckoutDiscountPct: 5,
+        saleTotalUnits: 4,
+      );
+
+      // 100 spread over 4 units = 25 per unit off the margin.
+      expect(allocation.profitPerUnit, closeTo(200 - 25, 0.001));
+      expect(allocation.refundPerUnit, closeTo(500 * 0.95, 0.001));
+    });
+
+    test('a zero subtotal cannot divide by zero', () {
+      final allocation = OrderTotals.returnAllocation(
+        discountedPrice: 250,
+        purchasePrice: 100,
+        saleSubtotal: 0,
+        saleTotal: 0,
+        saleCheckoutDiscountPct: 0,
+        saleTotalUnits: 0,
+      );
+
+      expect(allocation.refundPerUnit, 250);
+      expect(allocation.profitPerUnit, 150);
+    });
+  });
 }
