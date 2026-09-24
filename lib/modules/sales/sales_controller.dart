@@ -1,7 +1,5 @@
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
@@ -16,12 +14,10 @@ import '../customers/customers_controller.dart';
 class SalesController extends GetxController {
   final sales = <SaleModel>[].obs;
 
-  // Search & filter state
+  // Search & filter state. The search box renders from this and writes back
+  // to it; the text itself is owned by the field's own state (see
+  // `SalesSearchField`), never by a controller whose lifetime GetX decides.
   final searchQuery = ''.obs;
-
-  /// Owns the search field's text so clearing filters also clears the
-  /// visible text (a TextField without a controller can't be reset).
-  final searchCtrl = TextEditingController();
 
   final dateFilter =
       'All'.obs; // 'All', 'Today', 'This Week', 'This Month', 'Custom'
@@ -338,16 +334,9 @@ class SalesController extends GetxController {
   }
 
   void clearFilters() {
-    searchCtrl.clear();
     searchQuery.value = '';
     dateFilter.value = 'All';
     customStartDate = null;
     customEndDate = null;
-  }
-
-  @override
-  void onClose() {
-    searchCtrl.dispose();
-    super.onClose();
   }
 }

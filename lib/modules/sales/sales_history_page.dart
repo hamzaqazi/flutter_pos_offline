@@ -14,6 +14,7 @@ import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:get/get.dart';
 
 import 'sales_controller.dart';
+import 'sales_search_field.dart';
 import '../invoice/invoice_preview_page.dart';
 
 class SalesHistoryPage extends GetView<SalesController> {
@@ -181,37 +182,8 @@ class SalesHistoryPage extends GetView<SalesController> {
             );
             }),
             // ---------- Search bar ----------
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: TextField(
-                controller: controller.searchCtrl,
-                decoration: InputDecoration(
-                  hintText: "Search by invoice no, customer or item...",
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  filled: true,
-                  suffixIcon: Obx(() {
-                    if (controller.searchQuery.value.isEmpty)
-                      return const SizedBox.shrink();
-                    return IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        controller.searchCtrl.clear();
-                        controller.searchQuery.value = '';
-                      },
-                    );
-                  }),
-                ),
-                onChanged: (value) => controller.searchQuery.value = value,
-              ),
-            ),
+            // The field owns its own text controller — see SalesSearchField.
+            SalesSearchField(query: controller.searchQuery),
             const SizedBox(height: AppSpacing.sm),
 
             // ---------- Date filter chips ----------
