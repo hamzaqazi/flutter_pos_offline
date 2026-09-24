@@ -405,6 +405,16 @@ class CartPage extends GetView<CartController> {
               final enough =
                   cash + cashTolerance >= totals.total && !discountInvalid;
 
+              // A bill that does not cover what the goods cost: the additional
+              // discount is the usual cause, and the cashier sees the figures
+              // they can check by hand.
+              final belowCostMessage = totals.paysBelowCost
+                  ? "${Formatters.currency(totals.total)} payable, but these "
+                        "items cost you ${Formatters.currency(totals.cost)} — "
+                        "${Formatters.currency(totals.belowCostAmount)} short "
+                        "of cost."
+                  : null;
+
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
@@ -544,6 +554,19 @@ class CartPage extends GetView<CartController> {
                               ],
                             ),
                           ],
+                          // The additional discount can take the bill under
+                          // what the goods cost. Allowed — clearing stock is a
+                          // reason to — but the cashier is told before taking
+                          // payment rather than finding out in the reports.
+                          if (belowCostMessage != null)
+                            AppBanner.warning(
+                              icon: Icons.trending_down,
+                              title: "Selling below cost",
+                              subtitle: belowCostMessage,
+                              margin: const EdgeInsets.only(
+                                top: AppSpacing.md,
+                              ),
+                            ),
                         ],
                       ),
                     ),

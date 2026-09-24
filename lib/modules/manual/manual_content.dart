@@ -228,6 +228,13 @@ class ManualGuides {
           'Sold the wrong item? Don\'t delete the sale — record a return '
           'instead so your reports stay accurate.',
         ),
+        const ManualCallout(
+          ManualCalloutKind.warning,
+          'Checkout warns you before you take payment if the additional '
+          'discount brings the total below what the items in the cart cost '
+          'you, and shows both figures. Completing the sale is still your '
+          'call.',
+        ),
         const ManualAction('Go to Cart', tabIndex: 2),
       ],
     ),

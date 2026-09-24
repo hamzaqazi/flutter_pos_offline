@@ -11,6 +11,7 @@ import 'package:ad_shop_pos/data/models/shop_settings_model.dart';
 class OrderTotals {
   const OrderTotals({
     required this.subtotal,
+    required this.cost,
     required this.checkoutDiscountAmount,
     required this.taxAmount,
     required this.total,
@@ -20,6 +21,12 @@ class OrderTotals {
 
   /// Sum of line totals, using each product's own discounted price.
   final double subtotal;
+
+  /// What the items in this sale cost the shop — purchase price × quantity.
+  ///
+  /// A discount never changes this: it changes what is charged, not what the
+  /// stock cost to buy.
+  final double cost;
 
   /// Money taken off the bill by the checkout discount.
   ///
@@ -59,10 +66,12 @@ class OrderTotals {
     double checkoutDiscountAmount = 0,
   }) {
     var subtotal = 0.0;
+    var cost = 0.0;
     var productSavings = 0.0;
     var grossProfit = 0.0;
     for (final item in items) {
       subtotal += item.total;
+      cost += item.product.purchasePrice * item.quantity;
       productSavings += item.savings;
       grossProfit += item.profit;
     }
@@ -84,6 +93,7 @@ class OrderTotals {
 
     return OrderTotals(
       subtotal: subtotal,
+      cost: cost,
       checkoutDiscountAmount: discount,
       taxAmount: tax,
       total: total,
@@ -91,6 +101,26 @@ class OrderTotals {
       profit: grossProfit - discount,
     );
   }
+
+  /// Whether the customer is being asked to pay less than these goods cost.
+  ///
+  /// This is the check a shopkeeper makes by hand — "am I taking in less than
+  /// this stock cost me?" — so it compares the payable amount against the
+  /// purchase cost, both as they are shown on the checkout screen. A checkout
+  /// discount is what usually causes it, but an item priced under its cost
+  /// reaches the same place.
+  bool get paysBelowCost => belowCostAmount > 0;
+
+  /// How far the payable amount falls short of the goods' cost; 0 when the
+  /// sale still covers what the stock cost.
+  double get belowCostAmount {
+    final shortfall = cost - total;
+    return shortfall > _moneyTolerance ? shortfall : 0;
+  }
+
+  /// Anything closer together than this counts as the same amount of money, so
+  /// a rounding artefact cannot turn a break-even bill into a reported loss.
+  static const double _moneyTolerance = 0.005;
 
   /// Translates a completed sale's stored figures into the per-unit amounts a
   /// return should use.

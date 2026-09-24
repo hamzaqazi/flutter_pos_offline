@@ -200,6 +200,97 @@ void main() {
     });
   });
 
+  group('payable below cost', () {
+    test('cost is what every unit cost, discount or not', () {
+      final totals = OrderTotals.calculate(
+        items: [
+          item(price: 1000, purchasePrice: 600, qty: 2),
+          item(price: 500, purchasePrice: 300, discount: 10, qty: 3),
+        ],
+        settings: ShopSettingsModel(),
+      );
+
+      expect(totals.subtotal, closeTo(2000 + 1350, 0.001));
+      expect(totals.cost, closeTo(1200 + 900, 0.001));
+      expect(totals.total, closeTo(3350, 0.001));
+      expect(totals.paysBelowCost, isFalse);
+      expect(totals.belowCostAmount, 0);
+    });
+
+    test('flags the reported case: 1,746 payable, 1,800 of stock', () {
+      // 3,000 less 40% is 1,800, which is also what the item cost; 2% tax adds
+      // 36 and Rs 90 off the bill leaves 1,746 — 54 short of the goods.
+      final totals = OrderTotals.calculate(
+        items: [item(price: 3000, purchasePrice: 1800, discount: 40)],
+        settings: ShopSettingsModel(taxRate: 2, taxInclusive: false),
+        checkoutDiscountAmount: 90,
+      );
+
+      expect(totals.total, closeTo(1746, 0.001));
+      expect(totals.cost, closeTo(1800, 0.001));
+      expect(totals.paysBelowCost, isTrue);
+      expect(totals.belowCostAmount, closeTo(54, 0.001));
+    });
+
+    test('without tax the shortfall equals the loss', () {
+      final totals = OrderTotals.calculate(
+        items: [item(price: 1000, purchasePrice: 1000)],
+        settings: ShopSettingsModel(),
+        checkoutDiscountAmount: 90,
+      );
+
+      expect(totals.total, closeTo(910, 0.001));
+      expect(totals.belowCostAmount, closeTo(90, 0.001));
+      expect(totals.profit, closeTo(-90, 0.001));
+    });
+
+    test('a bill that only covers cost is not flagged', () {
+      final totals = OrderTotals.calculate(
+        items: [item(price: 1000, purchasePrice: 1000)],
+        settings: ShopSettingsModel(),
+      );
+
+      expect(totals.total, closeTo(1000, 0.001));
+      expect(totals.paysBelowCost, isFalse);
+    });
+
+    test('float dust from a product discount is not flagged', () {
+      // 10.00 less 64% is 3.5999999999999996 in binary floating point and the
+      // cost is exactly 3.60 — the two print the same, so there is no loss.
+      final totals = OrderTotals.calculate(
+        items: [item(price: 10, purchasePrice: 3.6, discount: 64)],
+        settings: ShopSettingsModel(),
+      );
+
+      expect(totals.cost, 3.6);
+      expect(totals.paysBelowCost, isFalse);
+    });
+
+    test('an unknown purchase price never reads as below cost', () {
+      final totals = OrderTotals.calculate(
+        items: [item(price: 100, purchasePrice: 0)],
+        settings: ShopSettingsModel(),
+      );
+
+      expect(totals.cost, 0);
+      expect(totals.paysBelowCost, isFalse);
+    });
+
+    test('tax-inclusive pricing is compared the same way', () {
+      // 1,180 on the shelf with the tax inside it, costing 1,000: Rs 200 off
+      // the bill leaves 980 payable, 20 short of cost.
+      final totals = OrderTotals.calculate(
+        items: [item(price: 1180, purchasePrice: 1000)],
+        settings: ShopSettingsModel(taxRate: 18, taxInclusive: true),
+        checkoutDiscountAmount: 200,
+      );
+
+      expect(totals.total, closeTo(980, 0.001));
+      expect(totals.paysBelowCost, isTrue);
+      expect(totals.belowCostAmount, closeTo(20, 0.001));
+    });
+  });
+
   group('returnAllocation', () {
     // The reported case: sell price 3,000 with a 40% product discount gives an
     // 1,800 line, 2% tax-exclusive adds 36, and Rs 90 off leaves 1,746
