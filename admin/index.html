@@ -857,7 +857,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.0/firebase-app.js";
-    import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.7.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, Timestamp, query, orderBy, deleteField } from "https://www.gstatic.com/firebasejs/11.7.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB0EHs3fiytPSPrxAvlcfQ2BsZ4TSpRdRo",
@@ -1036,6 +1036,51 @@
       return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     }
 
+    // Normalize a license's devices into [{id, addedAt, lastUsed, label}],
+    // reading the current `devices` array shape or the legacy
+    // `registeredDevices` (array of ids) + `deviceLastUsed` (map) shape.
+    function deviceList(l) {
+      if (Array.isArray(l.devices) && l.devices.length) {
+        return l.devices
+          .map(d => ({
+            id: (d && d.id) ? String(d.id) : '',
+            addedAt: (d && d.addedAt) || null,
+            lastUsed: (d && d.lastUsed) || null,
+            label: (d && d.label) ? String(d.label) : '',
+          }))
+          .filter(d => d.id);
+      }
+      const ids = Array.isArray(l.registeredDevices) ? l.registeredDevices : [];
+      const lu = l.deviceLastUsed || {};
+      return ids
+        .map(id => ({ id: String(id), addedAt: null, lastUsed: lu[id] || null, label: '' }))
+        .filter(d => d.id);
+    }
+
+    // True while a doc still carries the legacy fields (a one-time sweep is
+    // available in the detail view to migrate it).
+    function hasLegacy(l) {
+      const hasRegistered = Array.isArray(l.registeredDevices) && l.registeredDevices.length > 0;
+      const hasLastUsed = l.deviceLastUsed && Object.keys(l.deviceLastUsed).length > 0;
+      return Boolean(hasRegistered || hasLastUsed);
+    }
+
+    // Write a license's device list in the clean `devices` shape and delete
+    // the legacy fields, so a doc is fully migrated in one write.
+    async function writeDevices(key, devices) {
+      await updateDoc(doc(db, "licenses", key), {
+        devices: devices.map(d => {
+          const o = { id: d.id };
+          if (d.addedAt) o.addedAt = d.addedAt;
+          if (d.lastUsed) o.lastUsed = d.lastUsed;
+          if (d.label) o.label = d.label;
+          return o;
+        }),
+        registeredDevices: deleteField(),
+        deviceLastUsed: deleteField(),
+      });
+    }
+
     const upgradeMsg = (remaining) =>
       `Hi! 👋 This is a reminder from Codynest POS. Your ${remaining > 0 ? 'trial has ' + remaining + ' days remaining' : 'trial has expired'}. Would you like to upgrade to Premium? Contact us at 0315-3507075.`;
 
@@ -1121,7 +1166,7 @@
       tbody.innerHTML = filtered.map(l => {
         const status = getStatus(l);
         const days = daysUntil(l.expiresAt);
-        const devices = l.registeredDevices || [];
+        const devices = deviceList(l);
         const phone = l.customerPhone || '-';
         const email = l.customerEmail || '-';
         const hasWA = l.customerPhone && l.customerPhone.length > 5;
@@ -1207,7 +1252,7 @@
         await setDoc(doc(db, "licenses", key), {
           shopName, active: true, plan, maxDevices,
           expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
-          registeredDevices: [],
+          devices: [],
           customerPhone: customerPhone || '',
           customerEmail: customerEmail || '',
           activatedAt: serverTimestamp(),
@@ -1230,7 +1275,7 @@
       if (!l) return;
       const status = getStatus(l);
       const days = daysUntil(l.expiresAt);
-      const devices = l.registeredDevices || [];
+      const devices = deviceList(l);
       const hasWA = l.customerPhone && l.customerPhone.length > 5;
 
       document.getElementById('modalTitle').innerHTML = `🔑 ${l.shopName || key}`;
@@ -1252,16 +1297,20 @@
       <div><label>Activated</label><div class="detail-value">${l.activatedAt ? formatDateTime(l.activatedAt) : '-'}</div></div>
       <div><label>Last Verified</label><div class="detail-value">${l.lastVerified ? formatDateTime(l.lastVerified) : '-'}</div></div>
     </div>
-    <div><label>Registered Devices (${devices.length}/${l.maxDevices || 3})</label>
+    <div>
+      <label>Registered Devices (${devices.length}/${l.maxDevices || 3})</label>
       ${devices.length === 0 ? '<div style="color:#999;font-size:12px;margin-top:4px;">No devices registered</div>' :
-          devices.map(d => {
-            const lastUsed = l.deviceLastUsed && l.deviceLastUsed[d] ? formatDateTime(l.deviceLastUsed[d]) : 'Never';
-            return `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;flex-wrap:wrap;">
-            <span class="device-tag">${d}</span>
-            <span style="font-size:11px;color:var(--on-surface-var);">Last: ${lastUsed}</span>
-            <button class="btn btn-danger btn-sm" onclick="removeDevice('${key}','${d}')">Remove</button>
-          </div>`;
-          }).join('')}
+          devices.map(d => `
+          <div style="display:flex;align-items:center;gap:8px;margin:5px 0;flex-wrap:wrap;padding:6px 8px;background:var(--surface-2);border-radius:8px;">
+            <span class="device-tag" title="${d.id}">${d.label ? d.label + ' · ' : ''}${d.id}</span>
+            <span style="font-size:11px;color:var(--on-surface-var);">Added: ${d.addedAt ? formatDateTime(d.addedAt) : '—'}</span>
+            <span style="font-size:11px;color:var(--on-surface-var);">Last: ${formatDateTime(d.lastUsed)}</span>
+            <span style="flex:1;"></span>
+            <button class="btn btn-ghost btn-sm" onclick="relabelDevice('${key}','${d.id}')">Rename</button>
+            <button class="btn btn-danger btn-sm" onclick="removeDevice('${key}','${d.id}')">Remove</button>
+          </div>`).join('')}
+      ${devices.length < (l.maxDevices || 3) ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="addDevice('${key}')">＋ Add device</button>` : ''}
+      ${hasLegacy(l) ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="sweepLegacy('${key}')">🧹 Migrate legacy device data</button>` : ''}
     </div>
   `;
       document.getElementById('detailModal').classList.add('show');
@@ -1307,10 +1356,58 @@
     window.removeDevice = async function (key, deviceId) {
       const l = allLicenses.find(x => x.key === key);
       if (!l) return;
-      const devices = (l.registeredDevices || []).filter(d => d !== deviceId);
+      if (!confirm(`Remove device ${deviceId}?\n\nThe next time it opens the app it will be asked to re-register, and will be blocked if the device limit is already reached.`)) return;
+      const devices = deviceList(l).filter(d => d.id !== deviceId);
       try {
-        await updateDoc(doc(db, "licenses", key), { registeredDevices: devices });
+        await writeDevices(key, devices);
         showToast('✅ Device removed');
+        showDetail(key);
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.addDevice = async function (key) {
+      const l = allLicenses.find(x => x.key === key);
+      if (!l) return;
+      const devices = deviceList(l);
+      const maxDevices = l.maxDevices || 3;
+      if (devices.length >= maxDevices) { showToast('⚠️ Device limit reached (' + maxDevices + ')'); return; }
+      const id = prompt('Device ID to register. The app supplies its own ID on activation — use this to pre-register a specific device.');
+      if (id === null) return;
+      const trimmed = id.trim();
+      if (!trimmed) return;
+      if (devices.some(d => d.id === trimmed)) { showToast('⚠️ Device already registered'); return; }
+      const label = prompt('Optional label (e.g. "Main register"):', '') || '';
+      try {
+        devices.push({ id: trimmed, addedAt: serverTimestamp(), lastUsed: serverTimestamp(), label: label.trim() });
+        await writeDevices(key, devices);
+        showToast('✅ Device added');
+        showDetail(key);
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.relabelDevice = async function (key, deviceId) {
+      const l = allLicenses.find(x => x.key === key);
+      if (!l) return;
+      const devices = deviceList(l);
+      const device = devices.find(d => d.id === deviceId);
+      if (!device) return;
+      const label = prompt('Label for this device (leave blank to remove):', device.label || '');
+      if (label === null) return;
+      device.label = label.trim();
+      try {
+        await writeDevices(key, devices);
+        showToast('✅ Device renamed');
+        showDetail(key);
+      } catch (e) { showToast('❌ Error: ' + e.message); }
+    };
+
+    window.sweepLegacy = async function (key) {
+      const l = allLicenses.find(x => x.key === key);
+      if (!l) return;
+      if (!confirm(`Migrate legacy device data for ${l.shopName || key}?\n\nThis moves the old device entries into the new format and removes the legacy fields. No registered devices are lost; only orphaned stale entries are cleaned up.`)) return;
+      try {
+        await writeDevices(key, deviceList(l));
+        showToast('✅ Legacy device data migrated');
         showDetail(key);
       } catch (e) { showToast('❌ Error: ' + e.message); }
     };
