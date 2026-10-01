@@ -1716,11 +1716,21 @@
         </div>`;
 
       // ── Info tiles ──
+      // Activated / last-active are derived from the device list, which the app
+      // maintains (addedAt on first registration, lastUsed on every launch).
+      // The old activatedAt / lastVerified doc fields are never written by the
+      // app, so reading them straight up always came back empty / "Never".
+      const tsMs = t => (t && t.toDate) ? t.toDate().getTime() : (t ? new Date(t).getTime() : null);
+      const added = devices.map(d => d.addedAt).filter(t => t).sort((a, b) => tsMs(a) - tsMs(b));
+      const last = devices.map(d => d.lastUsed).filter(t => t).sort((a, b) => tsMs(a) - tsMs(b));
+      const firstActivated = added.length ? added[0] : null;
+      const lastActive = last.length ? last[last.length - 1] : null;
+
       const tiles = [
         { ico: '📞', label: 'Customer Phone', value: hasWA ? `<a href="${waLink(l.customerPhone, 'Hi from Codynest POS!')}" target="_blank">${l.customerPhone} 💬</a>` : (l.customerPhone || '—') },
         { ico: '✉️', label: 'Customer Email', value: l.customerEmail ? `<a href="mailto:${l.customerEmail}">${l.customerEmail}</a>` : '—' },
-        { ico: '📅', label: 'Activated', value: l.activatedAt ? formatDateTime(l.activatedAt) : '—' },
-        { ico: '🔄', label: 'Last Verified', value: l.lastVerified ? formatDateTime(l.lastVerified) : 'Never' },
+        { ico: '📅', label: 'Activated', value: firstActivated ? formatDateTime(firstActivated) : '—' },
+        { ico: '🕒', label: 'Last active', value: lastActive ? formatDateTime(lastActive) : 'Never' },
       ].map(t => `
         <div class="ld-tile">
           <div class="ld-tile-ico">${t.ico}</div>
