@@ -69,6 +69,18 @@ class LicenseService {
     return DateTime.tryParse(str);
   }
 
+  /// When this device last verified a license against the server.
+  ///
+  /// `verifyActiveLicense` stamps this on every successful Firestore check
+  /// and leaves it untouched when it falls back to the offline "trust the
+  /// saved copy" path. Comparing it before and after a check is therefore a
+  /// reliable way to tell a live server read apart from an offline one.
+  static DateTime? get lastVerified {
+    final str = _box.get('license_lastVerified') as String?;
+    if (str == null || str.isEmpty) return null;
+    return DateTime.tryParse(str);
+  }
+
   /// Check if license is expired.
   static bool get isExpired {
     final exp = expiresAt;
