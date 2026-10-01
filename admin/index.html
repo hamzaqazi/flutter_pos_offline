@@ -592,6 +592,375 @@
       background: #e8e5f0;
     }
 
+    /* ── License detail (card-based) ─────────────────────── */
+    #detailModal .modal {
+      max-width: 560px;
+    }
+
+    .ld-hero {
+      background: linear-gradient(135deg, var(--primary), #4f3d8e);
+      border-radius: var(--radius);
+      padding: 20px;
+      color: #fff;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ld-hero::before {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 140px;
+      height: 140px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 50%;
+    }
+
+    .ld-hero::after {
+      content: '';
+      position: absolute;
+      right: 34px;
+      bottom: -50px;
+      width: 90px;
+      height: 90px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 50%;
+    }
+
+    .ld-hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .ld-hero-shop {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .ld-hero-badges {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ld-hero-badges .badge {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .ld-hero-expiry {
+      font-size: 12.5px;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.92;
+    }
+
+    .ld-hero-expiry.warn {
+      color: #FFD54F;
+    }
+
+    .ld-key {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px dashed rgba(255, 255, 255, 0.4);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px 8px 12px;
+    }
+
+    .ld-key code {
+      flex: 1;
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 1px;
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    .ld-key button {
+      background: rgba(255, 255, 255, 0.18);
+      border: none;
+      color: #fff;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      transition: background 0.15s;
+    }
+
+    .ld-key button:hover {
+      background: rgba(255, 255, 255, 0.32);
+    }
+
+    .ld-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .ld-tile {
+      background: var(--surface);
+      border: 1px solid #eceaf2;
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .ld-tile-ico {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .ld-tile-body {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .ld-tile-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--on-surface-var);
+      margin-bottom: 2px;
+    }
+
+    .ld-tile-value {
+      font-size: 13.5px;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .ld-tile-value a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .ld-tile-value a:hover {
+      text-decoration: underline;
+    }
+
+    .ld-devices {
+      background: var(--surface);
+      border: 1px solid #eceaf2;
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .ld-devices-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .ld-devices-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ld-devices-count {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--on-surface-var);
+      background: var(--surface-container);
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+
+    .ld-capbar {
+      height: 6px;
+      background: var(--surface-container);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .ld-capbar > span {
+      display: block;
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .ld-capbar.full > span {
+      background: var(--warning);
+    }
+
+    .ld-device {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid #eceaf2;
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .ld-device:hover {
+      border-color: #dcd5ee;
+      box-shadow: var(--shadow);
+    }
+
+    .ld-device-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      background: var(--surface-container);
+      position: relative;
+    }
+
+    .ld-device-avatar .dot {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #bdb9c9;
+      border: 2px solid var(--surface);
+    }
+
+    .ld-device-avatar .dot.on {
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .ld-device-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ld-device-name {
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .ld-device-id {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--on-surface-var);
+      word-break: break-all;
+      margin-top: 1px;
+    }
+
+    .ld-device-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 7px;
+      font-size: 11px;
+      color: var(--on-surface-var);
+      flex-wrap: wrap;
+    }
+
+    .ld-device-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ld-device-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .ld-add {
+      width: 100%;
+      border: 1.5px dashed #d0c9e6;
+      background: transparent;
+      color: var(--primary);
+      border-radius: var(--radius-sm);
+      padding: 11px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 4px;
+    }
+
+    .ld-add:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .ld-migrate {
+      width: 100%;
+      margin-top: 12px;
+      border: none;
+      background: var(--warning-light);
+      color: var(--warning);
+      border-radius: var(--radius-sm);
+      padding: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .ld-migrate:hover {
+      filter: brightness(0.97);
+    }
+
+    .ld-empty {
+      text-align: center;
+      padding: 26px 16px;
+      color: var(--on-surface-var);
+    }
+
+    .ld-empty-ico {
+      font-size: 34px;
+      margin-bottom: 8px;
+      opacity: 0.6;
+    }
+
+    .ld-empty-title {
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .ld-empty-sub {
+      font-size: 12px;
+      margin-top: 4px;
+      opacity: 0.8;
+      max-width: 280px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     /* Empty / Loading */
     .empty {
       text-align: center;
@@ -648,6 +1017,19 @@
 
       .detail-grid {
         grid-template-columns: 1fr;
+      }
+
+      .ld-info {
+        grid-template-columns: 1fr;
+      }
+
+      .ld-device {
+        flex-wrap: wrap;
+      }
+
+      .ld-device-actions {
+        flex-direction: row;
+        width: 100%;
       }
 
       .container {
@@ -1081,6 +1463,36 @@
       });
     }
 
+    function deviceIcon(id) {
+      if (id.startsWith('android')) return '🤖';
+      if (id.startsWith('ios') || id.startsWith('iphone') || id.startsWith('ipad')) return '📱';
+      if (id.startsWith('web')) return '🌐';
+      if (id.startsWith('macos')) return '💻';
+      if (id.startsWith('windows')) return '🖥️';
+      if (id.startsWith('linux')) return '🐧';
+      return '📟';
+    }
+
+    function deviceName(id) {
+      if (id.startsWith('android')) return 'Android device';
+      if (id.startsWith('ios') || id.startsWith('iphone') || id.startsWith('ipad')) return 'Apple device';
+      if (id.startsWith('web')) return 'Web session';
+      if (id.startsWith('macos')) return 'Mac device';
+      if (id.startsWith('windows')) return 'Windows PC';
+      if (id.startsWith('linux')) return 'Linux machine';
+      return 'Device';
+    }
+
+    function isRecent(ts) {
+      if (!ts) return false;
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return (Date.now() - d.getTime()) < 14 * 24 * 3600 * 1000;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     const upgradeMsg = (remaining) =>
       `Hi! 👋 This is a reminder from Codynest POS. Your ${remaining > 0 ? 'trial has ' + remaining + ' days remaining' : 'trial has expired'}. Would you like to upgrade to Premium? Contact us at 0315-3507075.`;
 
@@ -1278,41 +1690,95 @@
       const devices = deviceList(l);
       const hasWA = l.customerPhone && l.customerPhone.length > 5;
 
-      document.getElementById('modalTitle').innerHTML = `🔑 ${l.shopName || key}`;
-      document.getElementById('renewBtn').style.display = l.plan === 'lifetime' ? 'none' : '';
+      const maxDev = l.maxDevices || 3;
 
+      // ── Hero card ──
+      const isLifetime = l.plan === 'lifetime' || !l.expiresAt;
+      const expiryHtml = isLifetime
+        ? '<span>♾️ Lifetime — no expiry</span>'
+        : (() => {
+            const warn = days !== null && days <= 7;
+            const dtxt = days === null ? '' : (days > 0 ? ` · <b>${days}d left</b>` : ' · <b>Expired</b>');
+            return `<span class="${warn ? 'warn' : ''}">📅 ${formatDate(l.expiresAt)}${dtxt}</span>`;
+          })();
+      const hero = `
+        <div class="ld-hero">
+          <div class="ld-hero-shop">${escapeHtml(l.shopName || 'Untitled Shop')}</div>
+          <div class="ld-hero-badges">
+            <span class="badge">${(l.plan || 'free').charAt(0).toUpperCase() + (l.plan || 'free').slice(1)}</span>
+            <span class="badge">${statusLabel(status)}</span>
+          </div>
+          <div class="ld-hero-expiry">${expiryHtml}</div>
+          <div class="ld-key">
+            <code>${escapeHtml(key)}</code>
+            <button onclick="navigator.clipboard.writeText('${key}'); showToast('✅ Key copied!')">Copy</button>
+          </div>
+        </div>`;
+
+      // ── Info tiles ──
+      const tiles = [
+        { ico: '📞', label: 'Customer Phone', value: hasWA ? `<a href="${waLink(l.customerPhone, 'Hi from Codynest POS!')}" target="_blank">${l.customerPhone} 💬</a>` : (l.customerPhone || '—') },
+        { ico: '✉️', label: 'Customer Email', value: l.customerEmail ? `<a href="mailto:${l.customerEmail}">${l.customerEmail}</a>` : '—' },
+        { ico: '📅', label: 'Activated', value: l.activatedAt ? formatDateTime(l.activatedAt) : '—' },
+        { ico: '🔄', label: 'Last Verified', value: l.lastVerified ? formatDateTime(l.lastVerified) : 'Never' },
+      ].map(t => `
+        <div class="ld-tile">
+          <div class="ld-tile-ico">${t.ico}</div>
+          <div class="ld-tile-body">
+            <div class="ld-tile-label">${t.label}</div>
+            <div class="ld-tile-value">${t.value}</div>
+          </div>
+        </div>`).join('');
+
+      // ── Devices ─
+      const capPct = Math.min(100, Math.round((devices.length / maxDev) * 100));
+      const capFull = devices.length >= maxDev;
+      const capBar = `<div class="ld-capbar ${capFull ? 'full' : ''}"><span style="width:${capPct}%"></span></div>`;
+
+      let devicesBody;
+      if (devices.length === 0) {
+        devicesBody = `
+          <div class="ld-empty">
+            <div class="ld-empty-ico">📟</div>
+            <div class="ld-empty-title">No devices yet</div>
+            <div class="ld-empty-sub">Devices appear here automatically the first time they open the app with this license.</div>
+            ${!capFull ? `<button class="ld-add" style="margin-top:14px;" onclick="addDevice('${key}')">＋ Add a device</button>` : ''}
+          </div>`;
+      } else {
+        devicesBody = devices.map(d => `
+          <div class="ld-device">
+            <div class="ld-device-avatar">${deviceIcon(d.id)}<span class="dot ${isRecent(d.lastUsed) ? 'on' : ''}"></span></div>
+            <div class="ld-device-body">
+              <div class="ld-device-name">${d.label ? escapeHtml(d.label) : deviceName(d.id)}</div>
+              <div class="ld-device-id" title="${escapeHtml(d.id)}">${escapeHtml(d.id)}</div>
+              <div class="ld-device-meta">
+                <span>📥 Added ${d.addedAt ? formatDateTime(d.addedAt) : '—'}</span>
+                <span>🕒 Last ${d.lastUsed ? formatDateTime(d.lastUsed) : '—'}</span>
+              </div>
+            </div>
+            <div class="ld-device-actions">
+              <button class="btn btn-ghost btn-sm" onclick="relabelDevice('${key}','${d.id}')">✏️ Rename</button>
+              <button class="btn btn-danger btn-sm" onclick="removeDevice('${key}','${d.id}')">Remove</button>
+            </div>
+          </div>`).join('')
+          + (!capFull ? `<button class="ld-add" onclick="addDevice('${key}')">＋ Add device</button>` : '');
+      }
+
+      document.getElementById('modalTitle').innerHTML = '🔑 License Details';
+      document.getElementById('renewBtn').style.display = l.plan === 'lifetime' ? 'none' : '';
       document.getElementById('modalBody').innerHTML = `
-    <div style="margin-bottom:16px;">
-      <label>License Key</label>
-      <div class="key-display" onclick="navigator.clipboard.writeText('${key}'); showToast('✅ Copied!')">${key}</div>
-    </div>
-    <div class="detail-grid">
-      <div><label>Plan</label><div class="detail-value"><span class="badge badge-${l.plan || 'free'}">${(l.plan || 'free').charAt(0).toUpperCase() + (l.plan || 'free').slice(1)}</span></div></div>
-      <div><label>Status</label><div class="detail-value"><span class="badge badge-${status}">${statusLabel(status)}</span></div></div>
-      <div><label>Shop Name</label><div class="detail-value">${l.shopName || '-'}</div></div>
-      <div><label>Customer Phone</label><div class="detail-value">${hasWA ? `<a href="${waLink(l.customerPhone, 'Hi from Codynest POS!')}" target="_blank" style="color:#25D366;text-decoration:none;">${l.customerPhone} 💬</a>` : (l.customerPhone || '-')}</div></div>
-      <div><label>Customer Email</label><div class="detail-value">${l.customerEmail ? `<a href="mailto:${l.customerEmail}" style="color:var(--info);text-decoration:none;">${l.customerEmail} ✉️</a>` : '-'}</div></div>
-      <div><label>Max Devices</label><div class="detail-value">${l.maxDevices || 3}</div></div>
-      <div><label>Expires</label><div class="detail-value">${formatDate(l.expiresAt)}${days !== null ? ` <span style="font-size:11px;color:${days <= 7 ? 'var(--warning)' : 'var(--on-surface-var)'}">(${days > 0 ? days + 'd left' : 'EXPIRED'})</span>` : ''}</div></div>
-      <div><label>Activated</label><div class="detail-value">${l.activatedAt ? formatDateTime(l.activatedAt) : '-'}</div></div>
-      <div><label>Last Verified</label><div class="detail-value">${l.lastVerified ? formatDateTime(l.lastVerified) : '-'}</div></div>
-    </div>
-    <div>
-      <label>Registered Devices (${devices.length}/${l.maxDevices || 3})</label>
-      ${devices.length === 0 ? '<div style="color:#999;font-size:12px;margin-top:4px;">No devices registered</div>' :
-          devices.map(d => `
-          <div style="display:flex;align-items:center;gap:8px;margin:5px 0;flex-wrap:wrap;padding:6px 8px;background:var(--surface-2);border-radius:8px;">
-            <span class="device-tag" title="${d.id}">${d.label ? d.label + ' · ' : ''}${d.id}</span>
-            <span style="font-size:11px;color:var(--on-surface-var);">Added: ${d.addedAt ? formatDateTime(d.addedAt) : '—'}</span>
-            <span style="font-size:11px;color:var(--on-surface-var);">Last: ${formatDateTime(d.lastUsed)}</span>
-            <span style="flex:1;"></span>
-            <button class="btn btn-ghost btn-sm" onclick="relabelDevice('${key}','${d.id}')">Rename</button>
-            <button class="btn btn-danger btn-sm" onclick="removeDevice('${key}','${d.id}')">Remove</button>
-          </div>`).join('')}
-      ${devices.length < (l.maxDevices || 3) ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="addDevice('${key}')">＋ Add device</button>` : ''}
-      ${hasLegacy(l) ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="sweepLegacy('${key}')">🧹 Migrate legacy device data</button>` : ''}
-    </div>
-  `;
+        ${hero}
+        <div class="ld-info">${tiles}</div>
+        <div class="ld-devices">
+          <div class="ld-devices-head">
+            <div class="ld-devices-title">📟 Registered Devices</div>
+            <div class="ld-devices-count">${devices.length} / ${maxDev}</div>
+          </div>
+          ${capBar}
+          ${devicesBody}
+          ${hasLegacy(l) ? `<button class="ld-migrate" onclick="sweepLegacy('${key}')">🧹 Migrate legacy device data</button>` : ''}
+        </div>
+      `;
       document.getElementById('detailModal').classList.add('show');
     };
 
@@ -1373,7 +1839,8 @@
       if (devices.length >= maxDevices) { showToast('⚠️ Device limit reached (' + maxDevices + ')'); return; }
       const id = prompt('Device ID to register. The app supplies its own ID on activation — use this to pre-register a specific device.');
       if (id === null) return;
-      const trimmed = id.trim();
+      // Strip characters that would break the inline handlers / attributes.
+      const trimmed = id.trim().replace(/['"`\\<>]/g, '');
       if (!trimmed) return;
       if (devices.some(d => d.id === trimmed)) { showToast('⚠️ Device already registered'); return; }
       const label = prompt('Optional label (e.g. "Main register"):', '') || '';
