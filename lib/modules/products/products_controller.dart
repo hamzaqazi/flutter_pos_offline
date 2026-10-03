@@ -7,11 +7,14 @@ import '../../data/services/product_image_service.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/license_service.dart';
 
+enum ProductViewMode { grid, list }
+
 class ProductsController extends GetxController {
   final products = <ProductModel>[].obs;
 
   final searchQuery = ''.obs;
   final selectedCategory = 'All'.obs;
+  final viewMode = ProductViewMode.grid.obs;
 
   @override
   void onInit() {
@@ -50,7 +53,8 @@ class ProductsController extends GetxController {
 
   void addProduct(ProductModel product) {
     // Check product limit for free tier
-    if (!LicenseService.isPremium && products.length >= LicenseService.maxProducts) {
+    if (!LicenseService.isPremium &&
+        products.length >= LicenseService.maxProducts) {
       Get.snackbar(
         'Product Limit Reached',
         'Free plan allows up to ${LicenseService.freeMaxProducts} products. Upgrade to Premium for unlimited.',

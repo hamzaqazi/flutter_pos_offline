@@ -127,6 +127,39 @@ class ProductsPage extends GetView<ProductsController> {
             ),
           ),
 
+          // ---------- View toggle ----------
+          Padding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.lg,
+              right: AppSpacing.lg,
+              bottom: AppSpacing.sm,
+            ),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Obx(
+                () => SegmentedButton<ProductViewMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: ProductViewMode.grid,
+                      icon: Icon(Icons.grid_view_rounded),
+                      label: Text('Grid'),
+                    ),
+                    ButtonSegment(
+                      value: ProductViewMode.list,
+                      icon: Icon(Icons.view_list_rounded),
+                      label: Text('List'),
+                    ),
+                  ],
+                  selected: {controller.viewMode.value},
+                  onSelectionChanged: (selected) {
+                    controller.viewMode.value = selected.first;
+                  },
+                  showSelectedIcon: false,
+                ),
+              ),
+            ),
+          ),
+
           // ---------- Category filter ----------
           SizedBox(
             height: 44,
@@ -146,7 +179,7 @@ class ProductsPage extends GetView<ProductsController> {
             }),
           ),
 
-          // ---------- Grid ----------
+          // ---------- Products ----------
           Expanded(
             child: RefreshIndicator(
               onRefresh: controller.refreshProducts,
@@ -172,15 +205,29 @@ class ProductsPage extends GetView<ProductsController> {
                     },
                   );
                 }
+                final padding = const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  // Floating nav clearance + room for the FAB above it
+                  AppSpacing.navClearance + AppSpacing.huge,
+                );
+
+                if (controller.viewMode.value == ProductViewMode.list) {
+                  return ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: padding,
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (_, index) =>
+                        ProductCard(product: items[index], compact: true),
+                  );
+                }
+
                 return GridView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                    // Floating nav clearance + room for the FAB above it
-                    AppSpacing.navClearance + AppSpacing.huge,
-                  ),
+                  padding: padding,
                   itemCount: items.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -483,8 +530,8 @@ class ProductsPage extends GetView<ProductsController> {
                               final priceVal = double.tryParse(
                                 priceController.text.trim(),
                               );
-                              final purchaseText =
-                                  purchasePriceController.text.trim();
+                              final purchaseText = purchasePriceController.text
+                                  .trim();
                               final purchaseVal = purchaseText.isEmpty
                                   ? 0.0
                                   : double.tryParse(purchaseText);
@@ -553,9 +600,7 @@ class _EmptyState extends StatelessWidget {
       // Point first-time users at the manual rather than leaving them at a
       // dead end.
       actionLabel: hasProducts ? null : 'How to add a product',
-      onAction: hasProducts
-          ? null
-          : () => ManualNav.openGuide('add-product'),
+      onAction: hasProducts ? null : () => ManualNav.openGuide('add-product'),
     );
   }
 }

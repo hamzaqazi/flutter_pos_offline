@@ -15,9 +15,10 @@ import '../modules/cart/cart_controller.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
+  final bool compact;
   final CartController cartController = Get.find<CartController>();
 
-  ProductCard({super.key, required this.product});
+  ProductCard({super.key, required this.product, this.compact = false});
 
   IconData _iconForCategory(String category) {
     // Map common category names to icons, with a default
@@ -55,6 +56,8 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (compact) return _buildCompactCard(context);
+
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final accent = AppColors.forCategory(product.category);
@@ -67,21 +70,7 @@ class ProductCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           // Tap out-of-stock → edit (restock), tap in-stock → add to cart
-          onTap: outOfStock
-              ? () => _showEditDialog(context)
-              : () {
-                  if (!cartController.addToCart(product)) return;
-                  Get.snackbar(
-                    "Added to cart",
-                    product.name,
-                    snackPosition: SnackPosition.BOTTOM,
-                    margin: const EdgeInsets.all(AppSpacing.md),
-                    duration: const Duration(milliseconds: 1200),
-                    backgroundColor: cs.inverseSurface,
-                    colorText: cs.onInverseSurface,
-                    icon: Icon(Icons.check_circle, color: cs.onInverseSurface),
-                  );
-                },
+          onTap: () => _handleCardTap(context),
           // Long-press any card → edit
           onLongPress: () => _showEditDialog(context),
           child: Column(
@@ -399,6 +388,251 @@ class ProductCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCompactCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final accent = AppColors.forCategory(product.category);
+    final outOfStock = product.stock <= 0;
+    final lowStock = product.stock > 0 && product.stock <= 5;
+    final hasDiscount = product.discount > 0;
+
+    return RepaintBoundary(
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _handleCardTap(context),
+          onLongPress: () => _showEditDialog(context),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 104),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 104,
+                  height: 104,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              accent.withValues(alpha: 0.18),
+                              accent.withValues(alpha: 0.06),
+                            ],
+                          ),
+                        ),
+                        child: product.hasImage
+                            ? Image.file(
+                                File(product.image!),
+                                fit: BoxFit.cover,
+                                cacheWidth: 240,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  _iconForCategory(product.category),
+                                  size: 32,
+                                  color: accent,
+                                ),
+                              )
+                            : Icon(
+                                _iconForCategory(product.category),
+                                size: 32,
+                                color: accent,
+                              ),
+                      ),
+                      Positioned(
+                        top: AppSpacing.xs,
+                        left: AppSpacing.xs,
+                        child: _badge(product.category, accent, fontSize: 9),
+                      ),
+                      if (hasDiscount)
+                        Positioned(
+                          top: AppSpacing.xs,
+                          right: AppSpacing.xs,
+                          child: _badge(
+                            "-${product.discount.toStringAsFixed(0)}%",
+                            AppColors.danger,
+                            fontSize: 9,
+                          ),
+                        ),
+                      if (outOfStock)
+                        IgnorePointer(
+                          child: Container(
+                            color: cs.surface.withValues(alpha: 0.55),
+                            alignment: Alignment.center,
+                            child: _badge("Out of stock", AppColors.danger),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                product.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _showEditDialog(context),
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: AppSpacing.sm,
+                                ),
+                                child: Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (product.hasBrand)
+                          Text(
+                            product.brand,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        if (product.hasSku || product.hasBarcode)
+                          Text(
+                            [
+                              if (product.hasSku) 'SKU ${product.sku}',
+                              if (product.hasBarcode)
+                                'Barcode ${product.barcode}',
+                            ].join(' • '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 10,
+                            ),
+                          ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (hasDiscount)
+                                  Text(
+                                    Formatters.currency(product.price),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      decoration: TextDecoration.lineThrough,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                Text(
+                                  Formatters.currency(product.discountedPrice),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _StockChip(
+                                  stock: product.stock,
+                                  low: lowStock,
+                                  out: outOfStock,
+                                ),
+                                if (!outOfStock) ...[
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: cs.primary,
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm,
+                                      ),
+                                    ),
+                                    child: Icon(
+                                      Icons.add,
+                                      size: 16,
+                                      color: cs.onPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _badge(String label, Color color, {double fontSize = 10}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  void _handleCardTap(BuildContext context) {
+    if (product.stock <= 0) {
+      _showEditDialog(context);
+      return;
+    }
+
+    if (!cartController.addToCart(product)) return;
+    final cs = Theme.of(context).colorScheme;
+    Get.snackbar(
+      "Added to cart",
+      product.name,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(AppSpacing.md),
+      duration: const Duration(milliseconds: 1200),
+      backgroundColor: cs.inverseSurface,
+      colorText: cs.onInverseSurface,
+      icon: Icon(Icons.check_circle, color: cs.onInverseSurface),
     );
   }
 
@@ -727,8 +961,8 @@ class ProductCard extends StatelessWidget {
                               final priceVal = double.tryParse(
                                 priceController.text.trim(),
                               );
-                              final purchaseText =
-                                  purchasePriceController.text.trim();
+                              final purchaseText = purchasePriceController.text
+                                  .trim();
                               final purchaseVal = purchaseText.isEmpty
                                   ? 0.0
                                   : double.tryParse(purchaseText);
