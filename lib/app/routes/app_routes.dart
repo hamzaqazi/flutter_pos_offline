@@ -11,6 +11,7 @@ abstract class Routes {
   static const staff = '/staff';
 
   static const activation = '/activation';
+  static const onboarding = '/onboarding';
   static const pinSetup = '/pin-setup';
   static const pinLock = '/pin-lock';
   static const lowStock = '/low-stock';

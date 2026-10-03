@@ -8,6 +8,7 @@ import 'package:ad_shop_pos/modules/expenses/expenses_page.dart';
 import 'package:ad_shop_pos/modules/invoice/invoice_page.dart';
 import 'package:ad_shop_pos/modules/manual/manual_article_page.dart';
 import 'package:ad_shop_pos/modules/manual/manual_home_page.dart';
+import 'package:ad_shop_pos/modules/onboarding/onboarding_page.dart';
 import 'package:ad_shop_pos/modules/products/low_stock_page.dart';
 import 'package:ad_shop_pos/modules/reports/reports_page.dart';
 import 'package:ad_shop_pos/modules/returns/returns_page.dart';
@@ -70,6 +71,12 @@ class AppPages {
     GetPage(
       name: Routes.activation,
       page: () => const ActivationScreen(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.onboarding,
+      page: () => const OnboardingPage(),
       transition: Transition.fadeIn,
       transitionDuration: AppDuration.page,
     ),
