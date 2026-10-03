@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
+import 'package:ad_shop_pos/app/widgets/premium_license_banner.dart';
+import 'package:ad_shop_pos/app/widgets/tooltip_label.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
@@ -29,6 +31,7 @@ class DashboardPage extends GetView<DashboardController> {
     return Scaffold(
       appBar: AppShellAppBar(
         title: Text('Dashboard'),
+        helpTopicId: 'getting-started',
         actions: const [_AutoBackupAppBarAction()],
       ),
       body: SafeArea(
@@ -46,6 +49,7 @@ class DashboardPage extends GetView<DashboardController> {
                   AppSpacing.lg,
                   AppSpacing.md,
                   AppSpacing.lg,
+
                   AppSpacing.navClearance,
                 ),
                 sliver: SliverList(
@@ -58,6 +62,7 @@ class DashboardPage extends GetView<DashboardController> {
                       return _buildBanners(context);
                     }),
 
+                    const SizedBox(height: AppSpacing.xxl),
                     // ── Today's Summary ──
                     AppSectionHeader(
                       title: "Today's Summary",
@@ -97,83 +102,192 @@ class DashboardPage extends GetView<DashboardController> {
   }
 
   // ── Banners ──
-
   Widget _buildBanners(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Get.toNamed("/license"),
-      child: Column(
-        children: [
-          // Trial banner
-          if (LicenseService.isTrialActive)
-            Builder(
-              builder: (context) {
-                final days = LicenseService.trialDaysRemaining;
-                final isUrgent = days <= 3;
-                return AppBanner(
-                  type: isUrgent ? AppBannerType.warning : AppBannerType.trial,
-                  icon: isUrgent
-                      ? Icons.timer_outlined
-                      : Icons.celebration_outlined,
-                  title: isUrgent
-                      ? 'Trial expires in $days day${days == 1 ? '' : 's'}!'
-                      : 'Free Trial — $days days remaining',
-                  subtitle: 'Upgrade to keep all Premium features',
-                  actionLabel: 'Enter Key',
-                  onAction: () => _showUpgradeSheet(context),
-                );
-              },
-            ),
-          // Free tier banner
-          if (LicenseService.isFreeTier)
-            AppBanner.warning(
-              title: 'Free Plan — Limited Features',
-              subtitle: 'Upgrade to unlock Returns, Reports, and more',
-              icon: Icons.workspace_premium_outlined,
-              actionLabel: 'Enter Key',
-              onAction: () => _showUpgradeSheet(context),
-            ),
-          // License info
-          Builder(
-            builder: (context) {
-              if (!LicenseService.isActivated) return const SizedBox.shrink();
-              final days = LicenseService.daysUntilExpiry;
-              final expiresAt = LicenseService.expiresAt;
-              if (days == null && LicenseService.storedPlan == 'lifetime') {
-                return AppBanner(
-                  type: AppBannerType.success,
-                  icon: Icons.workspace_premium,
-                  title: 'Lifetime License — Active',
-                  subtitle: LicenseService.shopName,
-                );
-              }
-              if (days == null || expiresAt == null)
-                return const SizedBox.shrink();
-              final isCritical = days <= 7;
-              final isWarning = days <= 30;
-              if (isCritical) {
-                return AppBanner.danger(
-                  title: 'License expires in $days day${days == 1 ? '' : 's'}!',
-                  subtitle: 'Expires: ${formatDate(expiresAt)}',
-                  icon: Icons.vpn_key_outlined,
-                );
-              }
-              if (isWarning) {
-                return AppBanner.warning(
-                  title: 'License expires in $days days',
-                  subtitle: 'Expires: ${formatDate(expiresAt)}',
-                  icon: Icons.vpn_key_outlined,
-                );
-              }
-              return AppBanner.success(
-                title: 'License active',
-                subtitle: 'Expires: ${formatDate(expiresAt)}',
-              );
-            },
+    final banners = <Widget>[];
+
+    void openLicense() {
+      Get.toNamed('/license');
+    }
+
+    Widget banner({
+      required String status,
+      required String title,
+      required String subtitle,
+      required IconData icon,
+      required Color accent,
+      bool showUpgrade = false,
+    }) {
+      return PremiumLicenseBanner(
+        status: status,
+        title: title,
+        subtitle: subtitle,
+        icon: icon,
+        accent: accent,
+        onTap: openLicense,
+        actionLabel: showUpgrade ? 'Enter Key' : null,
+        onAction: showUpgrade ? () => _showUpgradeSheet(context) : null,
+      );
+    }
+
+    if (LicenseService.isTrialActive) {
+      final days = LicenseService.trialDaysRemaining;
+      final isUrgent = days <= 3;
+
+      banners.add(
+        banner(
+          status: isUrgent ? 'ENDING SOON' : 'PREMIUM TRIAL',
+          title: isUrgent
+              ? 'Trial ends in $days day${days == 1 ? '' : 's'}'
+              : '$days days of Premium left',
+          subtitle: 'Upgrade to keep all your Premium features.',
+          icon: isUrgent ? Icons.timer_outlined : Icons.auto_awesome_outlined,
+          accent: isUrgent ? const Color(0xFFD97706) : const Color(0xFF7C3AED),
+          showUpgrade: true,
+        ),
+      );
+    }
+
+    if (LicenseService.isFreeTier) {
+      banners.add(
+        banner(
+          status: 'FREE PLAN',
+          title: 'Unlock your full potential',
+          subtitle: 'Get Returns, Reports, and more with Premium.',
+          icon: Icons.workspace_premium_outlined,
+          accent: const Color(0xFF7C3AED),
+          showUpgrade: true,
+        ),
+      );
+    }
+
+    if (LicenseService.isActivated) {
+      final days = LicenseService.daysUntilExpiry;
+      final expiresAt = LicenseService.expiresAt;
+
+      if (days == null && LicenseService.storedPlan == 'lifetime') {
+        banners.add(
+          banner(
+            status: 'LIFETIME ACCESS',
+            title: 'Premium. Yours forever.',
+            subtitle: LicenseService.shopName ?? '',
+            icon: Icons.workspace_premium_rounded,
+            accent: const Color(0xFF059669),
           ),
+        );
+      } else if (days != null && expiresAt != null) {
+        final isCritical = days <= 7;
+        final isWarning = days <= 30;
+
+        banners.add(
+          banner(
+            status: isCritical
+                ? 'EXPIRING SOON'
+                : isWarning
+                ? 'RENEWAL REMINDER'
+                : 'PREMIUM ACTIVE',
+            title: isWarning
+                ? 'License expires in $days day${days == 1 ? '' : 's'}'
+                : 'You’re all set',
+            subtitle: 'Expires: ${formatDate(expiresAt)}',
+            icon: isWarning ? Icons.vpn_key_outlined : Icons.verified_outlined,
+            accent: isCritical
+                ? const Color(0xFFDC2626)
+                : isWarning
+                ? const Color(0xFFD97706)
+                : const Color(0xFF059669),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < banners.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          banners[i],
         ],
-      ),
+      ],
     );
   }
+
+  // Widget _buildBanners(BuildContext context) {
+  //   return GestureDetector(
+  //     onTap: () => Get.toNamed("/license"),
+  //     child: Column(
+  //       children: [
+  //         // Trial banner
+  //         if (LicenseService.isTrialActive)
+  //           Builder(
+  //             builder: (context) {
+  //               final days = LicenseService.trialDaysRemaining;
+  //               final isUrgent = days <= 3;
+  //               return AppBanner(
+  //                 type: isUrgent ? AppBannerType.warning : AppBannerType.trial,
+  //                 icon: isUrgent
+  //                     ? Icons.timer_outlined
+  //                     : Icons.celebration_outlined,
+  //                 title: isUrgent
+  //                     ? 'Trial expires in $days day${days == 1 ? '' : 's'}!'
+  //                     : 'Free Trial — $days days remaining',
+  //                 subtitle: 'Upgrade to keep all Premium features',
+  //                 actionLabel: 'Enter Key',
+  //                 onAction: () => _showUpgradeSheet(context),
+  //               );
+  //             },
+  //           ),
+  //         // Free tier banner
+  //         if (LicenseService.isFreeTier)
+  //           AppBanner.warning(
+  //             title: 'Free Plan — Limited Features',
+  //             subtitle: 'Upgrade to unlock Returns, Reports, and more',
+  //             icon: Icons.workspace_premium_outlined,
+  //             actionLabel: 'Enter Key',
+  //             onAction: () => _showUpgradeSheet(context),
+  //           ),
+  //         // License info
+  //         Builder(
+  //           builder: (context) {
+  //             if (!LicenseService.isActivated) return const SizedBox.shrink();
+  //             final days = LicenseService.daysUntilExpiry;
+  //             final expiresAt = LicenseService.expiresAt;
+  //             if (days == null && LicenseService.storedPlan == 'lifetime') {
+  //               return AppBanner(
+  //                 type: AppBannerType.success,
+  //                 icon: Icons.workspace_premium,
+  //                 title: 'Lifetime License — Active',
+  //                 subtitle: LicenseService.shopName,
+  //               );
+  //             }
+  //             if (days == null || expiresAt == null)
+  //               return const SizedBox.shrink();
+  //             final isCritical = days <= 7;
+  //             final isWarning = days <= 30;
+  //             if (isCritical) {
+  //               return AppBanner.danger(
+  //                 title: 'License expires in $days day${days == 1 ? '' : 's'}!',
+  //                 subtitle: 'Expires: ${formatDate(expiresAt)}',
+  //                 icon: Icons.vpn_key_outlined,
+  //               );
+  //             }
+  //             if (isWarning) {
+  //               return AppBanner.warning(
+  //                 title: 'License expires in $days days',
+  //                 subtitle: 'Expires: ${formatDate(expiresAt)}',
+  //                 icon: Icons.vpn_key_outlined,
+  //               );
+  //             }
+  //             return AppBanner.success(
+  //               title: 'License active',
+  //               subtitle: 'Expires: ${formatDate(expiresAt)}',
+  //             );
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // ── Today's Summary ──
 
@@ -225,6 +339,7 @@ class DashboardPage extends GetView<DashboardController> {
                 value: sales.toString(),
                 icon: Icons.receipt_long_outlined,
                 color: AppColors.seed,
+                tooltip: FinancialTooltips.todaySales,
                 onTap: () => ShellController.to.goSales(),
               ),
             ),
@@ -235,9 +350,7 @@ class DashboardPage extends GetView<DashboardController> {
                 value: Formatters.currency(revenue),
                 icon: Icons.payments_outlined,
                 color: AppColors.success,
-                tooltip: expenses > 0
-                    ? 'Revenue includes expenses of ${Formatters.currency(expenses)}'
-                    : null,
+                tooltip: FinancialTooltips.todayRevenue,
               ),
             ),
           ],
@@ -247,10 +360,11 @@ class DashboardPage extends GetView<DashboardController> {
           children: [
             Expanded(
               child: AppStatCard(
-                label: 'Gross Profit',
+                label: 'Profit',
                 value: Formatters.currency(profit),
                 icon: Icons.trending_up_outlined,
                 color: AppColors.violet,
+                tooltip: FinancialTooltips.todayProfit,
               ),
             ),
             if (expenses > 0) ...[
@@ -263,6 +377,7 @@ class DashboardPage extends GetView<DashboardController> {
                   color: (profit - expenses) >= 0
                       ? AppColors.success
                       : AppColors.danger,
+                  tooltip: FinancialTooltips.netProfit,
                   trend: expenses > 0
                       ? 'Exp: ${Formatters.currency(expenses)}'
                       : null,
@@ -300,10 +415,11 @@ class DashboardPage extends GetView<DashboardController> {
         color: AppColors.success,
       ),
       AppStatCard(
-        label: 'Gross Profit',
+        label: 'Profit',
         value: Formatters.currency(controller.totalProfit.value),
         icon: Icons.trending_up_outlined,
         color: AppColors.violet,
+        tooltip: FinancialTooltips.profit,
       ),
       AppStatCard(
         label: 'Low Stock',
@@ -494,12 +610,12 @@ class _AutoBackupAppBarAction extends StatelessWidget {
         },
         icon: Badge(
           // alignment: Alignment.topCenter,
-          backgroundColor: AppColors.warning,
+          backgroundColor: AppColors.warning.withValues(alpha: 0.8),
           label: Text(
             AutoBackupService.lastBackupAgo,
             style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
           ),
-          child: const Icon(Icons.backup_outlined, size: 20),
+          child: const Icon(Icons.cloud_sync_outlined, size: 28),
         ),
         tooltip: 'Auto backup is on',
       );

@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/data/models/return_model.dart';
+import 'package:ad_shop_pos/data/models/sale_model.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:get/get.dart';
@@ -102,29 +103,25 @@ class ReturnsController extends GetxController {
   double get totalProfitReversed =>
       returns.fold(0, (sum, r) => sum + r.refundProfit);
 
-  /// Total refunds in a date range.
-  double totalRefundsInRange(DateTime start, DateTime end) {
+  /// Returns recorded between [start] and the end of the [end] day.
+  List<ReturnModel> returnsInRange(DateTime start, DateTime end) {
+    final endOfRange = end.add(const Duration(days: 1));
     return returns
-        .where((r) =>
-            r.date.isAfter(start) && r.date.isBefore(end.add(const Duration(days: 1))))
-        .fold(0, (sum, r) => sum + r.refundAmount);
+        .where((r) => r.date.isAfter(start) && r.date.isBefore(endOfRange))
+        .toList();
   }
+
+  /// Total refunds in a date range.
+  double totalRefundsInRange(DateTime start, DateTime end) =>
+      returnsInRange(start, end).fold(0, (sum, r) => sum + r.refundAmount);
 
   /// Total profit reversed in a date range.
-  double totalProfitReversedInRange(DateTime start, DateTime end) {
-    return returns
-        .where((r) =>
-            r.date.isAfter(start) && r.date.isBefore(end.add(const Duration(days: 1))))
-        .fold(0, (sum, r) => sum + r.refundProfit);
-  }
+  double totalProfitReversedInRange(DateTime start, DateTime end) =>
+      returnsInRange(start, end).fold(0, (sum, r) => sum + r.refundProfit);
 
   /// Number of return transactions in a date range.
-  int returnCountInRange(DateTime start, DateTime end) {
-    return returns
-        .where((r) =>
-            r.date.isAfter(start) && r.date.isBefore(end.add(const Duration(days: 1))))
-        .length;
-  }
+  int returnCountInRange(DateTime start, DateTime end) =>
+      returnsInRange(start, end).length;
 
   /// Check how many units of a product have already been returned from a sale.
   int alreadyReturnedQty(String saleId, String productId) {
@@ -138,6 +135,24 @@ class ReturnsController extends GetxController {
       }
     }
     return total;
+  }
+
+  /// Whether anything at all has been given back from [saleId].
+  bool hasReturns(String saleId) => returnsForSale(saleId).isNotEmpty;
+
+  /// True once every unit sold in [sale] has been given back.
+  ///
+  /// Compares per product rather than by a total, so a sale with two of one
+  /// item and one of another is only "fully returned" when all three are back —
+  /// returning one unit of each would otherwise look like a complete return.
+  bool isFullyReturned(SaleModel sale) {
+    if (sale.items.isEmpty) return false;
+    for (final item in sale.items) {
+      if (alreadyReturnedQty(sale.id, item.product.id) < item.quantity) {
+        return false;
+      }
+    }
+    return true;
   }
 
   String _fmtCurrency(double value) {

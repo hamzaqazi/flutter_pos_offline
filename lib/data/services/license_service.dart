@@ -10,8 +10,9 @@ import 'package:hive/hive.dart';
 ///   - `licenses` — license key docs (ID = license key, e.g. "CNPO-K7ZM-2XN4-PQ9R")
 ///   - `trial_devices` — trial device records (ID = device ID, prevents repeat trials)
 ///
-/// License fields: shopName, active, plan, maxDevices, expiresAt, registeredDevices[],
-///         customerPhone, activatedAt
+/// License fields: shopName, active, plan, maxDevices, expiresAt, devices[],
+///         customerPhone, activatedAt. `devices` is a list of
+///         {id, addedAt, lastUsed, label} objects (see `_Device`).
 /// Trial device fields: trialStartedAt, deviceModel, trialDurationDays
 ///
 /// Plans: "free", "monthly", "yearly", "lifetime"
@@ -65,6 +66,18 @@ class LicenseService {
   /// Get the license expiry date (null if not set or never expires).
   static DateTime? get expiresAt {
     final str = _box.get('license_expiresAt') as String?;
+    if (str == null || str.isEmpty) return null;
+    return DateTime.tryParse(str);
+  }
+
+  /// When this device last verified a license against the server.
+  ///
+  /// `verifyActiveLicense` stamps this on every successful Firestore check
+  /// and leaves it untouched when it falls back to the offline "trust the
+  /// saved copy" path. Comparing it before and after a check is therefore a
+  /// reliable way to tell a live server read apart from an offline one.
+  static DateTime? get lastVerified {
+    final str = _box.get('license_lastVerified') as String?;
     if (str == null || str.isEmpty) return null;
     return DateTime.tryParse(str);
   }
@@ -478,60 +491,50 @@ class LicenseService {
       }
 
       // Check expiry
-      if (data['expiresAt'] != null) {
-        final expiresAt = (data['expiresAt'] as Timestamp).toDate();
-        if (expiresAt.isBefore(DateTime.now())) {
-          return LicenseResult(
-            success: false,
-            message:
-                'License expired on ${_formatDate(expiresAt)}. Contact support to renew.',
-          );
-        }
+      final expiresAt = parseExpiry(data['expiresAt']);
+      if (expiresAt != null && expiresAt.isBefore(DateTime.now())) {
+        return LicenseResult(
+          success: false,
+          message:
+              'License expired on ${_formatDate(expiresAt)}. Contact support to renew.',
+        );
       }
 
       final shopName = data['shopName'] as String? ?? 'My Shop';
       final plan = data['plan'] as String? ?? 'lifetime';
       final maxDevices = data['maxDevices'] as int? ?? 3;
-      final registeredDevices = List<String>.from(
-        data['registeredDevices'] ?? [],
-      );
+      final devices = _readDevices(data);
 
-      // Check device limit
       final currentDeviceId = await deviceId;
-
-      if (!registeredDevices.contains(currentDeviceId)) {
-        if (registeredDevices.length >= maxDevices) {
+      final existing = _findDevice(devices, currentDeviceId);
+      if (existing == null) {
+        if (devices.length >= maxDevices) {
           return LicenseResult(
             success: false,
             message:
                 'Device limit reached ($maxDevices devices max). Contact support to add more devices.',
           );
         }
+        final now = DateTime.now();
+        devices.add(_Device(id: currentDeviceId, addedAt: now, lastUsed: now));
+      } else {
+        existing.lastUsed = DateTime.now();
       }
 
-      // All good — register this device if not already
-      if (!registeredDevices.contains(currentDeviceId)) {
-        registeredDevices.add(currentDeviceId);
-        await FirebaseFirestore.instance
-            .collection('licenses')
-            .doc(key.trim().toUpperCase())
-            .update({'registeredDevices': registeredDevices});
-      }
-
-      // Record when this device was activated / last used
-      await _touchLicenseDeviceLastUsed(
-        key.trim().toUpperCase(),
-        currentDeviceId,
-      );
+      // Persist the device list in the clean `devices` shape. This is also
+      // what migrates a legacy doc — it deletes the old fields on the same
+      // write — so a renewed/activated license always ends up in one shape.
+      await FirebaseFirestore.instance
+          .collection('licenses')
+          .doc(key.trim().toUpperCase())
+          .update(_devicesUpdateFields(devices));
 
       // Save activation locally
       await _saveActivation(
         key: key.trim().toUpperCase(),
         shopName: shopName,
         plan: plan,
-        expiresAt: data['expiresAt'] != null
-            ? (data['expiresAt'] as Timestamp).toDate()
-            : null,
+        expiresAt: expiresAt,
       );
 
       return LicenseResult(
@@ -539,9 +542,7 @@ class LicenseService {
         message: 'Activated successfully!',
         shopName: shopName,
         plan: plan,
-        expiresAt: data['expiresAt'] != null
-            ? (data['expiresAt'] as Timestamp).toDate()
-            : null,
+        expiresAt: expiresAt,
       );
     } catch (e, s) {
       debugPrint('🔥 LICENSE ERROR: $e');
@@ -605,7 +606,10 @@ class LicenseService {
         await deactivate(reason: 'License key not found. Contact support.');
         return false;
       }
-      if (doc.data()?['active'] != true) {
+
+      final data = doc.data() ?? const <String, dynamic>{};
+
+      if (data['active'] != true) {
         await deactivate(
           reason:
               'Your license has been deactivated by the administrator. Contact support to reactivate.',
@@ -614,23 +618,20 @@ class LicenseService {
       }
 
       // Check expiry
-      if (doc.data()?['expiresAt'] != null) {
-        final expiresAt = (doc.data()!['expiresAt'] as Timestamp).toDate();
-        if (expiresAt.isBefore(DateTime.now())) {
-          await deactivate(
-            reason:
-                'Your license expired on ${_formatDate(expiresAt)}. Contact support to renew your license.',
-          );
-          return false;
-        }
+      final serverExpiry = parseExpiry(data['expiresAt']);
+      if (serverExpiry != null && serverExpiry.isBefore(DateTime.now())) {
+        await deactivate(
+          reason:
+              'Your license expired on ${_formatDate(serverExpiry)}. Contact support to renew your license.',
+        );
+        return false;
       }
 
       // Check if this device is still registered
-      final registeredDevices = List<String>.from(
-        doc.data()?['registeredDevices'] ?? [],
-      );
+      final devices = _readDevices(data);
       final currentDeviceId = await deviceId;
-      if (!registeredDevices.contains(currentDeviceId)) {
+      final currentDevice = _findDevice(devices, currentDeviceId);
+      if (currentDevice == null) {
         // Device was removed from Firestore — deactivate
         await deactivate(
           reason:
@@ -638,33 +639,73 @@ class LicenseService {
         );
         return false;
       }
+      currentDevice.lastUsed = DateTime.now();
 
-      // Update plan from Firestore (in case it was changed server-side)
-      final serverPlan = doc.data()?['plan'] as String? ?? storedPlan;
+      // Pull the admin's copy into the local cache.
+      //
+      // Enforcement above already ran against Firestore, but every screen
+      // reads the cached values, and only `_saveActivation` ever writes them.
+      // Without this, extending (or shortening) a license in Firestore — or
+      // renaming the shop, or switching a plan — never reached the app: it
+      // kept showing the expiry it was activated with, however often it was
+      // restarted.
+      var changed = false;
+
+      final serverPlan = data['plan'] as String? ?? storedPlan;
       if (serverPlan != storedPlan) {
         await _box.put('license_plan', serverPlan);
+        changed = true;
+      }
+
+      final serverShop = data['shopName'] as String?;
+      if (serverShop != null &&
+          serverShop.isNotEmpty &&
+          serverShop != shopName) {
+        await _box.put('license_shopName', serverShop);
+        changed = true;
+      }
+
+      if (serverExpiry == null) {
+        // No expiry on the server (a lifetime license). Drop any stale date
+        // so the app stops counting down to it.
+        if (expiresAt != null) {
+          await _box.delete('license_expiresAt');
+          changed = true;
+        }
+      } else if (serverExpiry != expiresAt) {
+        await _box.put('license_expiresAt', serverExpiry.toIso8601String());
+        changed = true;
       }
 
       // Save last verified timestamp for offline grace
       await _box.put('license_lastVerified', DateTime.now().toIso8601String());
 
-      // Update "last used" timestamp for this device on the license record
-      await _touchLicenseDeviceLastUsed(key, currentDeviceId);
+      // Record this device's activity and persist the device list. Writing
+      // the full `devices` array also migrates a legacy doc on the same call.
+      await FirebaseFirestore.instance
+          .collection('licenses')
+          .doc(key)
+          .update(_devicesUpdateFields(devices));
+
+      // Screens showing the expiry read this inside an Obx, so a renewal
+      // appears as soon as verification finishes.
+      if (changed) _notifyChanged();
 
       return true;
     } catch (e) {
-      // No internet — trust the saved activation (with offline grace)
+      // No internet — trust the saved activation (with offline grace).
+      // Logged so a failed sync is diagnosable: it is the difference between
+      // "offline" and "the server said something we could not read".
+      debugPrint('License verification failed, using saved copy: $e');
       return isActivated;
     }
-
-    _notifyChanged();
   }
   // =================== Save / Deactivate ===================
 
   /// Save activation details locally.
   /// Also expires the free trial (paid plan supersedes trial) and removes
   /// the device from the trial_devices Firestore collection (they're now
-  /// a paying customer, tracked under the license's registeredDevices).
+  /// a paying customer, tracked in the license's `devices` list).
   static Future<void> _saveActivation({
     required String key,
     required String shopName,
@@ -688,7 +729,7 @@ class LicenseService {
     await _box.put('trial_expired', true);
 
     // Remove this device from trial_devices Firestore
-    // (it's now tracked under the license's registeredDevices)
+    // (it's now tracked in the license's `devices` list)
     await _removeTrialDeviceRecord();
 
     _notifyChanged();
@@ -720,7 +761,7 @@ class LicenseService {
 
   /// Remove this device from Firestore trial_devices collection.
   /// Called when a license is activated — the device is now tracked
-  /// under the license's registeredDevices, not under trial_devices.
+  /// in the license's `devices` list, not under trial_devices.
   static Future<void> _removeTrialDeviceRecord() async {
     try {
       final currentDeviceId = await deviceId;
@@ -736,7 +777,7 @@ class LicenseService {
     }
   }
 
-  /// Remove this device from Firestore registeredDevices list.
+  /// Remove this device from the license's `devices` list.
   static Future<void> _unregisterDevice() async {
     try {
       final key = _box.get('license_key') as String? ?? '';
@@ -750,17 +791,13 @@ class LicenseService {
       if (!doc.exists) return;
 
       final currentDeviceId = await deviceId;
-      final registeredDevices = List<String>.from(
-        doc.data()?['registeredDevices'] ?? [],
-      );
+      final devices = _readDevices(doc.data() ?? const <String, dynamic>{});
+      final before = devices.length;
+      devices.removeWhere((device) => device.id == currentDeviceId);
 
-      if (registeredDevices.contains(currentDeviceId)) {
-        registeredDevices.remove(currentDeviceId);
+      if (devices.length != before) {
         await FirebaseFirestore.instance.collection('licenses').doc(key).update(
-          {
-            'registeredDevices': registeredDevices,
-            'deviceLastUsed.$currentDeviceId': FieldValue.delete(),
-          },
+          _devicesUpdateFields(devices),
         );
       }
     } catch (e) {
@@ -768,23 +805,75 @@ class LicenseService {
     }
   }
 
-  /// Update the "last used" timestamp for [deviceId] on the license record,
-  /// stored as a `deviceLastUsed.<deviceId>` map entry so the admin panel
-  /// can show per-device activity alongside `registeredDevices`.
-  static Future<void> _touchLicenseDeviceLastUsed(
-    String key,
-    String targetDeviceId,
-  ) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('licenses')
-          .doc(key)
-          .update({
-            'deviceLastUsed.$targetDeviceId': FieldValue.serverTimestamp(),
-          });
-    } catch (e) {
-      debugPrint('⚠️ Failed to update device last-used timestamp: $e');
+  /// Read a license's registered devices, normalizing both the current shape
+  /// (a `devices` array of objects) and the legacy shape (a `registeredDevices`
+  /// array of strings plus a `deviceLastUsed` map) into a single list.
+  ///
+  /// This is what keeps pre-migration licenses working: the app reads an old
+  /// doc fine, and the next time that doc is written it is stored in the clean
+  /// `devices` shape (see `_devicesUpdateFields`), so legacy data migrates
+  /// itself on use.
+  static List<_Device> _readDevices(Map<String, dynamic> data) {
+    final devices = <_Device>[];
+    final seen = <String>{};
+
+    final current = data['devices'];
+    if (current is List) {
+      for (final entry in current) {
+        if (entry is! Map) continue;
+        final id = entry['id'] as String? ?? '';
+        if (id.isEmpty || !seen.add(id)) continue;
+        devices.add(
+          _Device(
+            id: id,
+            addedAt: _asDate(entry['addedAt']),
+            lastUsed: _asDate(entry['lastUsed']),
+            label: entry['label'] as String?,
+          ),
+        );
+      }
+    } else if (data['registeredDevices'] is List) {
+      // Legacy docs that haven't been migrated yet: a `registeredDevices`
+      // array of strings plus a `deviceLastUsed` map.
+      final lastUsed = data['deviceLastUsed'];
+      for (final entry in data['registeredDevices'] as List) {
+        if (entry is! String || entry.isEmpty || !seen.add(entry)) continue;
+        devices.add(
+          _Device(
+            id: entry,
+            lastUsed: (lastUsed is Map && lastUsed[entry] is Timestamp)
+                ? (lastUsed[entry] as Timestamp).toDate()
+                : null,
+          ),
+        );
+      }
     }
+
+    return devices;
+  }
+
+  static DateTime? _asDate(Object? value) {
+    return value is Timestamp ? value.toDate() : null;
+  }
+
+  static _Device? _findDevice(List<_Device> devices, String id) {
+    for (final device in devices) {
+      if (device.id == id) return device;
+    }
+    return null;
+  }
+
+  /// Firestore update fields for a license's device list: the clean
+  /// `devices` array, plus deletion of the legacy `registeredDevices` /
+  /// `deviceLastUsed` fields so a doc is fully migrated in a single write.
+  /// Deleting a field that is already absent is a no-op, so this is safe on
+  /// every write and removes a device's data atomically with the device.
+  static Map<String, dynamic> _devicesUpdateFields(List<_Device> devices) {
+    return {
+      'devices': devices.map((device) => device.toFirestore()).toList(),
+      'registeredDevices': FieldValue.delete(),
+      'deviceLastUsed': FieldValue.delete(),
+    };
   }
 
   // =================== Plan Helpers ===================
@@ -831,6 +920,23 @@ class LicenseService {
 
   // =================== Formatting ===================
 
+  /// Reads a license's `expiresAt` field from a Firestore document.
+  ///
+  /// The admin panel writes a real `Timestamp`, but a date typed into the
+  /// Firebase console by hand can arrive as an ISO string. Reading it through
+  /// one place means either shape works, and — this is the point — a cast
+  /// failure can no longer abort a whole verification and leave the app
+  /// quietly showing the dates it was activated with.
+  ///
+  /// Returns null for "no expiry" (a lifetime license) and for anything
+  /// unreadable, which is treated the same way.
+  static DateTime? parseExpiry(Object? value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
+  }
+
   static String _formatDate(DateTime date) {
     return '${date.day} ${_monthName(date.month)} ${date.year}';
   }
@@ -852,6 +958,31 @@ class LicenseService {
       'December',
     ];
     return names[month];
+  }
+}
+
+/// A single registered device on a license, in its stored (Firestore) form.
+///
+/// Replaces the old pair of a `registeredDevices` string array and a
+/// `deviceLastUsed` map: each device now carries its own `addedAt` /
+/// `lastUsed` / `label`, so removing a device removes all of its data in one
+/// step and the two pieces of information can never drift out of sync.
+class _Device {
+  _Device({required this.id, this.addedAt, this.lastUsed, this.label});
+
+  final String id;
+  DateTime? addedAt;
+  DateTime? lastUsed;
+  String? label;
+
+  /// Serialize to the `devices` array shape used in a Firestore update.
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      if (addedAt != null) 'addedAt': Timestamp.fromDate(addedAt!),
+      if (lastUsed != null) 'lastUsed': Timestamp.fromDate(lastUsed!),
+      if (label != null && label!.isNotEmpty) 'label': label,
+    };
   }
 }
 
