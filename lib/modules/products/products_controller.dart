@@ -6,6 +6,7 @@ import '../../data/services/hive_service.dart';
 import '../../data/services/product_image_service.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/license_service.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 
 enum ProductViewMode { grid, list }
 
@@ -52,6 +53,7 @@ class ProductsController extends GetxController {
   }
 
   void addProduct(ProductModel product) {
+    AutoBackupService.markDataChanged();
     // Check product limit for free tier
     if (!LicenseService.isPremium &&
         products.length >= LicenseService.maxProducts) {
@@ -75,6 +77,7 @@ class ProductsController extends GetxController {
   /// the list, like the dashboard's product count) showing stale values until
   /// the next full load — editing a product appeared to do nothing.
   void updateProduct(ProductModel product) {
+    AutoBackupService.markDataChanged();
     if (products.indexWhere((p) => p.id == product.id) == -1) return;
     HiveService.productBox.put(product.id, _toMap(product));
     loadProducts();
@@ -82,6 +85,7 @@ class ProductsController extends GetxController {
 
   /// Convenience: update stock only (for quick restock).
   void updateStock(String id, int newStock) {
+    AutoBackupService.markDataChanged();
     final index = products.indexWhere((p) => p.id == id);
 
     if (index != -1) {
@@ -120,6 +124,7 @@ class ProductsController extends GetxController {
   }
 
   void deleteProduct(String id) {
+    AutoBackupService.markDataChanged();
     // Clean up the stored product photo (if any) before removing the record.
     final index = products.indexWhere((e) => e.id == id);
     if (index != -1) {

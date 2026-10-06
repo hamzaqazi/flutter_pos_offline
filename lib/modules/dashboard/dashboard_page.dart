@@ -596,10 +596,15 @@ class _AutoBackupAppBarAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Rebuild when auto backup is toggled / a backup completes.
+      // Rebuild when auto backup is toggled, a backup completes, or data
+      // changes (markDataChanged bumps revision).
       AutoBackupService.revision.value;
 
-      if (!AutoBackupService.isEnabled) return const SizedBox.shrink();
+      final autoOn = AutoBackupService.isEnabled;
+      final pending = AutoBackupService.hasPendingChanges;
+      // Show for auto backup, AND whenever there is data not yet covered by
+      // a backup — so the user knows they should back up now.
+      if (!autoOn && !pending) return const SizedBox.shrink();
 
       return IconButton(
         onPressed: () {
@@ -609,15 +614,16 @@ class _AutoBackupAppBarAction extends StatelessWidget {
           );
         },
         icon: Badge(
-          // alignment: Alignment.topCenter,
-          backgroundColor: AppColors.warning.withValues(alpha: 0.8),
+          backgroundColor: autoOn
+              ? AppColors.warning.withValues(alpha: 0.8)
+              : AppColors.danger.withValues(alpha: 0.9),
           label: Text(
-            AutoBackupService.lastBackupAgo,
+            autoOn ? AutoBackupService.lastBackupAgo : 'New',
             style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
           ),
           child: const Icon(Icons.cloud_sync_outlined, size: 28),
         ),
-        tooltip: 'Auto backup is on',
+        tooltip: autoOn ? 'Auto backup is on' : 'Data changed — back up now',
       );
     });
   }
@@ -668,6 +674,7 @@ class _AutoBackupSheetState extends State<_AutoBackupSheet> {
         // Keeps the sheet in sync while it is open.
         AutoBackupService.revision.value;
 
+        final autoOn = AutoBackupService.isEnabled;
         final frequency = switch (AutoBackupService.frequency) {
           'weekly' => 'Every week',
           'manual' => 'Manual only',
@@ -696,7 +703,7 @@ class _AutoBackupSheetState extends State<_AutoBackupSheet> {
             Icon(Icons.backup_outlined, size: 40, color: cs.primary),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'Auto backup is on',
+              autoOn ? 'Auto backup is on' : 'Back up your data',
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
@@ -704,10 +711,14 @@ class _AutoBackupSheetState extends State<_AutoBackupSheet> {
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              AutoBackupService.frequency == 'manual'
-                  ? 'Scheduling is set to manual — run a backup whenever you like.'
-                  : 'Your data is being saved automatically. '
-                        'You can also run a backup right now.',
+              autoOn
+                  ? (AutoBackupService.frequency == 'manual'
+                        ? 'Scheduling is set to manual — run a backup '
+                            'whenever you like.'
+                        : 'Your data is being saved automatically. '
+                            'You can also run a backup right now.')
+                  : 'New sales, returns or edits since your last backup. '
+                        'Auto backup is off — run one now to keep them safe.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,

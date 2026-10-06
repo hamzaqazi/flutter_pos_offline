@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/data/models/return_model.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/models/sale_model.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
@@ -30,6 +31,7 @@ class ReturnsController extends GetxController {
     required List<ReturnItemModel> returnItems,
     String reason = '',
   }) {
+    AutoBackupService.markDataChanged();
     if (returnItems.isEmpty || returnItems.every((i) => i.returnQty <= 0)) {
       Get.snackbar("No items", "Select at least one item to return");
       return;
@@ -86,6 +88,7 @@ class ReturnsController extends GetxController {
 
   /// Delete a return record (does NOT undo the restock).
   void deleteReturn(String id) {
+    AutoBackupService.markDataChanged();
     returns.removeWhere((r) => r.id == id);
     HiveService.returnsBox.delete(id);
   }

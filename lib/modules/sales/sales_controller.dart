@@ -1,4 +1,5 @@
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
@@ -123,6 +124,7 @@ class SalesController extends GetxController {
     String cashierId = '',
     String invoiceNumber = '',
   }) {
+    AutoBackupService.markDataChanged();
     // `checkoutDiscount` is an absolute amount off the bill (see OrderTotals).
     final cart = Get.find<CartController>();
     final products = Get.find<ProductsController>();
