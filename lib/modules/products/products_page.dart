@@ -1,5 +1,6 @@
 import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/app/widgets/app_empty_state.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/manual/manual_nav.dart';
