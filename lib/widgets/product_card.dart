@@ -1012,7 +1012,20 @@ class ProductCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      // The dialog owns these controllers; the StatefulBuilder inside has no
+      // lifecycle to release them, so dispose them once the route is popped.
+      // (Safe with the async barcode scan: it pushes a full-screen scanner on
+      // top, which always returns before this dialog can be dismissed.)
+      nameController.dispose();
+      brandController.dispose();
+      skuController.dispose();
+      barcodeController.dispose();
+      priceController.dispose();
+      purchasePriceController.dispose();
+      discountController.dispose();
+      stockController.dispose();
+    });
   }
 }
 
