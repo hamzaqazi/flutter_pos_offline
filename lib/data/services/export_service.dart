@@ -49,7 +49,9 @@ class ExportService {
 
     final buffer = StringBuffer();
     buffer.writeln(
-      'Invoice No,Sale ID,Date,Subtotal,Checkout Discount %,Tax Amount,Total,'
+      // "Checkout Discount" carries money, not a percentage, since the
+      // checkout discount became a fixed amount.
+      'Invoice No,Sale ID,Date,Subtotal,Checkout Discount,Tax Amount,Total,'
       'Cash,Change,Discount Amount,Profit,Customer ID,Items',
     );
 
@@ -59,7 +61,7 @@ class ExportService {
           .join('; ');
       buffer.writeln(
         '"${s.invoiceNumber}","${s.id}","${Formatters.dateTime(s.date)}",${s.subtotal},'
-        '${s.checkoutDiscount},${s.taxAmount},${s.total},'
+        '${s.checkoutDiscountAmount},${s.taxAmount},${s.total},'
         '${s.cash},${s.change},${s.discount},${s.profit},'
         '"${s.customerId}","$itemsSummary"',
       );

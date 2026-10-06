@@ -34,6 +34,9 @@ class AutoBackupService {
   static const _keyLastBackup = 'autoBackup_lastBackup';
   static const _keyMaxBackups = 'autoBackup_maxBackups';
   static const _keyKeepLast = 'autoBackup_keepLast';
+  // Stamped whenever business data (sales, returns, products, expenses,
+  // customers, staff, categories, shop/receipt settings) is mutated.
+  static const _keyLastDataChange = 'autoBackup_lastDataChange';
 
   static final _settingsBox = Hive.box(_box);
 
@@ -84,6 +87,37 @@ class AutoBackupService {
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';
+  }
+
+  /// ISO8601 string of the last business-data mutation, or '' if none yet.
+  static String get lastDataChangeIso =>
+      _settingsBox.get(_keyLastDataChange, defaultValue: '') as String;
+
+  /// Parsed DateTime of the last data change, or null if none recorded.
+  static DateTime? get lastDataChangeDate {
+    final s = lastDataChangeIso;
+    if (s.isEmpty) return null;
+    return DateTime.tryParse(s);
+  }
+
+  /// True when business data has changed since the last backup — or has
+  /// changed at least once but was never backed up. Drives the
+  /// "you should back up now" hint on the dashboard app bar.
+  static bool get hasPendingChanges {
+    final changed = lastDataChangeDate;
+    if (changed == null) return false;
+    final last = lastBackupDate;
+    return last == null || changed.isAfter(last);
+  }
+
+  /// Call from any code path that mutates business data (a sale, return,
+  /// product, expense, customer, staff member, category, or shop/receipt
+  /// settings). Stamps "last data change" and bumps [revision] so the
+  /// dashboard backup affordance reacts. Fire-and-forget: Hive applies the
+  /// value in-memory immediately, so [hasPendingChanges] is correct at once.
+  static void markDataChanged() {
+    _settingsBox.put(_keyLastDataChange, DateTime.now().toIso8601String());
+    _notifyChanged();
   }
 
   // ─── Settings Setters ────────────────────────────────────────

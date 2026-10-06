@@ -6,12 +6,16 @@ import '../../data/services/hive_service.dart';
 import '../../data/services/product_image_service.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/license_service.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
+
+enum ProductViewMode { grid, list }
 
 class ProductsController extends GetxController {
   final products = <ProductModel>[].obs;
 
   final searchQuery = ''.obs;
   final selectedCategory = 'All'.obs;
+  final viewMode = ProductViewMode.grid.obs;
 
   @override
   void onInit() {
@@ -49,8 +53,10 @@ class ProductsController extends GetxController {
   }
 
   void addProduct(ProductModel product) {
+    AutoBackupService.markDataChanged();
     // Check product limit for free tier
-    if (!LicenseService.isPremium && products.length >= LicenseService.maxProducts) {
+    if (!LicenseService.isPremium &&
+        products.length >= LicenseService.maxProducts) {
       Get.snackbar(
         'Product Limit Reached',
         'Free plan allows up to ${LicenseService.freeMaxProducts} products. Upgrade to Premium for unlimited.',
@@ -64,17 +70,22 @@ class ProductsController extends GetxController {
   }
 
   /// Full update: edit name, brand, category, price, purchasePrice, discount, stock, sku, barcode.
+  /// Persist an edited product and refresh everything that reads it.
+  ///
+  /// The save writes to Hive first, then re-reads the box. Replacing only the
+  /// single in-memory entry left the products grid (and anything derived from
+  /// the list, like the dashboard's product count) showing stale values until
+  /// the next full load — editing a product appeared to do nothing.
   void updateProduct(ProductModel product) {
-    final index = products.indexWhere((p) => p.id == product.id);
-
-    if (index != -1) {
-      products[index] = product;
-      HiveService.productBox.put(product.id, _toMap(product));
-    }
+    AutoBackupService.markDataChanged();
+    if (products.indexWhere((p) => p.id == product.id) == -1) return;
+    HiveService.productBox.put(product.id, _toMap(product));
+    loadProducts();
   }
 
   /// Convenience: update stock only (for quick restock).
   void updateStock(String id, int newStock) {
+    AutoBackupService.markDataChanged();
     final index = products.indexWhere((p) => p.id == id);
 
     if (index != -1) {
@@ -85,7 +96,35 @@ class ProductsController extends GetxController {
     }
   }
 
+  /// Add [qty] to the stock of [id], working from the product's *current*
+  /// level rather than a caller's possibly-stale snapshot.
+  ///
+  /// Restocking uses this: the restock dialog holds a copy of the product from
+  /// when it was opened, so writing back `snapshot + add` would discard any
+  /// other change made in the meantime.
+  void incrementStock(String id, int qty) {
+    final index = products.indexWhere((p) => p.id == id);
+    if (index == -1) return;
+
+    updateStock(id, products[index].stock + qty);
+  }
+
+  /// Reduce the stock of [id] by [qty], working from the product's *current*
+  /// level rather than a caller's possibly-stale snapshot.
+  ///
+  /// Completing a sale uses this: the cart holds a copy of the product from
+  /// the moment it was added, so subtracting from that copy would throw away
+  /// any restock made while the item sat in the cart. Never goes below zero.
+  void decrementStock(String id, int qty) {
+    final index = products.indexWhere((p) => p.id == id);
+    if (index == -1) return;
+
+    final next = products[index].stock - qty;
+    updateStock(id, next < 0 ? 0 : next);
+  }
+
   void deleteProduct(String id) {
+    AutoBackupService.markDataChanged();
     // Clean up the stored product photo (if any) before removing the record.
     final index = products.indexWhere((e) => e.id == id);
     if (index != -1) {

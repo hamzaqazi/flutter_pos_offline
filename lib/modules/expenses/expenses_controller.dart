@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 
 import '../../data/models/expense_model.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 
 class ExpensesController extends GetxController {
   final expenses = <ExpenseModel>[].obs;
@@ -21,12 +22,14 @@ class ExpensesController extends GetxController {
   }
 
   void addExpense(ExpenseModel expense) {
+    AutoBackupService.markDataChanged();
     final box = Hive.box('expenses');
     box.put(expense.id, expense.toMap());
     expenses.add(expense);
   }
 
   void deleteExpense(String id) {
+    AutoBackupService.markDataChanged();
     final box = Hive.box('expenses');
     box.delete(id);
     expenses.removeWhere((e) => e.id == id);

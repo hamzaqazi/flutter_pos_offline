@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/data/models/customer_model.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:get/get.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 
 class CustomersController extends GetxController {
   final customers = <CustomerModel>[].obs;
@@ -20,11 +21,13 @@ class CustomersController extends GetxController {
   }
 
   void addCustomer(CustomerModel customer) {
+    AutoBackupService.markDataChanged();
     HiveService.customersBox.put(customer.id, customer.toMap());
     customers.add(customer);
   }
 
   void updateCustomer(CustomerModel customer) {
+    AutoBackupService.markDataChanged();
     final index = customers.indexWhere((c) => c.id == customer.id);
     if (index != -1) {
       customers[index] = customer;
@@ -33,6 +36,7 @@ class CustomersController extends GetxController {
   }
 
   void deleteCustomer(String id) {
+    AutoBackupService.markDataChanged();
     customers.removeWhere((c) => c.id == id);
     HiveService.customersBox.delete(id);
   }

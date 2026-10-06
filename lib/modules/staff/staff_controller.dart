@@ -1,6 +1,7 @@
 import 'package:ad_shop_pos/data/models/staff_model.dart';
 import 'package:ad_shop_pos/data/services/hive_service.dart';
 import 'package:get/get.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 
 class StaffController extends GetxController {
   final staff = <StaffModel>[].obs;
@@ -50,11 +51,13 @@ class StaffController extends GetxController {
   }
 
   void addStaff(StaffModel member) {
+    AutoBackupService.markDataChanged();
     HiveService.staffBox.put(member.id, member.toMap());
     staff.add(member);
   }
 
   void updateStaff(StaffModel member) {
+    AutoBackupService.markDataChanged();
     final index = staff.indexWhere((s) => s.id == member.id);
     if (index != -1) {
       staff[index] = member;
@@ -63,6 +66,7 @@ class StaffController extends GetxController {
   }
 
   void deleteStaff(String id) {
+    AutoBackupService.markDataChanged();
     if (activeCashierId.value == id) {
       clearActiveCashier();
     }

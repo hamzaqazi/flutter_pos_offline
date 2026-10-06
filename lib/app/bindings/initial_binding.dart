@@ -5,6 +5,7 @@ import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
 import 'package:ad_shop_pos/modules/customers/customers_controller.dart';
 import 'package:ad_shop_pos/modules/dashboard/dashboard_controlller.dart';
 import 'package:ad_shop_pos/modules/expenses/expenses_controller.dart';
+import 'package:ad_shop_pos/modules/manual/manual_controller.dart';
 import 'package:ad_shop_pos/modules/products/products_controller.dart';
 import 'package:ad_shop_pos/modules/reports/reports_controller.dart';
 import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
@@ -27,6 +28,9 @@ class InitialBinding extends Bindings {
     Get.lazyPut(() => DashboardController(), fenix: true);
     Get.lazyPut(() => ProductsController(), fenix: true);
     Get.put(CartController(), permanent: true); // Shared across tabs (Products + Cart)
+    // Manual hub state (search text, category filter, recently viewed).
+    // Permanent so search results survive navigating in and out of guides.
+    Get.put(ManualController(), permanent: true);
     Get.lazyPut(() => SalesController(), fenix: true);
     Get.lazyPut(() => ReportsController(), fenix: true);
   }

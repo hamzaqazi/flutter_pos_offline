@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../data/models/shop_settings_model.dart';
 import '../../data/models/receipt_settings_model.dart';
 import '../../data/services/settings_service.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 
 class SettingsController extends GetxController {
   final settings = ShopSettingsModel().obs;
@@ -20,11 +21,13 @@ class SettingsController extends GetxController {
   }
 
   void updateSettings(ShopSettingsModel newSettings) {
+    AutoBackupService.markDataChanged();
     SettingsService.saveSettings(newSettings);
     settings.value = newSettings;
   }
 
   void updateReceiptSettings(ReceiptSettingsModel newSettings) {
+    AutoBackupService.markDataChanged();
     SettingsService.saveReceiptSettings(newSettings);
     receiptSettings.value = newSettings;
   }

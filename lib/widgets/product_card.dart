@@ -2,21 +2,19 @@ import 'dart:io';
 
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
-import 'package:ad_shop_pos/data/services/category_service.dart';
-import 'package:ad_shop_pos/modules/products/products_controller.dart';
-import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
-import 'package:ad_shop_pos/widgets/product_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/models/product_model.dart';
 import '../modules/cart/cart_controller.dart';
+import '../modules/products/product_form_page.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
+  final bool compact;
   final CartController cartController = Get.find<CartController>();
 
-  ProductCard({super.key, required this.product});
+  ProductCard({super.key, required this.product, this.compact = false});
 
   IconData _iconForCategory(String category) {
     // Map common category names to icons, with a default
@@ -54,6 +52,8 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (compact) return _buildCompactCard(context);
+
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final accent = AppColors.forCategory(product.category);
@@ -66,23 +66,9 @@ class ProductCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           // Tap out-of-stock → edit (restock), tap in-stock → add to cart
-          onTap: outOfStock
-              ? () => _showEditDialog(context)
-              : () {
-                  if (!cartController.addToCart(product)) return;
-                  Get.snackbar(
-                    "Added to cart",
-                    product.name,
-                    snackPosition: SnackPosition.BOTTOM,
-                    margin: const EdgeInsets.all(AppSpacing.md),
-                    duration: const Duration(milliseconds: 1200),
-                    backgroundColor: cs.inverseSurface,
-                    colorText: cs.onInverseSurface,
-                    icon: Icon(Icons.check_circle, color: cs.onInverseSurface),
-                  );
-                },
+          onTap: () => _handleCardTap(context),
           // Long-press any card → edit
-          onLongPress: () => _showEditDialog(context),
+          onLongPress: () => _openProductForm(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -276,7 +262,7 @@ class ProductCard extends StatelessWidget {
                       bottom: AppSpacing.sm,
                       left: AppSpacing.sm,
                       child: GestureDetector(
-                        onTap: () => _showEditDialog(context),
+                        onTap: () => _openProductForm(),
                         behavior: HitTestBehavior.opaque,
                         child: Container(
                           padding: const EdgeInsets.all(6),
@@ -401,348 +387,254 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
-    final nameController = TextEditingController(text: product.name);
-    final brandController = TextEditingController(text: product.brand);
-    final skuController = TextEditingController(text: product.sku);
-    final barcodeController = TextEditingController(text: product.barcode);
-    final priceController = TextEditingController(
-      text: product.price.toStringAsFixed(0),
-    );
-    final purchasePriceController = TextEditingController(
-      text: product.purchasePrice.toStringAsFixed(0),
-    );
-    final discountController = TextEditingController(
-      text: product.discount.toStringAsFixed(0),
-    );
-    final stockController = TextEditingController(
-      text: product.stock.toString(),
-    );
-    String selectedCategory = product.category;
-    String? imagePath = product.image;
+  Widget _buildCompactCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final accent = AppColors.forCategory(product.category);
+    final outOfStock = product.stock <= 0;
+    final lowStock = product.stock > 0 && product.stock <= 5;
+    final hasDiscount = product.discount > 0;
 
-    final controller = Get.find<ProductsController>();
-
-    Get.dialog(
-      Dialog(
-        insetPadding: const EdgeInsets.all(AppSpacing.lg),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              final theme = Theme.of(context);
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.12,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusSm,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.edit_outlined,
-                            color: theme.colorScheme.primary,
+    return RepaintBoundary(
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _handleCardTap(context),
+          onLongPress: () => _openProductForm(),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 104),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 104,
+                  height: 104,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              accent.withValues(alpha: 0.18),
+                              accent.withValues(alpha: 0.06),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text("Edit Product", style: theme.textTheme.titleLarge),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    ProductImagePicker(
-                      imagePath: imagePath,
-                      onChanged: (path) => setState(() => imagePath = path),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: nameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: "Product name",
-                        prefixIcon: Icon(Icons.label_outline),
+                        child: product.hasImage
+                            ? Image.file(
+                                File(product.image!),
+                                fit: BoxFit.cover,
+                                cacheWidth: 240,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  _iconForCategory(product.category),
+                                  size: 32,
+                                  color: accent,
+                                ),
+                              )
+                            : Icon(
+                                _iconForCategory(product.category),
+                                size: 32,
+                                color: accent,
+                              ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: brandController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: "Brand (optional)",
-                        prefixIcon: Icon(Icons.branding_watermark_outlined),
+                      Positioned(
+                        top: AppSpacing.xs,
+                        left: AppSpacing.xs,
+                        child: _badge(product.category, accent, fontSize: 9),
                       ),
+                      if (hasDiscount)
+                        Positioned(
+                          top: AppSpacing.xs,
+                          right: AppSpacing.xs,
+                          child: _badge(
+                            "-${product.discount.toStringAsFixed(0)}%",
+                            AppColors.danger,
+                            fontSize: 9,
+                          ),
+                        ),
+                      if (outOfStock)
+                        IgnorePointer(
+                          child: Container(
+                            color: cs.surface.withValues(alpha: 0.55),
+                            alignment: Alignment.center,
+                            child: _badge("Out of stock", AppColors.danger),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    // SKU field (internal code)
-                    Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: skuController,
-                            textCapitalization: TextCapitalization.characters,
-                            decoration: const InputDecoration(
-                              labelText: "SKU",
-                              hintText: "e.g. W0001",
-                              prefixIcon: Icon(Icons.tag_outlined),
-                              isDense: true,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                product.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _openProductForm(),
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: AppSpacing.sm,
+                                ),
+                                child: Icon(
+                                  Icons.edit_outlined,
+                                  size: 18,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (product.hasBrand)
+                          Text(
+                            product.brand,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: accent,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.outlined(
-                          onPressed: () {
-                            skuController.text = controller.generateSku(
-                              selectedCategory,
-                            );
-                            setState(() {});
-                          },
-                          icon: const Icon(Icons.autorenew, size: 20),
-                          tooltip: "Auto-generate SKU",
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    // Barcode field (real-world barcode from product packaging)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: barcodeController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Barcode",
-                              hintText: "e.g. 8901234567890",
-                              prefixIcon: Icon(Icons.qr_code_outlined),
-                              isDense: true,
+                        if (product.hasSku || product.hasBarcode)
+                          Text(
+                            [
+                              if (product.hasSku) 'SKU ${product.sku}',
+                              if (product.hasBarcode)
+                                'Barcode ${product.barcode}',
+                            ].join(' • '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 10,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.outlined(
-                          onPressed: () async {
-                            final result =
-                                await BarcodeScannerHelper.scanAndLookupRaw();
-                            if (result != null && result.isNotEmpty) {
-                              setState(() => barcodeController.text = result);
-                            }
-                          },
-                          icon: const Icon(Icons.qr_code_scanner, size: 20),
-                          tooltip: "Scan barcode with camera",
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: priceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Sell price",
-                              prefixIcon: Icon(Icons.sell_outlined),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: TextField(
-                            controller: purchasePriceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Purchase price",
-                              prefixIcon: Icon(Icons.payments_outlined),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: discountController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Discount %",
-                              prefixIcon: Icon(Icons.discount_outlined),
-                              suffixText: "%",
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: TextField(
-                            controller: stockController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Stock",
-                              prefixIcon: Icon(Icons.inventory_2_outlined),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<String>(
-                      value: selectedCategory,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: "Category",
-                        prefixIcon: Icon(Icons.category_outlined),
-                      ),
-                      items: Get.find<CategoryController>().categoryNames
-                          .map(
-                            (name) => DropdownMenuItem(
-                              value: name,
-                              child: Text(name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => selectedCategory = value!),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Row(
-                      children: [
-                        // Delete button
-                        IconButton.outlined(
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.warning_amber_rounded,
-                                      color: AppColors.danger,
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (hasDiscount)
+                                  Text(
+                                    Formatters.currency(product.price),
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      decoration: TextDecoration.lineThrough,
+                                      color: cs.onSurfaceVariant,
                                     ),
-                                    SizedBox(width: AppSpacing.sm),
-                                    Text("Delete Product"),
-                                  ],
-                                ),
-                                content: Text(
-                                  "Are you sure you want to delete \"${product.name}\"? This action cannot be undone.",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(false),
-                                    child: const Text("Cancel"),
                                   ),
-                                  FilledButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(true),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.danger,
+                                Text(
+                                  Formatters.currency(product.discountedPrice),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _StockChip(
+                                  stock: product.stock,
+                                  low: lowStock,
+                                  out: outOfStock,
+                                ),
+                                if (!outOfStock) ...[
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: cs.primary,
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm,
+                                      ),
                                     ),
-                                    child: const Text("Delete"),
+                                    child: Icon(
+                                      Icons.add,
+                                      size: 16,
+                                      color: cs.onPrimary,
+                                    ),
                                   ),
                                 ],
-                              ),
-                            );
-                            if (confirmed == true) {
-                              controller.deleteProduct(product.id);
-                              Get.back(); // Close edit dialog
-                              Get.snackbar(
-                                "Deleted",
-                                "\"${product.name}\" has been removed",
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: AppColors.danger.withValues(
-                                  alpha: 0.15,
-                                ),
-                                colorText: AppColors.danger,
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.delete_outline, size: 20),
-                          color: AppColors.danger,
-                          tooltip: "Delete product",
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: Get.back,
-                            child: const Text("Cancel"),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () {
-                              if (nameController.text.isEmpty ||
-                                  priceController.text.isEmpty ||
-                                  stockController.text.isEmpty) {
-                                Get.snackbar(
-                                  "Missing info",
-                                  "Please fill all required fields",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                                return;
-                              }
-
-                              final discountVal =
-                                  double.tryParse(discountController.text) ?? 0;
-                              if (discountVal < 0 || discountVal > 100) {
-                                Get.snackbar(
-                                  "Invalid discount",
-                                  "Discount must be between 0 and 100",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                                return;
-                              }
-
-                              controller.updateProduct(
-                                product
-                                    .copyWith(
-                                      name: nameController.text,
-                                      brand: brandController.text,
-                                      category: selectedCategory,
-                                      price:
-                                          double.tryParse(
-                                            priceController.text,
-                                          ) ??
-                                          product.price,
-                                      purchasePrice:
-                                          double.tryParse(
-                                            purchasePriceController.text,
-                                          ) ??
-                                          0,
-                                      discount: discountVal,
-                                      stock:
-                                          int.tryParse(stockController.text) ??
-                                          product.stock,
-                                      sku: skuController.text.trim(),
-                                      barcode: barcodeController.text.trim(),
-                                    )
-                                    .withImage(imagePath),
-                              );
-                              Get.back();
-                            },
-                            child: const Text("Save"),
-                          ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  Widget _badge(String label, Color color, {double fontSize = 10}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  void _handleCardTap(BuildContext context) {
+    if (product.stock <= 0) {
+      _openProductForm();
+      return;
+    }
+
+    if (!cartController.addToCart(product)) return;
+    final cs = Theme.of(context).colorScheme;
+    Get.snackbar(
+      "Added to cart",
+      product.name,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(AppSpacing.md),
+      duration: const Duration(milliseconds: 1200),
+      backgroundColor: cs.inverseSurface,
+      colorText: cs.onInverseSurface,
+      icon: Icon(Icons.check_circle, color: cs.onInverseSurface),
+    );
+  }
+
+  /// Open the full-screen product form to edit this product.
+  void _openProductForm() =>
+      Get.to(() => ProductFormPage(product: product));
 }
 
 class _StockChip extends StatelessWidget {
