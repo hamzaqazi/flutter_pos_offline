@@ -1,5 +1,6 @@
 import 'package:ad_shop_pos/app/routes/app_routes.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 import 'package:flutter/material.dart';
@@ -90,7 +91,22 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   Future<void> _finish() async {
     await Hive.box('settings').put(OnboardingPage._completeKey, true);
-    if (mounted) Get.offAllNamed(Routes.activation);
+    if (mounted) Get.offAllNamed(_startRoute());
+  }
+
+  /// Where to land once onboarding is done, based on the current license /
+  /// trial state rather than assuming a fresh install. Onboarding can
+  /// reappear after a backup restore, so an activated shop (or one on a free
+  /// trial) must go back into the app — only a genuinely un-activated device
+  /// is sent to activation.
+  String _startRoute() {
+    if (LicenseService.isTrialActive && !LicenseService.isActivated) {
+      return LicenseService.isPinEnabled ? Routes.pinLock : Routes.dashboard;
+    }
+    if (!LicenseService.isActivated) {
+      return Routes.activation;
+    }
+    return LicenseService.isPinEnabled ? Routes.pinLock : Routes.dashboard;
   }
 
   void _next() {
