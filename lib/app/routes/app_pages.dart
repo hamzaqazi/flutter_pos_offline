@@ -10,6 +10,7 @@ import 'package:ad_shop_pos/modules/manual/manual_article_page.dart';
 import 'package:ad_shop_pos/modules/manual/manual_home_page.dart';
 import 'package:ad_shop_pos/modules/onboarding/onboarding_page.dart';
 import 'package:ad_shop_pos/modules/products/low_stock_page.dart';
+import 'package:ad_shop_pos/modules/products/product_form_page.dart';
 import 'package:ad_shop_pos/modules/reports/reports_page.dart';
 import 'package:ad_shop_pos/modules/returns/returns_page.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
@@ -65,6 +66,14 @@ class AppPages {
     GetPage(
       name: Routes.lowStock,
       page: () => const LowStockPage(),
+      transition: Transition.fadeIn,
+      transitionDuration: AppDuration.page,
+    ),
+    GetPage(
+      name: Routes.productForm,
+      // The product argument (add vs edit) is passed through Get.to, not
+      // the route's arguments, so the page builder needs no parameters.
+      page: () => const ProductFormPage(),
       transition: Transition.fadeIn,
       transitionDuration: AppDuration.page,
     ),

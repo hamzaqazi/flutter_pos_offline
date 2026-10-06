@@ -2,16 +2,12 @@ import 'dart:io';
 
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
-import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
-import 'package:ad_shop_pos/data/services/category_service.dart';
-import 'package:ad_shop_pos/modules/products/products_controller.dart';
-import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
-import 'package:ad_shop_pos/widgets/product_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../data/models/product_model.dart';
 import '../modules/cart/cart_controller.dart';
+import '../modules/products/product_form_page.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
@@ -72,7 +68,7 @@ class ProductCard extends StatelessWidget {
           // Tap out-of-stock → edit (restock), tap in-stock → add to cart
           onTap: () => _handleCardTap(context),
           // Long-press any card → edit
-          onLongPress: () => _showEditDialog(context),
+          onLongPress: () => _openProductForm(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -266,7 +262,7 @@ class ProductCard extends StatelessWidget {
                       bottom: AppSpacing.sm,
                       left: AppSpacing.sm,
                       child: GestureDetector(
-                        onTap: () => _showEditDialog(context),
+                        onTap: () => _openProductForm(),
                         behavior: HitTestBehavior.opaque,
                         child: Container(
                           padding: const EdgeInsets.all(6),
@@ -404,7 +400,7 @@ class ProductCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => _handleCardTap(context),
-          onLongPress: () => _showEditDialog(context),
+          onLongPress: () => _openProductForm(),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 104),
             child: Row(
@@ -491,7 +487,7 @@ class ProductCard extends StatelessWidget {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () => _showEditDialog(context),
+                              onTap: () => _openProductForm(),
                               behavior: HitTestBehavior.opaque,
                               child: Padding(
                                 padding: const EdgeInsets.only(
@@ -618,7 +614,7 @@ class ProductCard extends StatelessWidget {
 
   void _handleCardTap(BuildContext context) {
     if (product.stock <= 0) {
-      _showEditDialog(context);
+      _openProductForm();
       return;
     }
 
@@ -636,398 +632,9 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
-    final nameController = TextEditingController(text: product.name);
-    final brandController = TextEditingController(text: product.brand);
-    final skuController = TextEditingController(text: product.sku);
-    final barcodeController = TextEditingController(text: product.barcode);
-    final priceController = TextEditingController(
-      text: product.price.toStringAsFixed(0),
-    );
-    final purchasePriceController = TextEditingController(
-      text: product.purchasePrice.toStringAsFixed(0),
-    );
-    final discountController = TextEditingController(
-      text: product.discount.toStringAsFixed(0),
-    );
-    final stockController = TextEditingController(
-      text: product.stock.toString(),
-    );
-    String selectedCategory = product.category;
-    String? imagePath = product.image;
-
-    final controller = Get.find<ProductsController>();
-
-    Get.dialog(
-      Dialog(
-        insetPadding: const EdgeInsets.all(AppSpacing.lg),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              final theme = Theme.of(context);
-              // Live figures for the below-cost warning: an empty or
-              // unparseable box counts as 0, matching what Save will store.
-              final priceNow =
-                  double.tryParse(priceController.text.trim()) ?? 0;
-              final purchaseNow =
-                  double.tryParse(purchasePriceController.text.trim()) ?? 0;
-              final discountNow =
-                  double.tryParse(discountController.text.trim()) ?? 0;
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.12,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusSm,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.edit_outlined,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text("Edit Product", style: theme.textTheme.titleLarge),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    ProductImagePicker(
-                      imagePath: imagePath,
-                      onChanged: (path) => setState(() => imagePath = path),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: nameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: "Product name",
-                        prefixIcon: Icon(Icons.label_outline),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: brandController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: "Brand (optional)",
-                        prefixIcon: Icon(Icons.branding_watermark_outlined),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    // SKU field (internal code)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: skuController,
-                            textCapitalization: TextCapitalization.characters,
-                            decoration: const InputDecoration(
-                              labelText: "SKU",
-                              hintText: "e.g. W0001",
-                              prefixIcon: Icon(Icons.tag_outlined),
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.outlined(
-                          onPressed: () {
-                            skuController.text = controller.generateSku(
-                              selectedCategory,
-                            );
-                            setState(() {});
-                          },
-                          icon: const Icon(Icons.autorenew, size: 20),
-                          tooltip: "Auto-generate SKU",
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    // Barcode field (real-world barcode from product packaging)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: barcodeController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Barcode",
-                              hintText: "e.g. 8901234567890",
-                              prefixIcon: Icon(Icons.qr_code_outlined),
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.outlined(
-                          onPressed: () async {
-                            final result =
-                                await BarcodeScannerHelper.scanAndLookupRaw();
-                            if (result != null && result.isNotEmpty) {
-                              setState(() => barcodeController.text = result);
-                            }
-                          },
-                          icon: const Icon(Icons.qr_code_scanner, size: 20),
-                          tooltip: "Scan barcode with camera",
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: priceController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (_) => setState(() {}),
-                            decoration: const InputDecoration(
-                              labelText: "Sell price",
-                              prefixIcon: Icon(Icons.sell_outlined),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: TextField(
-                            controller: purchasePriceController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (_) => setState(() {}),
-                            decoration: const InputDecoration(
-                              labelText: "Purchase price",
-                              prefixIcon: Icon(Icons.payments_outlined),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: discountController,
-                            keyboardType: TextInputType.number,
-                            onChanged: (_) => setState(() {}),
-                            decoration: const InputDecoration(
-                              labelText: "Discount %",
-                              prefixIcon: Icon(Icons.discount_outlined),
-                              suffixText: "%",
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: TextField(
-                            controller: stockController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Stock",
-                              prefixIcon: Icon(Icons.inventory_2_outlined),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    // A standing discount can quietly put the item under
-                    // what it cost — say so while the numbers are typed.
-                    BelowCostWarning(
-                      price: priceNow,
-                      purchasePrice: purchaseNow,
-                      discountPercent: discountNow,
-                    ),
-                    DropdownButtonFormField<String>(
-                      value: selectedCategory,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: "Category",
-                        prefixIcon: Icon(Icons.category_outlined),
-                      ),
-                      items: Get.find<CategoryController>().categoryNames
-                          .map(
-                            (name) => DropdownMenuItem(
-                              value: name,
-                              child: Text(name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => selectedCategory = value!),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Row(
-                      children: [
-                        // Delete button
-                        IconButton.outlined(
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Row(
-                                  children: [
-                                    Icon(
-                                      Icons.warning_amber_rounded,
-                                      color: AppColors.danger,
-                                    ),
-                                    SizedBox(width: AppSpacing.sm),
-                                    Text("Delete Product"),
-                                  ],
-                                ),
-                                content: Text(
-                                  "Are you sure you want to delete \"${product.name}\"? This action cannot be undone.",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(false),
-                                    child: const Text("Cancel"),
-                                  ),
-                                  FilledButton(
-                                    onPressed: () =>
-                                        Navigator.of(ctx).pop(true),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.danger,
-                                    ),
-                                    child: const Text("Delete"),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirmed == true) {
-                              controller.deleteProduct(product.id);
-                              Get.back(); // Close edit dialog
-                              Get.snackbar(
-                                "Deleted",
-                                "\"${product.name}\" has been removed",
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: AppColors.danger.withValues(
-                                  alpha: 0.15,
-                                ),
-                                colorText: AppColors.danger,
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.delete_outline, size: 20),
-                          color: AppColors.danger,
-                          tooltip: "Delete product",
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: Get.back,
-                            child: const Text("Cancel"),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () {
-                              if (nameController.text.isEmpty ||
-                                  priceController.text.isEmpty ||
-                                  stockController.text.isEmpty) {
-                                Get.snackbar(
-                                  "Missing info",
-                                  "Please fill all required fields",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                                return;
-                              }
-
-                              final discountVal =
-                                  double.tryParse(discountController.text) ?? 0;
-                              if (discountVal < 0 || discountVal > 100) {
-                                Get.snackbar(
-                                  "Invalid discount",
-                                  "Discount must be between 0 and 100",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                                return;
-                              }
-
-                              // Same hard block as the "add product" form:
-                              // refuse unparseable or negative numbers instead
-                              // of quietly falling back to a previous value.
-                              final priceVal = double.tryParse(
-                                priceController.text.trim(),
-                              );
-                              final purchaseText = purchasePriceController.text
-                                  .trim();
-                              final purchaseVal = purchaseText.isEmpty
-                                  ? 0.0
-                                  : double.tryParse(purchaseText);
-                              final stockVal = int.tryParse(
-                                stockController.text.trim(),
-                              );
-                              if (priceVal == null ||
-                                  purchaseVal == null ||
-                                  stockVal == null ||
-                                  priceVal < 0 ||
-                                  purchaseVal < 0 ||
-                                  stockVal < 0) {
-                                Get.snackbar(
-                                  "Invalid value",
-                                  "Enter a valid sell price, purchase price and stock — none can be negative",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                                return;
-                              }
-
-                              controller.updateProduct(
-                                product
-                                    .copyWith(
-                                      name: nameController.text,
-                                      brand: brandController.text,
-                                      category: selectedCategory,
-                                      price: priceVal,
-                                      purchasePrice: purchaseVal,
-                                      discount: discountVal,
-                                      stock: stockVal,
-                                      sku: skuController.text.trim(),
-                                      barcode: barcodeController.text.trim(),
-                                    )
-                                    .withImage(imagePath),
-                              );
-                              Get.back();
-                            },
-                            child: const Text("Save"),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-    // .whenComplete(() {
-    //   // The dialog owns these controllers; the StatefulBuilder inside has no
-    //   // lifecycle to release them, so dispose them once the route is popped.
-    //   // (Safe with the async barcode scan: it pushes a full-screen scanner on
-    //   // top, which always returns before this dialog can be dismissed.)
-    //   nameController.dispose();
-    //   brandController.dispose();
-    //   skuController.dispose();
-    //   barcodeController.dispose();
-    //   priceController.dispose();
-    //   purchasePriceController.dispose();
-    //   discountController.dispose();
-    //   stockController.dispose();
-    // });
-  }
+  /// Open the full-screen product form to edit this product.
+  void _openProductForm() =>
+      Get.to(() => ProductFormPage(product: product));
 }
 
 class _StockChip extends StatelessWidget {

@@ -1,6 +1,7 @@
 abstract class Routes {
   static const dashboard = '/';
   static const products = '/products';
+  static const productForm = '/products/form';
   static const cart = '/cart';
   static const sales = '/sales';
   static const reports = '/reports';
