@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="Codynest POS is an offline-first point-of-sale app for shops that need practical sales, inventory, printing, and backup tools.">
+    <link rel="canonical" href="https://pos.codynest.com/">
+    <title>Codynest POS | Run your shop with confidence</title>
+    <style>
+        :root {
+            --ink: #14252d;
+            --muted: #607179;
+            --paper: #f7f8f5;
+            --white: #fff;
+            --teal: #087f78;
+            --teal-dark: #075b57;
+            --coral: #ed765e;
+            --line: #dce5e1;
+            --shadow: 0 18px 50px rgba(20, 37, 45, .11);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--paper);
+            font-family: Georgia, 'Times New Roman', serif;
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .wrap {
+            width: min(1120px, calc(100% - 40px));
+            margin: 0 auto;
+        }
+
+        .topbar {
+            padding: 22px 0;
+            background: rgba(247, 248, 245, .93);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+
+        .mark {
+            display: block;
+            width: 66px;
+            height: 44px;
+            object-fit: contain;
+        }
+
+        .links {
+            display: flex;
+            gap: 24px;
+            color: var(--muted);
+            font: 600 14px Arial, sans-serif;
+        }
+
+        .links a {
+            text-decoration: none;
+        }
+
+        .links a:hover,
+        .links a:focus {
+            color: var(--teal);
+        }
+
+        .hero {
+            padding: 94px 0 90px;
+            background: radial-gradient(circle at 85% 14%, #d8eeea 0 13%, transparent 35%), linear-gradient(135deg, #f7f8f5 0%, #e9f2ed 100%);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            align-items: center;
+            gap: 70px;
+        }
+
+        .eyebrow {
+            color: var(--coral);
+            font: 700 12px Arial, sans-serif;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
+
+        h1 {
+            max-width: 700px;
+            margin: 14px 0 22px;
+            font-size: clamp(44px, 7vw, 78px);
+            line-height: .98;
+            letter-spacing: -.04em;
+        }
+
+        .lead {
+            max-width: 600px;
+            color: var(--muted);
+            font-size: 20px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 32px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 13px 19px;
+            border-radius: 8px;
+            font: 700 14px Arial, sans-serif;
+            text-decoration: none;
+        }
+
+        .button.primary {
+            color: #fff;
+            background: var(--teal);
+        }
+
+        .button.secondary {
+            color: var(--teal-dark);
+            border: 1px solid #9bc4bd;
+            background: transparent;
+        }
+
+        .button:hover,
+        .button:focus {
+            transform: translateY(-1px);
+        }
+
+        .hero-card {
+            padding: 27px;
+            color: #fff;
+            border-radius: 16px;
+            background: var(--ink);
+            box-shadow: var(--shadow);
+        }
+
+        .hero-card small {
+            color: #a6cbc5;
+            font: 700 12px Arial, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+        }
+
+        .hero-card h2 {
+            margin: 16px 0 24px;
+            font-size: 31px;
+            line-height: 1.1;
+        }
+
+        .signal {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 0;
+            border-top: 1px solid rgba(255, 255, 255, .15);
+            font: 600 14px Arial, sans-serif;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--coral);
+        }
+
+        section {
+            padding: 86px 0;
+        }
+
+        .section-head {
+            max-width: 650px;
+            margin-bottom: 34px;
+        }
+
+        h2 {
+            font-size: clamp(32px, 5vw, 52px);
+            line-height: 1.05;
+            letter-spacing: -.035em;
+        }
+
+        .section-head p {
+            color: var(--muted);
+            font-size: 18px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .feature {
+            min-height: 220px;
+            padding: 25px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--white);
+        }
+
+        .feature .number {
+            color: var(--coral);
+            font: 700 13px Arial, sans-serif;
+        }
+
+        .feature h3 {
+            margin: 28px 0 9px;
+            font-size: 23px;
+        }
+
+        .feature p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .plans {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .plan {
+            padding: 26px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--white);
+        }
+
+        .plan h3 {
+            margin: 0 0 10px;
+            font-size: 23px;
+        }
+
+        .plan .price {
+            margin: 0 0 8px;
+            color: var(--teal-dark);
+            font: 700 25px Arial, sans-serif;
+        }
+
+        .plan p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .plan .badge {
+            color: var(--coral);
+            font: 700 11px Arial, sans-serif;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .band {
+            color: #fff;
+            background: var(--teal-dark);
+        }
+
+        .band-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 70px;
+            align-items: center;
+        }
+
+        .band h2 {
+            margin-bottom: 18px;
+        }
+
+        .band p {
+            color: #d1e6e2;
+            font-size: 18px;
+        }
+
+        .list {
+            display: grid;
+            gap: 13px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            font: 600 15px Arial, sans-serif;
+        }
+
+        .list li {
+            padding: 15px 0 15px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, .2);
+            position: relative;
+        }
+
+        .list li:before {
+            content: '+';
+            position: absolute;
+            left: 0;
+            color: #f6a18e;
+            font-size: 23px;
+            line-height: 1;
+        }
+
+        .cta {
+            padding: 76px 0;
+            text-align: center;
+        }
+
+        .cta p {
+            max-width: 590px;
+            margin: 0 auto 26px;
+            color: var(--muted);
+            font-size: 18px;
+        }
+
+        footer {
+            padding: 28px 0;
+            color: #718087;
+            border-top: 1px solid var(--line);
+            font: 13px Arial, sans-serif;
+        }
+
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        @media (max-width:760px) {
+            .wrap {
+                width: min(100% - 28px, 1120px);
+            }
+
+            .nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .links {
+                gap: 15px;
+                flex-wrap: wrap;
+            }
+
+            .hero {
+                padding: 62px 0;
+            }
+
+            .hero-grid,
+            .band-grid {
+                grid-template-columns: 1fr;
+                gap: 38px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .plans {
+                grid-template-columns: 1fr;
+            }
+
+            section {
+                padding: 62px 0;
+            }
+
+            .footer-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="wrap nav">
+            <a class="brand" href="index.html"><img class="mark" src="assets/codynest-pos-logo.png"
+                    alt="Codynest POS logo"><span>Codynest POS</span></a>
+            <nav class="links" aria-label="Primary navigation"><a href="index.html">Home</a><a
+                    href="privacy-policy.html">Privacy Policy</a><a href="terms-of-use.html">Terms of Use</a></nav>
+        </div>
+    </header>
+    <main>
+        <section class="hero">
+            <div class="wrap hero-grid">
+                <div>
+                    <div class="eyebrow">Point of sale, made practical</div>
+                    <h1>Keep your shop moving.</h1>
+                    <p class="lead">Codynest POS gives independent shops a focused way to sell, manage stock, print
+                        receipts, and protect business records, even when the internet is out.</p>
+                    <div class="actions"><a class="button primary" href="#features">Explore the toolkit</a><a
+                            class="button secondary" href="privacy-policy.html">Read our privacy policy</a></div>
+                </div>
+                <aside class="hero-card" aria-label="Codynest POS highlights"><small>Built for daily trade</small>
+                    <h2>Your shop data, close at hand.</h2>
+                    <div class="signal"><span class="dot"></span>Offline-first sales workflow</div>
+                    <div class="signal"><span class="dot"></span>Local backups with optional Drive copy</div>
+                    <div class="signal"><span class="dot"></span>Flexible plans and license keys</div>
+                </aside>
+            </div>
+        </section>
+        <section id="features">
+            <div class="wrap">
+                <div class="section-head">
+                    <div class="eyebrow">One clear workspace</div>
+                    <h2>Tools that earn their place.</h2>
+                    <p>From the counter to the stock room, Codynest POS keeps the everyday work of a shop in one compact
+                        app.</p>
+                </div>
+                <div class="features">
+                    <article class="feature">
+                        <div class="number">01 / SELL</div>
+                        <h3>Fast checkout</h3>
+                        <p>Build carts, apply discounts and tax, record cash and change, hold carts, manage returns, and
+                            keep invoice history close.</p>
+                    </article>
+                    <article class="feature">
+                        <div class="number">02 / KNOW</div>
+                        <h3>Stock with context</h3>
+                        <p>Manage products, categories, prices, purchase costs, discounts, stock, SKUs, barcodes,
+                            customers, expenses, and staff cashiers.</p>
+                    </article>
+                    <article class="feature">
+                        <div class="number">03 / PRINT</div>
+                        <h3>Receipts your way</h3>
+                        <p>Customize receipt details and print to paired Bluetooth thermal printers. Product barcode and
+                            QR scanning is available on supported devices.</p>
+                    </article>
+                    <article class="feature">
+                        <div class="number">04 / WORK</div>
+                        <h3>Offline by design</h3>
+                        <p>Core shop records are stored locally, so sales and inventory work without a continuous
+                            internet connection.</p>
+                    </article>
+                    <article class="feature">
+                        <div class="number">05 / PROTECT</div>
+                        <h3>Backups that you control</h3>
+                        <p>Create full JSON backups, export CSV reports, restore from a file, or schedule local daily or
+                            weekly backups.</p>
+                    </article>
+                    <article class="feature">
+                        <div class="number">06 / EXTEND</div>
+                        <h3>Your Drive, optional</h3>
+                        <p>Sign in with Google to place app-created backups in your own Google Drive. The app requests
+                            access limited to files it creates.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+        <section class="band">
+            <div class="wrap band-grid">
+                <div>
+                    <div class="eyebrow">A plan for the way you start</div>
+                    <h2>Try the full toolkit, then choose your pace.</h2>
+                    <p>The app supports a free plan, a 14-day full-featured trial on first install, and paid license
+                        plans represented in the app as monthly, yearly, or lifetime.</p>
+                </div>
+                <ul class="list">
+                    <li>License keys are checked against the Codynest service.</li>
+                    <li>The free plan currently limits products to 14.</li>
+                    <li>Paid access can continue through a short offline verification grace period.</li>
+                    <li>Cancel anytime. Contact support with your bank details for the applicable fee transfer back.
+                    </li>
+                </ul>
+            </div>
+        </section>
+        <section id="plans">
+            <div class="wrap">
+                <div class="section-head">
+                    <div class="eyebrow">Simple customer-facing pricing</div>
+                    <h2>Choose the right runway.</h2>
+                    <p>Every paid plan gives you a clear way to keep using Codynest POS. Cancel anytime by contacting
+                        support.</p>
+                </div>
+                <div class="plans">
+                    <article class="plan">
+                        <h3>Monthly</h3>
+                        <p class="price">Rs. 499</p>
+                        <p>Pay monthly, cancel anytime.</p>
+                    </article>
+                    <article class="plan">
+                        <div class="badge">Best Value</div>
+                        <h3>Yearly</h3>
+                        <p class="price">Rs. 4,499</p>
+                        <p>Save approximately 25% compared with monthly.</p>
+                    </article>
+                    <article class="plan">
+                        <div class="badge">Best Deal</div>
+                        <h3>3-Year Lifetime</h3>
+                        <p class="price">Rs. 11,999</p>
+                        <p>One-time payment. Use Codynest POS for up to 3 years. Save approximately 33% compared with
+                            monthly.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+        <section class="cta">
+            <div class="wrap">
+                <div class="eyebrow">Questions or account help?</div>
+                <h2>Keep the counter simple.</h2>
+                <p>CodyNest Solutions supports Codynest POS at <a href="https://pos.codynest.com/">pos.codynest.com</a>.
+                    For activation, licensing, backups, or app support, call 0315-3507075 or 0345-3333316, or email
+                    hqazi62@gmail.com.</p><a class="button primary" href="mailto:hqazi62@gmail.com">Contact support</a>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="wrap footer-row"><span>(c) 2026 CodyNest Solutions</span><span><a href="privacy-policy.html">Privacy
+                    Policy</a> &nbsp; <a href="terms-of-use.html">Terms of Use</a></span></div>
+    </footer>
+</body>
+
+</html>

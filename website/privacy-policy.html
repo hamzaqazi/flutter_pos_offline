@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Privacy Policy for Codynest POS.">
+    <link rel="canonical" href="https://pos.codynest.com/privacy-policy.html">
+    <title>Privacy Policy | Codynest POS</title>
+    <style>
+        :root {
+            --ink: #14252d;
+            --muted: #607179;
+            --paper: #f7f8f5;
+            --white: #fff;
+            --teal: #087f78;
+            --coral: #ed765e;
+            --line: #dce5e1
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--paper);
+            font-family: Georgia, 'Times New Roman', serif;
+            line-height: 1.7
+        }
+
+        a {
+            color: var(--teal)
+        }
+
+        .wrap {
+            width: min(960px, calc(100% - 40px));
+            margin: 0 auto
+        }
+
+        .topbar {
+            padding: 22px 0;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            font-weight: 700
+        }
+
+        .mark {
+            display: block;
+            width: 66px;
+            height: 44px;
+            object-fit: contain
+        }
+
+        .links {
+            display: flex;
+            gap: 22px;
+            font: 600 14px Arial, sans-serif
+        }
+
+        .links a {
+            text-decoration: none;
+            color: var(--muted)
+        }
+
+        .links a:hover,
+        .links a:focus {
+            color: var(--teal)
+        }
+
+        .intro {
+            padding: 76px 0 45px
+        }
+
+        .eyebrow {
+            color: var(--coral);
+            font: 700 12px Arial, sans-serif;
+            letter-spacing: .15em;
+            text-transform: uppercase
+        }
+
+        h1 {
+            font-size: clamp(40px, 7vw, 68px);
+            line-height: 1.02;
+            letter-spacing: -.04em;
+            margin: 13px 0 15px
+        }
+
+        .date {
+            color: var(--muted);
+            font: 14px Arial, sans-serif
+        }
+
+        .policy {
+            padding: 25px 34px 70px;
+            background: var(--white);
+            border: 1px solid var(--line);
+            border-radius: 10px
+        }
+
+        h2 {
+            margin: 35px 0 9px;
+            font-size: 27px;
+            line-height: 1.15
+        }
+
+        h3 {
+            margin: 24px 0 5px;
+            font-size: 19px
+        }
+
+        p {
+            margin: 0 0 13px
+        }
+
+        ul {
+            margin-top: 5px;
+            padding-left: 23px
+        }
+
+        .note {
+            padding: 17px 20px;
+            margin: 22px 0;
+            border-left: 4px solid var(--coral);
+            background: #fff5f1
+        }
+
+        footer {
+            padding: 28px 0;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font: 13px Arial, sans-serif
+        }
+
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px
+        }
+
+        @media(max-width:680px) {
+            .wrap {
+                width: min(100% - 28px, 960px)
+            }
+
+            .nav {
+                align-items: flex-start;
+                flex-direction: column
+            }
+
+            .links {
+                gap: 14px;
+                flex-wrap: wrap
+            }
+
+            .intro {
+                padding: 54px 0 30px
+            }
+
+            .policy {
+                padding: 18px 20px 45px
+            }
+
+            .footer-row {
+                flex-direction: column
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="wrap nav"><a class="brand" href="index.html"><img class="mark" src="assets/codynest-pos-logo.png"
+                    alt="Codynest POS logo"><span>Codynest POS</span></a>
+            <nav class="links" aria-label="Primary navigation"><a href="index.html">Home</a><a
+                    href="privacy-policy.html">Privacy Policy</a><a href="terms-of-use.html">Terms of Use</a></nav>
+        </div>
+    </header>
+    <main>
+        <div class="wrap intro">
+            <div class="eyebrow">Transparency for shop owners</div>
+            <h1>Privacy Policy</h1>
+            <div class="date">Effective date: October 7, 2026</div>
+        </div>
+        <article class="wrap policy">
+            <p>This Privacy Policy explains how CodyNest Solutions handles information when you use the Codynest POS
+                application. It is based on the current application implementation. Codynest POS is an offline-first
+                point-of-sale application; many shop records remain on the device unless you choose to export or back
+                them up elsewhere.</p>
+            <div class="note"><strong>In brief:</strong> CodyNest Solutions does not collect general shop records on
+                its own servers. The app stores those records locally, but it does contact Firebase/Firestore
+                for license and trial-device operations, and can optionally use Google Sign-In and Google Drive for
+                backups. It does not contain a general Firebase Authentication, analytics, crash-reporting, or
+                notification service integration.</div>
+            <h2>1. Information handled by the app</h2>
+            <h3>Shop and business data</h3>
+            <p>The app can store locally entered business records including products, SKUs and barcodes, prices, costs,
+                discounts, stock, categories, sales and invoice details, returns, expenses, customers and their contact
+                details, staff and cashier details, shop and receipt settings, held carts, and related app settings.
+                This data is stored in local Hive storage on the device.</p>
+            <h3>License information</h3>
+            <p>When a license key is entered, the app sends the key to Firebase Firestore to validate it. The app
+                receives and may cache the associated shop name, plan, activation and expiry information, and device
+                registration state locally. The Firestore license record can include plan, active status, expiry, device
+                registrations, maximum devices, shop name, activation details, and customer phone information as
+                configured by the license service.</p>
+            <h3>Trial information</h3>
+            <p>The first-install trial lasts 14 days and requires a phone number in the trial flow. The phone number is
+                stored locally and, when supplied, sent to Firestore with a trial-device record for WhatsApp follow-up
+                reminders. The app also sends a device identifier, device model, trial timestamps, and trial duration to
+                Firestore to check and prevent repeated trials on the same device.</p>
+            <h3>Device information</h3>
+            <p>For license and trial controls, the app obtains a platform device identifier such as an Android
+                identifier, an iOS vendor identifier, a macOS system identifier, a Windows computer name, a Linux
+                machine identifier, or a locally stored browser identifier where applicable. It may also send a device
+                model or platform description with trial registration. The app does not use this information for
+                advertising.</p>
+            <h2>2. Where information is stored</h2>
+            <h3>Local and offline storage</h3>
+            <p>Core shop records are stored in local Hive databases and can remain on the device while the app is
+                offline. The app can continue its core sales and inventory workflow without continuous internet access.
+                Local app storage can include the records listed above, license/trial state, backup settings, Google
+                Drive account display details, and an optional app PIN.</p>
+            <h3>Firebase and Firestore</h3>
+            <p>The app initializes Firebase and uses Firestore for license documents and trial-device records. The
+                repository does not show general cloud synchronization of products, sales, customers, staff, or other
+                shop records to Firestore. License verification may occur when the app starts; if a verification cannot
+                be reached, the app can rely on saved activation state under the implemented offline rules.</p>
+            <h3>Google Drive</h3>
+            <p>Google Drive backup is optional. If you sign in and grant the requested Drive scope, the app creates JSON
+                backup files in a folder named "Codynest POS Backups" in your own Google Drive. It requests the
+                <code>drive.file</code> scope, which is limited to files created or opened by the app rather than your
+                whole Drive. The app can read, restore, and manage those backup files, and keeps up to two Drive backups
+                under its current implementation. Google processes the account and Drive activity under Google's own
+                terms and privacy policy.
+            </p>
+            <h2>3. Backups, exports, and restore</h2>
+            <p>You control whether to create backups. A full JSON backup can contain products, sales, expenses, returns,
+                customers, staff, settings, receipt settings, categories, invoice numbering, active cashier information,
+                and relevant trial fields. Products, sales, and expenses can also be exported as CSV files for sharing
+                through the device’s sharing features.</p>
+            <p>Optional scheduled backups are written to app-specific local storage daily or weekly, with older local
+                backups pruned according to the setting. If Google Drive backup is enabled and a Google account is
+                connected, an automatic backup may also be uploaded to that account. A restore imports a JSON backup and
+                replaces current business data; the app deliberately preserves license, trial protection, backup
+                configuration, and Drive connection settings where implemented. Keep an independent copy of important
+                backups.</p>
+            <h2>4. Device permissions</h2>
+            <p>The app requests permissions only for features that need them. The exact prompt depends on platform and
+                use:</p>
+            <ul>
+                <li><strong>Camera:</strong> used to scan product barcodes and QR codes, and for product photos where
+                    used. Camera hardware is optional on Android.</li>
+                <li><strong>Bluetooth:</strong> used to discover, connect to, and print receipts on paired Bluetooth
+                    thermal printers. Android declares Bluetooth scan/connect permissions; iOS declares Bluetooth usage
+                    descriptions.</li>
+                <li><strong>Location on iOS:</strong> the iOS configuration includes a When In Use location usage
+                    description for discovering nearby Bluetooth printers. Android declares Bluetooth scan with
+                    <code>neverForLocation</code> and does not declare location permission.
+                </li>
+                <li><strong>Internet:</strong> used for Firebase license/trial requests and optional Google
+                    Sign-In/Drive operations.</li>
+                <li><strong>Files and storage:</strong> the app uses file-picking, app-specific storage, temporary
+                    files, sharing, and printing for imports, exports, and backups. Android’s current backup directory
+                    is app-specific and does not declare broad storage permission.</li>
+            </ul>
+            <p>No notification permission is declared in the Android manifest or iOS property list reviewed for this
+                policy.</p>
+            <h2>5. Third-party services</h2>
+            <ul>
+                <li><strong>Firebase Core and Cloud Firestore:</strong> initialize the Firebase project and process
+                    license and trial-device records described above.</li>
+                <li><strong>Google Sign-In:</strong> authenticates the Google account you choose for optional Drive
+                    backup. Account email, display name, and profile photo URL may be cached locally for the Drive
+                    settings screen.</li>
+                <li><strong>Google Drive API:</strong> stores and retrieves the app’s JSON backup files in your Drive
+                    after you grant the limited app-created-file scope.</li>
+                <li><strong>Device information provider:</strong> reads the platform identifier and model data used for
+                    license and trial-device controls.</li>
+                <li><strong>Bluetooth, camera, file, PDF, printing, sharing, and background-task libraries:</strong>
+                    provide local device features. The repository does not show these libraries sending business records
+                    to their vendors.</li>
+            </ul>
+            <h2>6. Sharing and user controls</h2>
+            <p>You can choose whether to enter a trial phone number, activate a license, connect a Google account,
+                enable Drive backup, create local backups, export files, or restore a backup. You can disconnect Google
+                Drive from the app and delete local or Drive backups using the relevant device or Google Drive controls.
+                Uninstalling the app or clearing its data may remove locally stored records, but it does not by itself
+                delete Firestore license or trial records or files already shared to Drive.</p>
+            <p>For a request about access, correction, deletion of trial or license information, or support with account
+                data, contact <a href="mailto:hqazi62@gmail.com">hqazi62@gmail.com</a>, call 0315-3507075 or
+                0345-3333316, or use the support channel shown in the app. We may need enough information to identify
+                the relevant license or trial record. We cannot delete records held by Google from Google’s systems on
+                your behalf.</p>
+            <h2>7. Retention</h2>
+            <p>Local data remains until you delete it, clear the app, uninstall the app, overwrite it through restore,
+                or otherwise manage it on your device. Local and Drive backup files remain until you delete or replace
+                them under the app’s retention behavior and your own Drive controls. Firestore license and trial records
+                are retained according to the operator’s administrative needs; the repository does not define a fixed
+                deletion schedule.</p>
+            <h2>8. Security</h2>
+            <p>Codynest POS uses platform storage, Firebase transport, Google authentication, and the limited Drive
+                scope provided by its integrations. No software can guarantee absolute security. You are responsible for
+                protecting your device, Google account, license key, PIN, exported files, and backup files. Anyone who
+                can access an unprotected backup may be able to read its business contents.</p>
+            <h2>9. Children’s privacy</h2>
+            <p>Codynest POS is a business tool and is not directed to children. We do not knowingly design the app to
+                collect information from children. If you believe a child provided information through the app, contact
+                us so the relevant record can be reviewed.</p>
+            <h2>10. Changes to this policy</h2>
+            <p>We may update this policy when the app’s data practices or legal requirements change. The effective date
+                at the top will identify the current version. Continued use after an update means the updated policy
+                applies to future use.</p>
+            <h2>11. Contact</h2>
+            <p>CodyNest Solutions support: <a href="mailto:hqazi62@gmail.com">hqazi62@gmail.com</a><br>Website: <a
+                    href="https://pos.codynest.com/">pos.codynest.com</a><br>Phone / WhatsApp: 0315-3507075 or
+                0345-3333316</p>
+        </article>
+    </main>
+    <footer>
+        <div class="wrap footer-row"><span>(c) 2026 CodyNest Solutions</span><span><a href="index.html">Home</a> &nbsp;
+                <a href="terms-of-use.html">Terms of Use</a></span></div>
+    </footer>
+</body>
+
+</html>
