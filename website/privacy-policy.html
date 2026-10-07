@@ -15,7 +15,17 @@
             --white: #fff;
             --teal: #087f78;
             --coral: #ed765e;
-            --line: #dce5e1
+            --line: #dce5e1;
+            --duration-fast: 180ms;
+            --duration-slow: 480ms;
+            --ease-out: cubic-bezier(.22,.64,.49,1)
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            :root {
+                --duration-fast: 0.01ms !important;
+                --duration-slow: 0.01ms !important
+            }
         }
 
         * {
@@ -179,7 +189,44 @@
                 flex-direction: column
             }
         }
+
+        .policy {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out)
+        }
+
+        .policy.revealed {
+            opacity: 1;
+            transform: translateY(0)
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .policy {
+                opacity: 1;
+                transform: none;
+                transition: none
+            }
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduced) return;
+
+            var el = document.querySelector('.policy');
+            if (!el) return;
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            observer.observe(el);
+        });
+    </script>
 </head>
 
 <body>

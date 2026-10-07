@@ -19,6 +19,17 @@
             --coral: #ed765e;
             --line: #dce5e1;
             --shadow: 0 18px 50px rgba(20, 37, 45, .11);
+            --duration-fast: 180ms;
+            --duration-slow: 480ms;
+            --ease-out: cubic-bezier(.22,.64,.49,1);
+            --ease-in-out: cubic-bezier(.68,-0.55,.27,1.55);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            :root {
+                --duration-fast: 0.01ms !important;
+                --duration-slow: 0.01ms !important;
+            }
         }
 
         * {
@@ -157,10 +168,29 @@
             background: transparent;
         }
 
+        .button {
+    transition: transform var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+
         .button:hover,
         .button:focus {
             transform: translateY(-1px);
         }
+
+        .hero-grid > * {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+
+        .hero-grid.revealed > * {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+        .hero-grid > :nth-child(2) {
+    transition-delay: 40ms;
+}
 
         .hero-card {
             padding: 27px;
@@ -233,6 +263,23 @@
             background: var(--white);
         }
 
+.feature {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+
+        .features.revealed .feature {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+        .feature:nth-child(2) { transition-delay: 40ms; }
+        .feature:nth-child(3) { transition-delay: 80ms; }
+        .feature:nth-child(4) { transition-delay: 120ms; }
+        .feature:nth-child(5) { transition-delay: 160ms; }
+        .feature:nth-child(6) { transition-delay: 200ms; }
+
         .feature .number {
             color: var(--coral);
             font: 700 13px Arial, sans-serif;
@@ -261,6 +308,20 @@
             border-radius: 10px;
             background: var(--white);
         }
+
+.plan {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+
+        .plans.revealed .plan {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+        .plan:nth-child(2) { transition-delay: 40ms; }
+        .plan:nth-child(3) { transition-delay: 80ms; }
 
         .plan h3 {
             margin: 0 0 10px;
@@ -319,6 +380,9 @@
             padding: 15px 0 15px 30px;
             border-bottom: 1px solid rgba(255, 255, 255, .2);
             position: relative;
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
         }
 
         .list li:before {
@@ -329,6 +393,15 @@
             font-size: 23px;
             line-height: 1;
         }
+
+        .band-grid.revealed .list li {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .band-grid .list li:nth-child(2) { transition-delay: 40ms; }
+        .band-grid .list li:nth-child(3) { transition-delay: 80ms; }
+        .band-grid .list li:nth-child(4) { transition-delay: 120ms; }
 
         .cta {
             padding: 76px 0;
@@ -396,7 +469,60 @@
                 flex-direction: column;
             }
         }
+
+        .cta > * {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+        }
+
+        .cta.revealed > * {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-grid > *,
+            .feature,
+            .plan,
+            .cta > *,
+            .band-grid .list li {
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+
+            .button {
+                transition: none;
+            }
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduced) return;
+
+            function revealOnScroll(selector) {
+                var el = document.querySelector(selector);
+                if (!el) return;
+                var observer = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('revealed');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+                observer.observe(el);
+            }
+
+            revealOnScroll('.hero-grid');
+            revealOnScroll('.features');
+            revealOnScroll('.band-grid');
+            revealOnScroll('.plans');
+            revealOnScroll('.cta');
+        });
+    </script>
 </head>
 
 <body>
