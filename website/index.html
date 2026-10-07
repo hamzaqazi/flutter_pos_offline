@@ -303,47 +303,129 @@
         }
 
         .plan {
-            padding: 26px;
-            border: 1px solid var(--line);
-            border-radius: 10px;
+            position: relative;
+            padding: 34px;
+            border: 2px solid transparent;
+            border-radius: 18px;
             background: var(--white);
+            box-shadow: 0 6px 24px rgba(20, 37, 45, .04);
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
         }
 
-.plan {
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
-}
-
         .plans.revealed .plan {
-    opacity: 1;
-    transform: translateY(0);
-}
+            opacity: 1;
+            transform: translateY(0);
+        }
 
         .plan:nth-child(2) { transition-delay: 40ms; }
         .plan:nth-child(3) { transition-delay: 80ms; }
 
+        .plan:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 36px rgba(20, 37, 45, .08);
+        }
+
+        .plan.popular {
+            border-color: var(--teal);
+            box-shadow: 0 12px 36px rgba(8, 127, 120, .14);
+        }
+
+        .plan.popular:hover {
+            box-shadow: 0 16px 42px rgba(8, 127, 120, .18);
+        }
+
         .plan h3 {
-            margin: 0 0 10px;
-            font-size: 23px;
-        }
-
-        .plan .price {
-            margin: 0 0 8px;
-            color: var(--teal-dark);
-            font: 700 25px Arial, sans-serif;
-        }
-
-        .plan p {
-            margin: 0;
-            color: var(--muted);
+            margin: 0 0 18px;
+            font-size: 25px;
         }
 
         .plan .badge {
-            color: var(--coral);
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: var(--teal-dark);
+            color: var(--white);
             font: 700 11px Arial, sans-serif;
             letter-spacing: .08em;
             text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(20, 37, 45, .12);
+        }
+
+        .plan .badge.best-value {
+            background: linear-gradient(135deg, var(--coral), #ff8a75);
+        }
+
+        .plan .badge.best-deal {
+            background: linear-gradient(135deg, var(--teal-dark), #054d49);
+        }
+
+        .plan .accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 4px;
+            border-radius: 4px 4px 0 0;
+            background: var(--paper);
+        }
+
+        .plan.popular .accent {
+            background: var(--teal);
+        }
+
+        .plan .price {
+            margin: 16px 0 22px;
+            color: var(--teal-dark);
+            font: 700 34px/1 Arial, sans-serif;
+        }
+
+        .plan p {
+            margin: 0 0 24px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .plan .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font: 700 14px Arial, sans-serif;
+            text-decoration: none;
+            transition: background-color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+        }
+
+        .plan .cta-btn:hover,
+        .plan .cta-btn:focus {
+            transform: translateY(-1px);
+        }
+
+        .plan:not(.popular) .cta-btn {
+            color: var(--teal-dark);
+            background: var(--paper);
+            border: 1px solid var(--line);
+        }
+
+        .plan:not(.popular) .cta-btn:hover,
+        .plan:not(.popular) .cta-btn:focus {
+            background: #ecefed;
+        }
+
+        .plan.popular .cta-btn {
+            color: var(--white);
+            background: var(--teal);
+            border: 1px solid var(--teal);
+        }
+
+        .plan.popular .cta-btn:hover,
+        .plan.popular .cta-btn:focus {
+            background: var(--teal-dark);
         }
 
         .band {
@@ -628,22 +710,28 @@
                 </div>
                 <div class="plans">
                     <article class="plan">
+                        <span class="accent"></span>
                         <h3>Monthly</h3>
                         <p class="price">Rs. 499</p>
                         <p>Pay monthly, cancel anytime.</p>
+                        <a class="cta-btn" href="mailto:hqazi62@gmail.com">Get started</a>
                     </article>
-                    <article class="plan">
-                        <div class="badge">Best Value</div>
+                    <article class="plan popular">
+                        <span class="accent"></span>
+                        <div class="badge best-value">Best Value</div>
                         <h3>Yearly</h3>
                         <p class="price">Rs. 4,499</p>
                         <p>Save approximately 25% compared with monthly.</p>
+                        <a class="cta-btn" href="mailto:hqazi62@gmail.com">Get started</a>
                     </article>
                     <article class="plan">
-                        <div class="badge">Best Deal</div>
+                        <span class="accent"></span>
+                        <div class="badge best-deal">Best Deal</div>
                         <h3>3-Year Lifetime</h3>
                         <p class="price">Rs. 11,999</p>
                         <p>One-time payment. Use Codynest POS for up to 3 years. Save approximately 33% compared with
                             monthly.</p>
+                        <a class="cta-btn" href="mailto:hqazi62@gmail.com">Get started</a>
                     </article>
                 </div>
             </div>
