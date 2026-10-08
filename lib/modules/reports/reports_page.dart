@@ -1246,17 +1246,31 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
     await Printing.layoutPdf(onLayout: (format) async => bytes);
   }
 
-  Future<void> _share() async {
-    final bytes = _bytes;
-    if (bytes == null) return;
-    final s = _c.startDate.value;
-    final e = _c.endDate.value;
+  /// File name for the current period, e.g. shop_report_20251001_20251008.pdf.
+  String get _reportFilename {
     String d(DateTime x) =>
         '${x.year}${x.month.toString().padLeft(2, '0')}'
         '${x.day.toString().padLeft(2, '0')}';
-    await Printing.sharePdf(
+    final s = _c.startDate.value;
+    final e = _c.endDate.value;
+    return 'shop_report_${d(s)}_${d(e)}.pdf';
+  }
+
+  Future<void> _share() async {
+    final bytes = _bytes;
+    if (bytes == null) return;
+    await Printing.sharePdf(bytes: bytes, filename: _reportFilename);
+  }
+
+  /// Open the generated PDF in an on-screen preview (with its own print /
+  /// save / share action bar) so the owner can review it before exporting.
+  Future<void> _preview() async {
+    final bytes = _bytes;
+    if (bytes == null) return;
+    await showPreviewDialog(
+      context: context,
+      filename: _reportFilename,
       bytes: bytes,
-      filename: 'shop_report_${d(s)}_${d(e)}.pdf',
     );
   }
 
@@ -1388,6 +1402,12 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
                 onPressed: _generate,
               ),
               if (_bytes != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                FilledButton.tonalIcon(
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  label: const Text('Preview report'),
+                  onPressed: _preview,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [

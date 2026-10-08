@@ -157,17 +157,17 @@ class ShopReportPdfService {
             _footer(context.pageNumber, context.pagesCount),
         build: (context) => [
           _kpiGrid(d),
-          const pw.SizedBox(height: 18),
+          pw.SizedBox(height: 18),
           _section('Financial summary', _financialSummary(d)),
-          const pw.SizedBox(height: 18),
+          pw.SizedBox(height: 18),
           _section('Sales by category', _categoryTable(d.categories)),
-          const pw.SizedBox(height: 18),
+          pw.SizedBox(height: 18),
           _section('Top products', _topProductsTable(d.topProducts)),
-          const pw.SizedBox(height: 18),
+          pw.SizedBox(height: 18),
           _section('Expenses by category', _expenses(d)),
-          const pw.SizedBox(height: 18),
+          pw.SizedBox(height: 18),
           _section('Returns & refunds', _returns(d)),
-          const pw.SizedBox(height: 18),
+          pw.SizedBox(height: 18),
           _section('Inventory snapshot', _inventory(d)),
         ],
       ),
@@ -196,12 +196,12 @@ class ShopReportPdfService {
                 style: pw.TextStyle(
                   fontSize: 18,
                   fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.white,
+                  color: _white,
                   letterSpacing: 0.4,
                 ),
               ),
               if (s.address.isNotEmpty) ...[
-                const pw.SizedBox(height: 3),
+                pw.SizedBox(height: 3),
                 pw.Text(_trunc(s.address, 64),
                     style: const pw.TextStyle(
                         fontSize: 8.5, color: _white70)),
@@ -222,20 +222,20 @@ class ShopReportPdfService {
                     color: _emeraldBg,
                     letterSpacing: 2,
                   )),
-              const pw.SizedBox(height: 5),
+              pw.SizedBox(height: 5),
               pw.Text(
                 '${Formatters.dateShort(d.start)} – '
                 '${Formatters.dateShort(d.end)}',
                 style: pw.TextStyle(
                   fontSize: 9,
                   fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.white,
+                  color: _white,
                 ),
               ),
-              const pw.SizedBox(height: 2),
+              pw.SizedBox(height: 2),
               pw.Text(d.rangeLabel,
                   style: const pw.TextStyle(fontSize: 8, color: _white70)),
-              const pw.SizedBox(height: 2),
+              pw.SizedBox(height: 2),
               pw.Text(
                 'Generated '
                 '${Formatters.dateTime(DateTime.now())}',
@@ -262,7 +262,7 @@ class ShopReportPdfService {
               style: pw.TextStyle(
                   fontSize: 9,
                   fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.white,
+                  color: _white,
                   letterSpacing: 1)),
           pw.Text(
             '${Formatters.dateShort(d.start)} – '
@@ -308,7 +308,7 @@ class ShopReportPdfService {
               height: 3,
               decoration: const pw.BoxDecoration(color: _emerald),
             ),
-            const pw.SizedBox(width: 8),
+            pw.SizedBox(width: 8),
             pw.Text(
               title.toUpperCase(),
               style: pw.TextStyle(
@@ -320,7 +320,7 @@ class ShopReportPdfService {
             ),
           ],
         ),
-        const pw.SizedBox(height: 10),
+        pw.SizedBox(height: 10),
         body,
       ],
     );
@@ -369,7 +369,7 @@ class ShopReportPdfService {
               letterSpacing: 0.4,
             ),
           ),
-          const pw.SizedBox(height: 4),
+          pw.SizedBox(height: 4),
           pw.Text(value,
               style: pw.TextStyle(
                 fontSize: 15,
@@ -384,7 +384,7 @@ class ShopReportPdfService {
   static pw.Widget _kpiRow(pw.Widget a, pw.Widget b) {
     return pw.Row(children: [
       pw.Expanded(child: a),
-      const pw.SizedBox(width: 12),
+      pw.SizedBox(width: 12),
       pw.Expanded(child: b),
     ]);
   }
@@ -397,17 +397,17 @@ class ShopReportPdfService {
         _kpi('Net profit', _money(d.netProfit),
             color: neg ? _red : _emeraldDark),
       ),
-      const pw.SizedBox(height: 10),
+      pw.SizedBox(height: 10),
       _kpiRow(
         _kpi('Gross profit', _money(d.grossProfit)),
         _kpi('Expenses', _money(d.totalExpenses), color: _red),
       ),
-      const pw.SizedBox(height: 10),
+      pw.SizedBox(height: 10),
       _kpiRow(
         _kpi('Transactions', '${d.transactions}'),
         _kpi('Items sold', '${d.itemsSold}'),
       ),
-      const pw.SizedBox(height: 10),
+      pw.SizedBox(height: 10),
       _kpiRow(
         _kpi('Net margin', '${d.netMargin.toStringAsFixed(1)}%'),
         _kpi('Avg. order', _money(d.averageTransaction)),
@@ -421,7 +421,7 @@ class ShopReportPdfService {
     return pw.TextStyle(
       fontSize: header ? 8.0 : 8.5,
       fontWeight: header ? pw.FontWeight.bold : pw.FontWeight.normal,
-      color: header ? PdfColor.white : (first ? _ink : _grey),
+      color: header ? _white : (first ? _ink : _grey),
     );
   }
 
@@ -431,12 +431,12 @@ class ShopReportPdfService {
     required String label,
     required List<String> values,
     required List<double> widths,
-    required bool header,
+    bool header = false,
     bool zebra = false,
   }) {
     return pw.Container(
       decoration: pw.BoxDecoration(
-        color: header ? _emeraldDark : (zebra ? _zebra : PdfColor.white),
+        color: header ? _emeraldDark : (zebra ? _zebra : _white),
         border: header
             ? null
             : const pw.Border(
@@ -548,11 +548,11 @@ class ShopReportPdfService {
                   ),
                 ],
               ),
-              const pw.SizedBox(height: 4),
+              pw.SizedBox(height: 4),
               pw.Container(
                 height: 4,
                 width: max > 0 ? (e.amount / max) * 330 : 0.0,
-                decoration: const pw.BoxDecoration(
+                decoration: pw.BoxDecoration(
                   color: _emerald,
                   borderRadius: pw.BorderRadius.circular(2),
                 ),
@@ -575,7 +575,7 @@ class ShopReportPdfService {
       _kv('Gross profit', _money(d.grossProfit)),
       _kv('Refunds & returns', '-${_money(d.refunds)}', color: _red),
       _kv('Expenses', '-${_money(d.totalExpenses)}', color: _red),
-      const pw.SizedBox(height: 12),
+      pw.SizedBox(height: 12),
       pw.Container(
         padding:
             const pw.EdgeInsets.symmetric(horizontal: 13, vertical: 10),
@@ -624,12 +624,12 @@ class ShopReportPdfService {
         _kpi('Retail value', _money(d.inventoryRetailValue)),
         _kpi('Cost value', _money(d.inventoryCostValue)),
       ),
-      const pw.SizedBox(height: 10),
+      pw.SizedBox(height: 10),
       _kpiRow(
         _kpi('Potential profit', _money(d.inventoryPotentialProfit)),
         _kpi('Stock units', '${d.stockUnits}'),
       ),
-      const pw.SizedBox(height: 10),
+      pw.SizedBox(height: 10),
       _kpiRow(
         _kpi(
           'Low stock',
