@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/return_model.dart';
 import '../../data/models/sale_model.dart';
+import '../../data/services/shop_report_pdf_service.dart';
 import '../expenses/expenses_controller.dart';
 import '../products/products_controller.dart';
 import '../sales/sales_controller.dart';
@@ -72,6 +73,84 @@ class ReportsController extends GetxController {
     startDate.value = DateTime(start.year, start.month, start.day);
     endDate.value = DateTime(end.year, end.month, end.day);
     selectedRange.value = ReportsRange.custom;
+  }
+
+  /// Snapshot of every figure the shop report PDF needs, read from the
+  /// currently selected [startDate]/[endDate].
+  ShopReportData buildReportData() {
+    return ShopReportData(
+      start: startDate.value,
+      end: endDate.value,
+      rangeLabel: describeRange(),
+      revenue: totalRevenue,
+      grossProfit: totalGrossProfit,
+      discounts: totalDiscount,
+      tax: totalTax,
+      cogs: totalCOGS,
+      totalExpenses: totalExpenses,
+      netProfit: netProfit,
+      netMargin: netMargin,
+      transactions: totalTransactions,
+      itemsSold: totalItemsSold,
+      averageTransaction: averageTransaction,
+      margin: margin,
+      refunds: totalRefunds,
+      returnTransactions: totalReturnTransactions,
+      profitReversed: totalProfitReversed,
+      categories: categoryBreakdownList
+          .map(
+            (c) => ShopCategory(
+              name: c.category,
+              quantity: c.quantity,
+              revenue: c.revenue,
+              profit: c.profit,
+            ),
+          )
+          .toList(),
+      topProducts: topProductsByRevenue
+          .take(10)
+          .map(
+            (p) => ShopTopProduct(
+              name: p.name,
+              category: p.category,
+              quantity: p.quantity,
+              revenue: p.revenue,
+              profit: p.profit,
+            ),
+          )
+          .toList(),
+      expenses: expenseBreakdownList
+          .map(
+            (e) => ShopExpenseLine(category: e.category, amount: e.amount),
+          )
+          .toList(),
+      inventoryRetailValue: inventoryRetailValue,
+      inventoryCostValue: inventoryCostValue,
+      inventoryPotentialProfit: inventoryPotentialProfit,
+      stockUnits: totalStockUnits,
+      lowStockCount: lowStockProducts.length,
+      outOfStockCount: outOfStockProducts.length,
+    );
+  }
+
+  /// Human name of the active range, e.g. "This month" or "Custom range".
+  String describeRange() {
+    switch (selectedRange.value) {
+      case ReportsRange.today:
+        return 'Today';
+      case ReportsRange.thisWeek:
+        return 'This week';
+      case ReportsRange.thisMonth:
+        return 'This month';
+      case ReportsRange.lastMonth:
+        return 'Last month';
+      case ReportsRange.allTime:
+        return 'All time';
+      case ReportsRange.custom:
+        return 'Custom range';
+      case null:
+        return 'Last 30 days';
+    }
   }
 
   /// Sales filtered by date range.
