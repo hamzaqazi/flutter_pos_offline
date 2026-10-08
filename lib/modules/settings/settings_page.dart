@@ -2790,6 +2790,17 @@ class _DriveBackupSectionState extends State<_DriveBackupSection> {
         backgroundColor: _driveGreen.withValues(alpha: 0.15),
         colorText: _driveGreen,
       );
+    } else if (GoogleDriveService.lastSignInCancelled) {
+      // User backed out of the Google account chooser — not a failure, so
+      // no red error and no SHA-1 hint, just a gentle notice.
+      Get.snackbar(
+        'Sign-in cancelled',
+        'No problem — you can connect to Google Drive anytime.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.textSecondary.withValues(alpha: 0.12),
+        colorText: AppColors.textSecondary,
+        duration: const Duration(seconds: 3),
+      );
     } else {
       final detail = GoogleDriveService.lastErrorMessage;
       Get.snackbar(

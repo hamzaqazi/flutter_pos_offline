@@ -69,7 +69,17 @@ class GoogleDriveService {
   /// ApiException: 10"). Shown in Settings so release-build problems
   /// (usually a missing SHA-1 fingerprint) can be diagnosed on-device
   /// without attaching a debugger. Empty when there is no error.
+  ///
+  /// A user *cancelling* the sign-in flow is intentionally NOT recorded
+  /// here — that is a user action, not a failure (see
+  /// [lastSignInCancelled]), so cancelling must not pop the error panel
+  /// or the SHA-1 hint.
   static String lastErrorMessage = '';
+
+  /// True when the most recent sign-in attempt was cancelled by the user
+  /// (back pressed / account chooser dismissed). Cancelling is not a
+  /// failure, so it surfaces as a neutral note, not the red error panel.
+  static bool lastSignInCancelled = false;
 
   static void _recordError(Object e) {
     lastErrorMessage = e is GoogleSignInException
@@ -180,6 +190,7 @@ class GoogleDriveService {
 
   /// Interactive sign-in. Returns true on success.
   static Future<bool> signIn() async {
+    lastSignInCancelled = false;
     try {
       await ensureInitialized();
       if (!GoogleSignIn.instance.supportsAuthenticate()) {
@@ -203,6 +214,16 @@ class GoogleDriveService {
       }
       return true;
     } on GoogleSignInException catch (e) {
+      // Pressing back / dismissing the account chooser surfaces as a
+      // `canceled` code. That's a user action, not a failure — don't record
+      // it as an error, or it would pop the red "Last error" panel and the
+      // SHA-1 diagnostic. The package only exports GoogleSignInException
+      // (not GoogleSignInExceptionCode), so match on the enum's name.
+      if (e.code.name == 'canceled') {
+        lastSignInCancelled = true;
+        debugPrint('ℹ️ GoogleDrive: sign-in cancelled by user');
+        return false;
+      }
       _recordError(e);
       return false;
     } catch (e) {
