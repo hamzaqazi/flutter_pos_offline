@@ -61,25 +61,79 @@ class ReportsPage extends GetView<ReportsController> {
                 AppSpacing.lg,
                 AppSpacing.sm,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Date range", style: theme.textTheme.titleSmall),
-                  const SizedBox(height: AppSpacing.sm),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+              child: Obx(() {
+                final sel = controller.selectedRange.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Date range", style: theme.textTheme.titleSmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _rangeChip(
+                            "Today",
+                            selected: sel == ReportsRange.today,
+                            onTap: controller.setToday,
+                          ),
+                          _rangeChip(
+                            "This week",
+                            selected: sel == ReportsRange.thisWeek,
+                            onTap: controller.setThisWeek,
+                          ),
+                          _rangeChip(
+                            "This month",
+                            selected: sel == ReportsRange.thisMonth,
+                            onTap: controller.setThisMonth,
+                          ),
+                          _rangeChip(
+                            "Last month",
+                            selected: sel == ReportsRange.lastMonth,
+                            onTap: controller.setLastMonth,
+                          ),
+                          _rangeChip(
+                            "All time",
+                            selected: sel == ReportsRange.allTime,
+                            onTap: controller.setAllTime,
+                          ),
+                          _rangeChip(
+                            "Custom",
+                            selected: sel == ReportsRange.custom,
+                            onTap: () => _pickCustomRange(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    // Show the exact range in effect so it's obvious a filter
+                    // is active (and which one), including the default window.
+                    Row(
                       children: [
-                        _dateChip("Today", controller.setToday),
-                        _dateChip("This week", controller.setThisWeek),
-                        _dateChip("This month", controller.setThisMonth),
-                        _dateChip("Last month", controller.setLastMonth),
-                        _dateChip("All time", controller.setAllTime),
+                        Icon(
+                          Icons.date_range,
+                          size: 14,
+                          color: sel == null ? cs.onSurfaceVariant : cs.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _activeRangeLabel(sel),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: sel == null
+                                  ? cs.onSurfaceVariant
+                                  : cs.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              }),
             ),
             const Divider(height: 1),
 
@@ -125,11 +179,72 @@ class ReportsPage extends GetView<ReportsController> {
     );
   }
 
-  Widget _dateChip(String label, VoidCallback onTap) {
+  /// A single-select date-range chip. The selected one is filled and shows a
+  /// checkmark, so it's clear which filter is currently active.
+  Widget _rangeChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(right: AppSpacing.sm),
-      child: ActionChip(label: Text(label), onPressed: onTap),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onTap(),
+      ),
     );
+  }
+
+  /// Text shown under the chips: the preset name + the exact dates in effect.
+  String _activeRangeLabel(ReportsRange? sel) {
+    final start = controller.startDate.value;
+    final end = controller.endDate.value;
+    final sameDay = start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day;
+    final dates = sameDay
+        ? Formatters.dateShort(start)
+        : '${Formatters.dateShort(start)} – ${Formatters.dateShort(end)}';
+    return '${_rangePrefix(sel)} · $dates';
+  }
+
+  String _rangePrefix(ReportsRange? sel) {
+    switch (sel) {
+      case ReportsRange.today:
+        return 'Today';
+      case ReportsRange.thisWeek:
+        return 'This week';
+      case ReportsRange.thisMonth:
+        return 'This month';
+      case ReportsRange.lastMonth:
+        return 'Last month';
+      case ReportsRange.allTime:
+        return 'All time';
+      case ReportsRange.custom:
+        return 'Custom';
+      case null:
+        return 'Last 30 days';
+    }
+  }
+
+  /// Open a date-range picker and apply the result as the custom filter.
+  Future<void> _pickCustomRange(BuildContext context) async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000, 1, 1),
+      lastDate: DateTime.now(),
+      initialDateRange: DateTimeRange(
+        start: controller.startDate.value,
+        end: controller.endDate.value,
+      ),
+      builder: (context, child) {
+        return Theme(data: Theme.of(context), child: child!);
+      },
+    );
+    if (picked != null) {
+      controller.setCustomRange(picked.start, picked.end);
+    }
   }
 }
 
