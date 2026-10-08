@@ -216,7 +216,8 @@ class ReportsPage extends GetView<ReportsController> {
   String _activeRangeLabel(ReportsRange? sel) {
     final start = controller.startDate.value;
     final end = controller.endDate.value;
-    final sameDay = start.year == end.year &&
+    final sameDay =
+        start.year == end.year &&
         start.month == end.month &&
         start.day == end.day;
     final dates = sameDay
@@ -1178,8 +1179,7 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
   String get _rangeSummary {
     final s = _c.startDate.value;
     final e = _c.endDate.value;
-    final sameDay =
-        s.year == e.year && s.month == e.month && s.day == e.day;
+    final sameDay = s.year == e.year && s.month == e.month && s.day == e.day;
     final dates = sameDay
         ? Formatters.dateShort(s)
         : '${Formatters.dateShort(s)} – ${Formatters.dateShort(e)}';
@@ -1216,9 +1216,7 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final bytes = await ShopReportPdfService.generate(
-        _c.buildReportData(),
-      );
+      final bytes = await ShopReportPdfService.generate(_c.buildReportData());
       // Brief pause so the loading state is visible even when the
       // document generates in a few milliseconds.
       await Future.delayed(const Duration(milliseconds: 450));
@@ -1359,8 +1357,7 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          sel == null ? cs.onSurfaceVariant : cs.primary,
+                      color: sel == null ? cs.onSurfaceVariant : cs.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1369,41 +1366,51 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
             ),
             const SizedBox(height: AppSpacing.md),
             if (_busy)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.lg,
-                ),
-                child: Column(
-                  children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Generating your report…',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Generating your report…',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               )
             else ...[
-              FilledButton.icon(
-                icon: const Icon(Icons.picture_as_pdf),
-                label: const Text('Generate report'),
-                onPressed: _generate,
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text('Generate report'),
+                  onPressed: _generate,
+                ),
               ),
               if (_bytes != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                FilledButton.tonalIcon(
-                  icon: const Icon(Icons.picture_as_pdf_outlined),
-                  label: const Text('Preview report'),
-                  onPressed: _preview,
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: const Text('Preview report'),
+                    onPressed: _preview,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: cs.primary,
+                          side: BorderSide(color: cs.primary),
+                        ),
                         icon: const Icon(Icons.ios_share),
                         label: const Text('Share'),
                         onPressed: _share,

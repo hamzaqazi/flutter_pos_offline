@@ -156,18 +156,19 @@ class ShopReportPdfService {
             context.pageNumber == 1 ? _header(d, settings) : _slimHeader(d),
         footer: (context) => _footer(context.pageNumber, context.pagesCount),
         build: (context) => [
+          pw.SizedBox(height: 22),
           _kpiGrid(d),
-          pw.SizedBox(height: 18),
+          pw.SizedBox(height: 22),
           _section('Financial summary', _financialSummary(d)),
-          pw.SizedBox(height: 18),
+          pw.SizedBox(height: 22),
           _section('Sales by category', _categoryTable(d.categories)),
-          pw.SizedBox(height: 18),
+          pw.SizedBox(height: 22),
           _section('Top products', _topProductsTable(d.topProducts)),
-          pw.SizedBox(height: 18),
+          pw.SizedBox(height: 22),
           _section('Expenses by category', _expenses(d)),
-          pw.SizedBox(height: 18),
+          pw.SizedBox(height: 22),
           _section('Returns & refunds', _returns(d)),
-          pw.SizedBox(height: 18),
+          pw.SizedBox(height: 22),
           _section('Inventory snapshot', _inventory(d)),
         ],
       ),
@@ -228,7 +229,7 @@ class ShopReportPdfService {
               ),
               pw.SizedBox(height: 5),
               pw.Text(
-                '${Formatters.dateShort(d.start)} – '
+                '${Formatters.dateShort(d.start)} - '
                 '${Formatters.dateShort(d.end)}',
                 style: pw.TextStyle(
                   fontSize: 9,
@@ -274,7 +275,7 @@ class ShopReportPdfService {
             ),
           ),
           pw.Text(
-            '${Formatters.dateShort(d.start)} – '
+            '${Formatters.dateShort(d.start)} - '
             '${Formatters.dateShort(d.end)}',
             style: const pw.TextStyle(fontSize: 8.5, color: _white70),
           ),
