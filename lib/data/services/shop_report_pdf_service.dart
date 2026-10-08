@@ -134,6 +134,7 @@ class ShopReportPdfService {
   static const _zebra = PdfColor.fromInt(0xFFF8FAFC);
   static const _red = PdfColor.fromInt(0xFFDC2626);
   static const _white70 = PdfColor.fromInt(0xB3FFFFFF);
+  static const _white = PdfColor.fromInt(0xFFFFFFFF);
 
   static String _money(double v) => Formatters.currency(v);
 
@@ -153,8 +154,7 @@ class ShopReportPdfService {
         ),
         header: (context) =>
             context.pageNumber == 1 ? _header(d, settings) : _slimHeader(d),
-        footer: (context) =>
-            _footer(context.pageNumber, context.pagesCount),
+        footer: (context) => _footer(context.pageNumber, context.pagesCount),
         build: (context) => [
           _kpiGrid(d),
           pw.SizedBox(height: 18),
@@ -202,26 +202,30 @@ class ShopReportPdfService {
               ),
               if (s.address.isNotEmpty) ...[
                 pw.SizedBox(height: 3),
-                pw.Text(_trunc(s.address, 64),
-                    style: const pw.TextStyle(
-                        fontSize: 8.5, color: _white70)),
+                pw.Text(
+                  _trunc(s.address, 64),
+                  style: const pw.TextStyle(fontSize: 8.5, color: _white70),
+                ),
               ],
               if (s.phone.isNotEmpty)
-                pw.Text(s.phone,
-                    style:
-                        const pw.TextStyle(fontSize: 8.5, color: _white70)),
+                pw.Text(
+                  s.phone,
+                  style: const pw.TextStyle(fontSize: 8.5, color: _white70),
+                ),
             ],
           ),
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
-              pw.Text('BUSINESS REPORT',
-                  style: pw.TextStyle(
-                    fontSize: 9,
-                    fontWeight: pw.FontWeight.bold,
-                    color: _emeraldBg,
-                    letterSpacing: 2,
-                  )),
+              pw.Text(
+                'BUSINESS REPORT',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: _emeraldBg,
+                  letterSpacing: 2,
+                ),
+              ),
               pw.SizedBox(height: 5),
               pw.Text(
                 '${Formatters.dateShort(d.start)} – '
@@ -233,8 +237,10 @@ class ShopReportPdfService {
                 ),
               ),
               pw.SizedBox(height: 2),
-              pw.Text(d.rangeLabel,
-                  style: const pw.TextStyle(fontSize: 8, color: _white70)),
+              pw.Text(
+                d.rangeLabel,
+                style: const pw.TextStyle(fontSize: 8, color: _white70),
+              ),
               pw.SizedBox(height: 2),
               pw.Text(
                 'Generated '
@@ -258,12 +264,15 @@ class ShopReportPdfService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('Business report',
-              style: pw.TextStyle(
-                  fontSize: 9,
-                  fontWeight: pw.FontWeight.bold,
-                  color: _white,
-                  letterSpacing: 1)),
+          pw.Text(
+            'Business report',
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              color: _white,
+              letterSpacing: 1,
+            ),
+          ),
           pw.Text(
             '${Formatters.dateShort(d.start)} – '
             '${Formatters.dateShort(d.end)}',
@@ -288,8 +297,10 @@ class ShopReportPdfService {
             '${Formatters.dateTime(DateTime.now())}',
             style: const pw.TextStyle(fontSize: 7.5, color: _grey),
           ),
-          pw.Text('Page $page of $total',
-              style: const pw.TextStyle(fontSize: 7.5, color: _grey)),
+          pw.Text(
+            'Page $page of $total',
+            style: const pw.TextStyle(fontSize: 7.5, color: _grey),
+          ),
         ],
       ),
     );
@@ -336,14 +347,15 @@ class ShopReportPdfService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(label,
-              style: const pw.TextStyle(fontSize: 9, color: _grey)),
-          pw.Text(value,
-              style: pw.TextStyle(
-                fontSize: 9.5,
-                fontWeight: pw.FontWeight.bold,
-                color: color ?? _ink,
-              )),
+          pw.Text(label, style: const pw.TextStyle(fontSize: 9, color: _grey)),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: 9.5,
+              fontWeight: pw.FontWeight.bold,
+              color: color ?? _ink,
+            ),
+          ),
         ],
       ),
     );
@@ -362,7 +374,7 @@ class ShopReportPdfService {
         children: [
           pw.Text(
             label.toUpperCase(),
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
               fontSize: 7.5,
               fontWeight: pw.FontWeight.bold,
               color: _grey,
@@ -370,49 +382,58 @@ class ShopReportPdfService {
             ),
           ),
           pw.SizedBox(height: 4),
-          pw.Text(value,
-              style: pw.TextStyle(
-                fontSize: 15,
-                fontWeight: pw.FontWeight.bold,
-                color: color ?? _ink,
-              )),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: 15,
+              fontWeight: pw.FontWeight.bold,
+              color: color ?? _ink,
+            ),
+          ),
         ],
       ),
     );
   }
 
   static pw.Widget _kpiRow(pw.Widget a, pw.Widget b) {
-    return pw.Row(children: [
-      pw.Expanded(child: a),
-      pw.SizedBox(width: 12),
-      pw.Expanded(child: b),
-    ]);
+    return pw.Row(
+      children: [
+        pw.Expanded(child: a),
+        pw.SizedBox(width: 12),
+        pw.Expanded(child: b),
+      ],
+    );
   }
 
   static pw.Widget _kpiGrid(ShopReportData d) {
     final neg = d.netProfit < 0;
-    return pw.Column(children: [
-      _kpiRow(
-        _kpi('Revenue', _money(d.revenue)),
-        _kpi('Net profit', _money(d.netProfit),
-            color: neg ? _red : _emeraldDark),
-      ),
-      pw.SizedBox(height: 10),
-      _kpiRow(
-        _kpi('Gross profit', _money(d.grossProfit)),
-        _kpi('Expenses', _money(d.totalExpenses), color: _red),
-      ),
-      pw.SizedBox(height: 10),
-      _kpiRow(
-        _kpi('Transactions', '${d.transactions}'),
-        _kpi('Items sold', '${d.itemsSold}'),
-      ),
-      pw.SizedBox(height: 10),
-      _kpiRow(
-        _kpi('Net margin', '${d.netMargin.toStringAsFixed(1)}%'),
-        _kpi('Avg. order', _money(d.averageTransaction)),
-      ),
-    ]);
+    return pw.Column(
+      children: [
+        _kpiRow(
+          _kpi('Revenue', _money(d.revenue)),
+          _kpi(
+            'Net profit',
+            _money(d.netProfit),
+            color: neg ? _red : _emeraldDark,
+          ),
+        ),
+        pw.SizedBox(height: 10),
+        _kpiRow(
+          _kpi('Gross profit', _money(d.grossProfit)),
+          _kpi('Expenses', _money(d.totalExpenses), color: _red),
+        ),
+        pw.SizedBox(height: 10),
+        _kpiRow(
+          _kpi('Transactions', '${d.transactions}'),
+          _kpi('Items sold', '${d.itemsSold}'),
+        ),
+        pw.SizedBox(height: 10),
+        _kpiRow(
+          _kpi('Net margin', '${d.netMargin.toStringAsFixed(1)}%'),
+          _kpi('Avg. order', _money(d.averageTransaction)),
+        ),
+      ],
+    );
   }
 
   // ── Tables (flexible left column + fixed right columns) ────
@@ -440,14 +461,17 @@ class ShopReportPdfService {
         border: header
             ? null
             : const pw.Border(
-                bottom: pw.BorderSide(color: _lineGrey, width: 0.5)),
+                bottom: pw.BorderSide(color: _lineGrey, width: 0.5),
+              ),
       ),
       padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: pw.Row(
         children: [
           pw.Expanded(
-            child: pw.Text(_trunc(label, 40),
-                style: _cellStyle(header, first: true)),
+            child: pw.Text(
+              _trunc(label, 40),
+              style: _cellStyle(header, first: true),
+            ),
           ),
           for (var i = 0; i < values.length; i++)
             pw.SizedBox(
@@ -466,58 +490,64 @@ class ShopReportPdfService {
   static pw.Widget _empty(String msg) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 8),
-      child: pw.Text(msg,
-          style: const pw.TextStyle(fontSize: 8.5, color: _grey)),
+      child: pw.Text(
+        msg,
+        style: const pw.TextStyle(fontSize: 8.5, color: _grey),
+      ),
     );
   }
 
   static pw.Widget _categoryTable(List<ShopCategory> cats) {
     if (cats.isEmpty) return _empty('No sales in this period.');
     const widths = [44.0, 86.0, 82.0];
-    return pw.Column(children: [
-      _trow(
-        label: 'Category',
-        values: ['Qty', 'Revenue', 'Profit'],
-        widths: widths,
-        header: true,
-      ),
-      for (var i = 0; i < cats.length; i++)
+    return pw.Column(
+      children: [
         _trow(
-          label: cats[i].name,
-          values: [
-            '${cats[i].quantity}',
-            _money(cats[i].revenue),
-            _money(cats[i].profit),
-          ],
+          label: 'Category',
+          values: ['Qty', 'Revenue', 'Profit'],
           widths: widths,
-          zebra: i.isOdd,
+          header: true,
         ),
-    ]);
+        for (var i = 0; i < cats.length; i++)
+          _trow(
+            label: cats[i].name,
+            values: [
+              '${cats[i].quantity}',
+              _money(cats[i].revenue),
+              _money(cats[i].profit),
+            ],
+            widths: widths,
+            zebra: i.isOdd,
+          ),
+      ],
+    );
   }
 
   static pw.Widget _topProductsTable(List<ShopTopProduct> prods) {
     if (prods.isEmpty) return _empty('No items sold in this period.');
     const widths = [44.0, 86.0, 82.0];
     final rows = prods.length > 10 ? prods.sublist(0, 10) : prods;
-    return pw.Column(children: [
-      _trow(
-        label: 'Product',
-        values: ['Qty', 'Revenue', 'Profit'],
-        widths: widths,
-        header: true,
-      ),
-      for (var i = 0; i < rows.length; i++)
+    return pw.Column(
+      children: [
         _trow(
-          label: rows[i].name,
-          values: [
-            '${rows[i].quantity}',
-            _money(rows[i].revenue),
-            _money(rows[i].profit),
-          ],
+          label: 'Product',
+          values: ['Qty', 'Revenue', 'Profit'],
           widths: widths,
-          zebra: i.isOdd,
+          header: true,
         ),
-    ]);
+        for (var i = 0; i < rows.length; i++)
+          _trow(
+            label: rows[i].name,
+            values: [
+              '${rows[i].quantity}',
+              _money(rows[i].revenue),
+              _money(rows[i].profit),
+            ],
+            widths: widths,
+            zebra: i.isOdd,
+          ),
+      ],
+    );
   }
 
   static pw.Widget _expenses(ShopReportData d) {
@@ -526,122 +556,131 @@ class ShopReportPdfService {
       0,
       (m, e) => e.amount > m ? e.amount : m,
     );
-    return pw.Column(children: [
-      for (final e in d.expenses)
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 9),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(_trunc(e.category, 44),
-                      style: const pw.TextStyle(fontSize: 9, color: _ink)),
-                  pw.Text(
-                    _money(e.amount),
-                    style: const pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                      color: _ink,
+    return pw.Column(
+      children: [
+        for (final e in d.expenses)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 9),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text(
+                      _trunc(e.category, 44),
+                      style: const pw.TextStyle(fontSize: 9, color: _ink),
                     ),
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 4),
-              pw.Container(
-                height: 4,
-                width: max > 0 ? (e.amount / max) * 330 : 0.0,
-                decoration: pw.BoxDecoration(
-                  color: _emerald,
-                  borderRadius: pw.BorderRadius.circular(2),
+                    pw.Text(
+                      _money(e.amount),
+                      style: pw.TextStyle(
+                        fontSize: 9,
+                        fontWeight: pw.FontWeight.bold,
+                        color: _ink,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                pw.SizedBox(height: 4),
+                pw.Container(
+                  height: 4,
+                  width: max > 0 ? (e.amount / max) * 330 : 0.0,
+                  decoration: pw.BoxDecoration(
+                    color: _emerald,
+                    borderRadius: pw.BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-    ]);
+      ],
+    );
   }
 
   // ── Simple sections ──
 
   static pw.Widget _financialSummary(ShopReportData d) {
     final neg = d.netProfit < 0;
-    return pw.Column(children: [
-      _kv('Gross revenue', _money(d.revenue)),
-      _kv('Discounts', '-${_money(d.discounts)}', color: _red),
-      _kv('Tax (net of refunds)', _money(d.tax)),
-      _kv('Cost of goods sold', _money(d.cogs)),
-      _kv('Gross profit', _money(d.grossProfit)),
-      _kv('Refunds & returns', '-${_money(d.refunds)}', color: _red),
-      _kv('Expenses', '-${_money(d.totalExpenses)}', color: _red),
-      pw.SizedBox(height: 12),
-      pw.Container(
-        padding:
-            const pw.EdgeInsets.symmetric(horizontal: 13, vertical: 10),
-        decoration: pw.BoxDecoration(
-          color: _emeraldBg,
-          borderRadius: pw.BorderRadius.circular(10),
-          border: pw.Border.all(color: _emerald, width: 1),
-        ),
-        child: pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.Text(
-              'NET PROFIT',
-              style: pw.TextStyle(
-                fontSize: 11,
-                fontWeight: pw.FontWeight.bold,
-                color: _emeraldDark,
-                letterSpacing: 0.5,
+    return pw.Column(
+      children: [
+        _kv('Gross revenue', _money(d.revenue)),
+        _kv('Discounts', '-${_money(d.discounts)}', color: _red),
+        _kv('Tax (net of refunds)', _money(d.tax)),
+        _kv('Cost of goods sold', _money(d.cogs)),
+        _kv('Gross profit', _money(d.grossProfit)),
+        _kv('Refunds & returns', '-${_money(d.refunds)}', color: _red),
+        _kv('Expenses', '-${_money(d.totalExpenses)}', color: _red),
+        pw.SizedBox(height: 12),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+          decoration: pw.BoxDecoration(
+            color: _emeraldBg,
+            borderRadius: pw.BorderRadius.circular(10),
+            border: pw.Border.all(color: _emerald, width: 1),
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text(
+                'NET PROFIT',
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                  color: _emeraldDark,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-            pw.Text(
-              _money(d.netProfit),
-              style: pw.TextStyle(
-                fontSize: 14,
-                fontWeight: pw.FontWeight.bold,
-                color: neg ? _red : _emeraldDark,
+              pw.Text(
+                _money(d.netProfit),
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  fontWeight: pw.FontWeight.bold,
+                  color: neg ? _red : _emeraldDark,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
   }
 
   static pw.Widget _returns(ShopReportData d) {
-    return pw.Column(children: [
-      _kv('Total refunds', _money(d.refunds), color: _red),
-      _kv('Return transactions', '${d.returnTransactions}'),
-      _kv('Profit reversed', _money(d.profitReversed), color: _red),
-    ]);
+    return pw.Column(
+      children: [
+        _kv('Total refunds', _money(d.refunds), color: _red),
+        _kv('Return transactions', '${d.returnTransactions}'),
+        _kv('Profit reversed', _money(d.profitReversed), color: _red),
+      ],
+    );
   }
 
   static pw.Widget _inventory(ShopReportData d) {
-    return pw.Column(children: [
-      _kpiRow(
-        _kpi('Retail value', _money(d.inventoryRetailValue)),
-        _kpi('Cost value', _money(d.inventoryCostValue)),
-      ),
-      pw.SizedBox(height: 10),
-      _kpiRow(
-        _kpi('Potential profit', _money(d.inventoryPotentialProfit)),
-        _kpi('Stock units', '${d.stockUnits}'),
-      ),
-      pw.SizedBox(height: 10),
-      _kpiRow(
-        _kpi(
-          'Low stock',
-          '${d.lowStockCount}',
-          color: d.lowStockCount > 0 ? _red : _emeraldDark,
+    return pw.Column(
+      children: [
+        _kpiRow(
+          _kpi('Retail value', _money(d.inventoryRetailValue)),
+          _kpi('Cost value', _money(d.inventoryCostValue)),
         ),
-        _kpi(
-          'Out of stock',
-          '${d.outOfStockCount}',
-          color: d.outOfStockCount > 0 ? _red : _emeraldDark,
+        pw.SizedBox(height: 10),
+        _kpiRow(
+          _kpi('Potential profit', _money(d.inventoryPotentialProfit)),
+          _kpi('Stock units', '${d.stockUnits}'),
         ),
-      ),
-    ]);
+        pw.SizedBox(height: 10),
+        _kpiRow(
+          _kpi(
+            'Low stock',
+            '${d.lowStockCount}',
+            color: d.lowStockCount > 0 ? _red : _emeraldDark,
+          ),
+          _kpi(
+            'Out of stock',
+            '${d.outOfStockCount}',
+            color: d.outOfStockCount > 0 ? _red : _emeraldDark,
+          ),
+        ),
+      ],
+    );
   }
 }
