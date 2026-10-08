@@ -422,6 +422,12 @@ class LicenseService {
   // =================== Device Info ===================
 
   /// Get this device's unique ID.
+  ///
+  /// The id is stable across app reinstalls (hardware-derived) but varies
+  /// per physical device. On **Android** it folds in brand + model in
+  /// addition to `ANDROID_ID`, because `ANDROID_ID` alone can collide
+  /// (shared emulators, some OEM ROMs) and was making different devices
+  /// report the same id.
   static Future<String> get deviceId async {
     // ── Web: generate a browser fingerprint ──
     if (kIsWeb) {
@@ -442,24 +448,44 @@ class LicenseService {
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
         final android = await deviceInfo.androidInfo;
-        return 'android_${android.id}';
+        // ANDROID_ID alone can be shared (emulators/OEM quirks); brand and
+        // model are stable Build values that differ per physical device.
+        return 'android_${android.id}_${android.brand}_${android.model}';
       } else if (defaultTargetPlatform == TargetPlatform.iOS) {
         final ios = await deviceInfo.iosInfo;
-        return 'ios_${ios.identifierForVendor ?? "unknown"}';
+        final id = ios.identifierForVendor;
+        if (id == null || id.isEmpty) return _fallbackDeviceId();
+        return 'ios_$id';
       } else if (defaultTargetPlatform == TargetPlatform.macOS) {
         final mac = await deviceInfo.macOsInfo;
-        return 'macos_${mac.systemGUID ?? "unknown"}';
+        final id = mac.systemGUID;
+        if (id == null || id.isEmpty) return _fallbackDeviceId();
+        return 'macos_$id';
       } else if (defaultTargetPlatform == TargetPlatform.windows) {
         final win = await deviceInfo.windowsInfo;
         return 'windows_${win.computerName}';
       } else if (defaultTargetPlatform == TargetPlatform.linux) {
         final linux = await deviceInfo.linuxInfo;
-        return 'linux_${linux.machineId ?? "unknown"}';
+        final id = linux.machineId;
+        if (id == null || id.isEmpty) return _fallbackDeviceId();
+        return 'linux_$id';
       }
     } catch (e) {
       debugPrint('⚠️ Failed to get device ID: $e');
     }
-    return 'unknown';
+    // Never return a constant: a shared id would make every affected device
+    // look like one. Persist a per-device stand-in instead (web-style).
+    return _fallbackDeviceId();
+  }
+
+  /// Last-resort per-device id, used only when the hardware id is
+  /// unavailable. Stored in Hive so affected devices don't collide.
+  static Future<String> _fallbackDeviceId() async {
+    final stored = _box.get('local_deviceId') as String?;
+    if (stored != null && stored.isNotEmpty) return stored;
+    final newId = 'local_${DateTime.now().microsecondsSinceEpoch}';
+    await _box.put('local_deviceId', newId);
+    return newId;
   }
 
   // =================== License Validation ===================
@@ -755,6 +781,16 @@ class LicenseService {
     await _box.delete('license_pin');
     await _box.delete('license_pinEnabled');
     // Keep trial_startDate so we know trial was used — don't delete it
+
+    // Activating a license expires the local trial ("paid supersedes
+    // trial"). If that license is now gone and the original window hasn't
+    // fully elapsed, hand the unused days back instead of leaving the user
+    // on a "trial has ended" screen — the trial never actually ran out.
+    final trialStart = trialStartDate;
+    if (trialStart != null &&
+        DateTime.now().difference(trialStart).inDays < trialDurationDays) {
+      await _box.put('trial_expired', false);
+    }
 
     _notifyChanged();
   }
