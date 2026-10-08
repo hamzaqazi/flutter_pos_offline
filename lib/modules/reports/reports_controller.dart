@@ -27,7 +27,7 @@ class ReportsController extends GetxController {
   /// The preset the range corresponds to. `null` = the default "last 30 days"
   /// window (no chip selected); a value = that preset is active, or
   /// [ReportsRange.custom] for a hand-picked range.
-  final ReportsRange? selectedRange = Rx<ReportsRange?>(null);
+  final Rx<ReportsRange?> selectedRange = Rx<ReportsRange?>(null);
 
   void setToday() {
     final now = DateTime.now();

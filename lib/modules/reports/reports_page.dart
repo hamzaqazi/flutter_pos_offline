@@ -181,8 +181,8 @@ class ReportsPage extends GetView<ReportsController> {
 
   /// A single-select date-range chip. The selected one is filled and shows a
   /// checkmark, so it's clear which filter is currently active.
-  Widget _rangeChip({
-    required String label,
+  Widget _rangeChip(
+    String label, {
     required bool selected,
     required VoidCallback onTap,
   }) {
