@@ -1159,7 +1159,7 @@ class _EmptyReport extends StatelessWidget {
 
 /// Bottom sheet that lets the owner pick a date range and generate a
 /// printable / shareable PDF report. Generation shows a loading
-/// indicator; once ready, Save/Print and Share actions appear.
+/// indicator; once ready, Preview and Share actions appear.
 class _ShopReportSheet extends StatefulWidget {
   final ReportsController controller;
 
@@ -1240,12 +1240,6 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
     }
   }
 
-  Future<void> _savePrint() async {
-    final bytes = _bytes;
-    if (bytes == null) return;
-    await Printing.layoutPdf(onLayout: (format) async => bytes);
-  }
-
   /// File name for the current period, e.g. shop_report_20251001_20251008.pdf.
   String get _reportFilename {
     String d(DateTime x) =>
@@ -1262,16 +1256,13 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
     await Printing.sharePdf(bytes: bytes, filename: _reportFilename);
   }
 
-  /// Open the generated PDF in an on-screen preview (with its own print /
-  /// save / share action bar) so the owner can review it before exporting.
+  /// Open the report in the on-screen print/preview dialog: the system
+  /// preview renders the pages so the owner can review the report, then
+  /// print or "Save as PDF" from the dialog (or cancel without exporting).
   Future<void> _preview() async {
     final bytes = _bytes;
     if (bytes == null) return;
-    await showPreviewDialog(
-      context: context,
-      filename: _reportFilename,
-      bytes: bytes,
-    );
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
   }
 
   @override
@@ -1411,14 +1402,6 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.save_alt_outlined),
-                        label: const Text('Save / Print'),
-                        onPressed: _savePrint,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: OutlinedButton.icon(
                         icon: const Icon(Icons.ios_share),
