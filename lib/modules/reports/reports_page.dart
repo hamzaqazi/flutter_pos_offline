@@ -1239,13 +1239,38 @@ class _ShopReportSheetState extends State<_ShopReportSheet> {
   }
 
   /// File name for the current period, e.g. shop_report_20251001_20251008.pdf.
+  // String get _reportFilename {
+  //   String d(DateTime x) =>
+  //       '${x.year}${x.month.toString().padLeft(2, '0')}'
+  //       '${x.day.toString().padLeft(2, '0')}';
+  //   final s = _c.startDate.value;
+  //   final e = _c.endDate.value;
+  //   return 'shop_report_${d(s)}_${d(e)}.pdf';
+  // }
   String get _reportFilename {
-    String d(DateTime x) =>
-        '${x.year}${x.month.toString().padLeft(2, '0')}'
-        '${x.day.toString().padLeft(2, '0')}';
+    String d(DateTime x) {
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+
+      return '${x.day.toString().padLeft(2, '0')}_${months[x.month - 1]}_${x.year}';
+    }
+
     final s = _c.startDate.value;
     final e = _c.endDate.value;
-    return 'shop_report_${d(s)}_${d(e)}.pdf';
+
+    return 'shop_report_${d(s)}-${d(e)}.pdf';
   }
 
   Future<void> _share() async {
