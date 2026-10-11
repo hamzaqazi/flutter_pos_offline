@@ -44,7 +44,8 @@ class InvoicePdfService {
     String invoiceNumber = '',
   }) async {
     final pdf = pw.Document();
-    final checkoutDiscountAmount = subtotal * checkoutDiscount / 100;
+    // Passed in as money off the bill, not a percentage.
+    final checkoutDiscountAmount = checkoutDiscount;
     final productDiscountAmount = totalSavings - checkoutDiscountAmount;
 
     final settings = SettingsService.getSettings();
@@ -274,9 +275,9 @@ class InvoicePdfService {
                   '-${Formatters.currency(productDiscountAmount)}',
                   valueColor: _emerald,
                 ),
-              if (checkoutDiscount > 0)
+              if (checkoutDiscountAmount > 0)
                 _totalRow(
-                  'Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%)',
+                  'Checkout discount',
                   '-${Formatters.currency(checkoutDiscountAmount)}',
                   valueColor: _red,
                 ),

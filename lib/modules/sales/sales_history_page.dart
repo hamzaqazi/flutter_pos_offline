@@ -9,10 +9,12 @@ import 'package:ad_shop_pos/modules/staff/staff_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/data/services/order_totals.dart';
 import 'package:ad_shop_pos/app/utils/launcher.dart';
 import 'package:get/get.dart';
 
 import 'sales_controller.dart';
+import 'sales_search_field.dart';
 import '../invoice/invoice_preview_page.dart';
 
 class SalesHistoryPage extends GetView<SalesController> {
@@ -24,7 +26,10 @@ class SalesHistoryPage extends GetView<SalesController> {
     final cs = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppShellAppBar(title: const Text("Sales History")),
+      appBar: AppShellAppBar(
+        title: const Text("Sales History"),
+        helpTopicId: 'sales-history',
+      ),
       body: Obx(() {
         if (controller.sales.isEmpty) {
           return _EmptySales();
@@ -177,37 +182,8 @@ class SalesHistoryPage extends GetView<SalesController> {
             );
             }),
             // ---------- Search bar ----------
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: TextField(
-                controller: controller.searchCtrl,
-                decoration: InputDecoration(
-                  hintText: "Search by invoice no, customer or item...",
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  filled: true,
-                  suffixIcon: Obx(() {
-                    if (controller.searchQuery.value.isEmpty)
-                      return const SizedBox.shrink();
-                    return IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        controller.searchCtrl.clear();
-                        controller.searchQuery.value = '';
-                      },
-                    );
-                  }),
-                ),
-                onChanged: (value) => controller.searchQuery.value = value,
-              ),
-            ),
+            // The field owns its own text controller — see SalesSearchField.
+            SalesSearchField(query: controller.searchQuery),
             const SizedBox(height: AppSpacing.sm),
 
             // ---------- Date filter chips ----------
@@ -315,6 +291,13 @@ class SalesHistoryPage extends GetView<SalesController> {
             Expanded(
               child: Obx(() {
                 final sales = controller.filteredSales;
+                final returnsController = Get.find<ReturnsController>();
+                // Subscribe to the returns list here. The per-card reads below
+                // happen inside itemBuilder, which runs during layout rather
+                // than inside this builder, so they are not tracked — without
+                // this line a card's return badge would not appear until
+                // something else happened to rebuild the list.
+                returnsController.returns.length;
                 return ListView.separated(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
@@ -333,7 +316,6 @@ class SalesHistoryPage extends GetView<SalesController> {
                   );
 
                   // Check if there are returns for this sale
-                  final returnsController = Get.find<ReturnsController>();
                   final saleReturns = returnsController.returnsForSale(sale.id);
                   final totalRefund = saleReturns.fold<double>(
                     0,
@@ -345,6 +327,24 @@ class SalesHistoryPage extends GetView<SalesController> {
                   );
                   final saleNetProfit = sale.profit - saleProfitReversed;
 
+                  // A sale that lost money showed nothing at all here before —
+                  // the profit chip only ever appeared above zero. Returns give
+                  // back the margin on the units they take, so a reversal
+                  // shrinks a loss the same way it shrinks a profit.
+                  final saleLoss = OrderTotals.lossFrom(saleNetProfit);
+                  final saleProfitLabel = saleProfitReversed > 0
+                      ? "${Formatters.currency(saleNetProfit)} net profit"
+                      : "+${Formatters.currency(sale.profit)} profit";
+                  final saleLossLabel =
+                      "−${Formatters.currency(saleLoss)} loss";
+
+                  // Return status, for the badge on the amount and for
+                  // disabling the return action once nothing is left to give
+                  // back.
+                  final fullyReturned = returnsController.isFullyReturned(sale);
+                  final partiallyReturned =
+                      !fullyReturned && returnsController.hasReturns(sale.id);
+
                   return RepaintBoundary(
                     child: Card(
                       clipBehavior: Clip.antiAlias,
@@ -354,7 +354,9 @@ class SalesHistoryPage extends GetView<SalesController> {
                               () => InvoicePreviewPage(
                                 items: sale.items,
                                 subtotal: sale.subtotal,
-                                checkoutDiscount: sale.checkoutDiscount,
+                                // Resolves the legacy percentage records, so
+                                // an old receipt reprints correctly.
+                                checkoutDiscount: sale.checkoutDiscountAmount,
                                 taxAmount: sale.taxAmount,
                                 total: sale.total,
                                 cash: sale.cash,
@@ -392,15 +394,48 @@ class SalesHistoryPage extends GetView<SalesController> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Row(
+                                      Wrap(
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: AppSpacing.sm,
                                         children: [
                                           Text(
                                             Formatters.currency(sale.total),
                                             style: theme.textTheme.titleMedium
                                                 ?.copyWith(
                                                   fontWeight: FontWeight.w800,
+                                                  // A fully refunded sale kept
+                                                  // its amount, but it is no
+                                                  // longer money taken —
+                                                  // strike it through so the
+                                                  // badge is not contradicted
+                                                  // by a live-looking total.
+                                                  decoration: fullyReturned
+                                                      ? TextDecoration
+                                                            .lineThrough
+                                                      : null,
+                                                  color: fullyReturned
+                                                      ? cs.onSurfaceVariant
+                                                      : null,
                                                 ),
                                           ),
+                                          // Return status badge, on the same
+                                          // line as the amount so a refunded
+                                          // sale is obvious at a glance. It
+                                          // drops to the next line by itself
+                                          // when the amount is wide.
+                                          if (fullyReturned)
+                                            AppBadge.danger(
+                                              label: 'Returned',
+                                              icon: Icons
+                                                  .assignment_return_outlined,
+                                            ),
+                                          if (partiallyReturned)
+                                            AppBadge.warning(
+                                              label: 'Partial return',
+                                              icon: Icons
+                                                  .assignment_return_outlined,
+                                            ),
                                           // if (sale.hasInvoiceNumber) ...[
                                           //   const SizedBox(width: AppSpacing.sm),
                                           //   Container(
@@ -509,37 +544,16 @@ class SalesHistoryPage extends GetView<SalesController> {
                                                 ),
                                           ),
                                           if (sale.profit > 0)
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: AppSpacing.xs,
-                                                    vertical: 1,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    (saleProfitReversed > 0
-                                                            ? AppColors.warning
-                                                            : AppColors.success)
-                                                        .withValues(
-                                                          alpha: 0.12,
-                                                        ),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      AppSpacing.radiusSm,
-                                                    ),
-                                              ),
-                                              child: Text(
-                                                saleProfitReversed > 0
-                                                    ? "${Formatters.currency(saleNetProfit)} net profit"
-                                                    : "+${Formatters.currency(sale.profit)} profit",
-                                                style: TextStyle(
-                                                  color: saleProfitReversed > 0
-                                                      ? AppColors.warning
-                                                      : AppColors.success,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
+                                            _SaleChip(
+                                              label: saleProfitLabel,
+                                              color: saleProfitReversed > 0
+                                                  ? AppColors.warning
+                                                  : AppColors.success,
+                                            ),
+                                          if (saleLoss > 0)
+                                            _SaleChip(
+                                              label: saleLossLabel,
+                                              color: AppColors.danger,
                                             ),
                                         ],
                                       ),
@@ -626,13 +640,21 @@ class SalesHistoryPage extends GetView<SalesController> {
                                         //   ),
                                         // ),
                                         child: IconButton.filled(
-                                          onPressed: () {
-                                            if (!LicenseService.isPremium) {
-                                              _showUpgradeDialog(context);
-                                              return;
-                                            }
-                                            showReturnDialog(sale);
-                                          },
+                                          // Nothing left to give back once the
+                                          // whole sale has been returned, so
+                                          // the action is disabled rather than
+                                          // opening a dialog that can only say
+                                          // "no valid items to return".
+                                          onPressed: fullyReturned
+                                              ? null
+                                              : () {
+                                                  if (!LicenseService
+                                                      .isPremium) {
+                                                    _showUpgradeDialog(context);
+                                                    return;
+                                                  }
+                                                  showReturnDialog(sale);
+                                                },
                                           icon: const Icon(
                                             Icons.assignment_return_outlined,
                                             size: 20,
@@ -820,6 +842,36 @@ class _EmptySales extends StatelessWidget {
       icon: Icons.receipt_long_outlined,
       title: 'No sales yet',
       subtitle: 'Completed sales will appear here',
+    );
+  }
+}
+
+/// Small tinted pill for the figures on a sale card — profit, or a loss.
+class _SaleChip extends StatelessWidget {
+  const _SaleChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 1,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

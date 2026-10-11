@@ -1,30 +1,56 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:ad_shop_pos/app/widgets/app_empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ad_shop_pos/main.dart';
-
+/// Widget tests for the shared design-system components.
+///
+/// These deliberately stay clear of `PosApp`: booting the real app needs
+/// Firebase and Hive initialised first (see `main.dart`), which is too heavy
+/// for a unit-test run. Testing the components directly keeps the suite fast
+/// and runnable with a plain `flutter test`.
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    // await tester.pumpWidget(const PosApp(initialRoute: ''));
+  testWidgets('AppEmptyState renders its content and fires its action', (
+    WidgetTester tester,
+  ) async {
+    var tapped = false;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AppEmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'No products yet',
+            subtitle: 'Tap "Add product" to get started',
+            actionLabel: 'How to add a product',
+            onAction: () => tapped = true,
+          ),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.text('No products yet'), findsOneWidget);
+    expect(find.text('Tap "Add product" to get started'), findsOneWidget);
+    expect(find.byIcon(Icons.inventory_2_outlined), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('How to add a product'));
+    expect(tapped, isTrue);
+  });
+
+  testWidgets('AppEmptyState omits the button when no action is given', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: AppEmptyState(
+            icon: Icons.search_off_rounded,
+            title: 'No matching products',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('No matching products'), findsOneWidget);
+    expect(find.byType(FilledButton), findsNothing);
   });
 }

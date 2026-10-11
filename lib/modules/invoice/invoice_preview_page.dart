@@ -18,7 +18,7 @@ import 'package:printing/printing.dart';
 class InvoicePreviewPage extends StatelessWidget {
   final List<CartItemModel> items;
   final double subtotal;
-  final double checkoutDiscount; // checkout discount percentage
+  final double checkoutDiscount; // checkout discount, as money off the bill
   final double taxRate; // tax rate %
   final bool taxInclusive; // whether tax is included in price
   final double taxAmount; // calculated tax amount
@@ -51,7 +51,8 @@ class InvoicePreviewPage extends StatelessWidget {
     this.readOnly = false,
   });
 
-  double get _checkoutDiscountAmount => subtotal * checkoutDiscount / 100;
+  /// The checkout discount is passed in as money, not a percentage.
+  double get _checkoutDiscountAmount => checkoutDiscount;
 
   String get _customerName {
     if (customerId.isEmpty) return '';
@@ -378,10 +379,10 @@ class InvoicePreviewPage extends StatelessWidget {
                       const SizedBox(height: AppSpacing.sm),
                     ],
                     // Checkout discount
-                    if (checkoutDiscount > 0) ...[
+                    if (_checkoutDiscountAmount > 0) ...[
                       _row(
                         theme,
-                        "Checkout discount (${checkoutDiscount.toStringAsFixed(0)}%)",
+                        "Checkout discount",
                         "-${Formatters.currency(_checkoutDiscountAmount)}",
                         valueColor: AppColors.danger,
                       ),
@@ -559,11 +560,14 @@ class InvoicePreviewPage extends StatelessWidget {
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text("Complete sale"),
                       onPressed: () {
+                        // completeSale recomputes the totals with
+                        // OrderTotals — the same helper this preview was
+                        // built from — so the saved sale matches what was
+                        // shown here.
                         Get.find<SalesController>().completeSale(
                           cash: cash,
                           change: change,
                           checkoutDiscount: checkoutDiscount,
-                          taxAmount: taxAmount,
                           customerId: customerId,
                           cashierId: cashierId,
                           invoiceNumber: invoiceNumber,

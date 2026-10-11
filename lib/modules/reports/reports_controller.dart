@@ -2,10 +2,18 @@ import 'package:ad_shop_pos/modules/returns/returns_controller.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/product_model.dart';
+import '../../data/models/return_model.dart';
 import '../../data/models/sale_model.dart';
+import '../../data/services/shop_report_pdf_service.dart';
 import '../expenses/expenses_controller.dart';
 import '../products/products_controller.dart';
 import '../sales/sales_controller.dart';
+
+/// Which date-range preset the reports are currently filtered by.
+///
+/// A `null` [ReportsController.selectedRange] means the default "last 30
+/// days" window (no chip selected); a value names the active preset.
+enum ReportsRange { today, thisWeek, thisMonth, lastMonth, allTime, custom }
 
 class ReportsController extends GetxController {
   final ProductsController _productsController = Get.find();
@@ -17,10 +25,16 @@ class ReportsController extends GetxController {
   final startDate = DateTime.now().subtract(const Duration(days: 30)).obs;
   final endDate = DateTime.now().obs;
 
+  /// The preset the range corresponds to. `null` = the default "last 30 days"
+  /// window (no chip selected); a value = that preset is active, or
+  /// [ReportsRange.custom] for a hand-picked range.
+  final Rx<ReportsRange?> selectedRange = Rx<ReportsRange?>(null);
+
   void setToday() {
     final now = DateTime.now();
     startDate.value = DateTime(now.year, now.month, now.day);
     endDate.value = now;
+    selectedRange.value = ReportsRange.today;
   }
 
   void setThisWeek() {
@@ -28,12 +42,14 @@ class ReportsController extends GetxController {
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     startDate.value = DateTime(weekStart.year, weekStart.month, weekStart.day);
     endDate.value = now;
+    selectedRange.value = ReportsRange.thisWeek;
   }
 
   void setThisMonth() {
     final now = DateTime.now();
     startDate.value = DateTime(now.year, now.month, 1);
     endDate.value = now;
+    selectedRange.value = ReportsRange.thisMonth;
   }
 
   void setLastMonth() {
@@ -41,11 +57,100 @@ class ReportsController extends GetxController {
     final lastMonth = DateTime(now.year, now.month - 1);
     startDate.value = DateTime(lastMonth.year, lastMonth.month, 1);
     endDate.value = DateTime(now.year, now.month, 0, 23, 59, 59);
+    selectedRange.value = ReportsRange.lastMonth;
   }
 
   void setAllTime() {
     startDate.value = DateTime(2000, 1, 1);
     endDate.value = DateTime.now();
+    selectedRange.value = ReportsRange.allTime;
+  }
+
+  /// Apply a hand-picked date range (from the custom picker). The end day is
+  /// stored at midnight so the filter's "+1 day / isBefore" includes the whole
+  /// end day, matching the other presets.
+  void setCustomRange(DateTime start, DateTime end) {
+    startDate.value = DateTime(start.year, start.month, start.day);
+    endDate.value = DateTime(end.year, end.month, end.day);
+    selectedRange.value = ReportsRange.custom;
+  }
+
+  /// Snapshot of every figure the shop report PDF needs, read from the
+  /// currently selected [startDate]/[endDate].
+  ShopReportData buildReportData() {
+    return ShopReportData(
+      start: startDate.value,
+      end: endDate.value,
+      rangeLabel: describeRange(),
+      revenue: totalRevenue,
+      grossProfit: totalGrossProfit,
+      discounts: totalDiscount,
+      tax: totalTax,
+      cogs: totalCOGS,
+      totalExpenses: totalExpenses,
+      netProfit: netProfit,
+      netMargin: netMargin,
+      transactions: totalTransactions,
+      itemsSold: totalItemsSold,
+      averageTransaction: averageTransaction,
+      margin: margin,
+      refunds: totalRefunds,
+      returnTransactions: totalReturnTransactions,
+      profitReversed: totalProfitReversed,
+      categories: categoryBreakdownList
+          .map(
+            (c) => ShopCategory(
+              name: c.category,
+              quantity: c.quantity,
+              revenue: c.revenue,
+              profit: c.profit,
+            ),
+          )
+          .toList(),
+      topProducts: topProductsByRevenue
+          .take(10)
+          .map(
+            (p) => ShopTopProduct(
+              name: p.name,
+              category: p.category,
+              quantity: p.quantity,
+              revenue: p.revenue,
+              profit: p.profit,
+            ),
+          )
+          .toList(),
+      expenses: expenseBreakdownList
+          .map(
+            (e) => ShopExpenseLine(category: e.category, amount: e.amount),
+          )
+          .toList(),
+      inventoryRetailValue: inventoryRetailValue,
+      inventoryCostValue: inventoryCostValue,
+      inventoryPotentialProfit: inventoryPotentialProfit,
+      stockUnits: totalStockUnits,
+      lowStockCount: lowStockProducts.length,
+      outOfStockCount: outOfStockProducts.length,
+    );
+  }
+
+  /// Human name of the active range, e.g. "This month" or "Custom range".
+  String describeRange() {
+    switch (selectedRange.value) {
+      case ReportsRange.today:
+        return 'Today';
+      case ReportsRange.thisWeek:
+        return 'This week';
+      case ReportsRange.thisMonth:
+        return 'This month';
+      case ReportsRange.lastMonth:
+        return 'Last month';
+      case ReportsRange.allTime:
+        return 'All time';
+      case ReportsRange.custom:
+        return 'Custom range';
+      case null:
+        return 'Last 30 days';
+    }
   }
 
   /// Sales filtered by date range.
@@ -69,8 +174,40 @@ class ReportsController extends GetxController {
   double get totalDiscount =>
       filteredSales.fold(0, (sum, s) => sum + s.discount);
 
-  double get totalTax =>
-      filteredSales.fold(0, (sum, s) => sum + s.taxAmount);
+  /// Tax the shop is still holding: tax charged in the period, less the tax
+  /// handed back with refunds.
+  double get totalTax => totalTaxCharged - totalTaxRefunded;
+
+  /// Tax charged on the sales in this period, before refunds.
+  double get totalTaxCharged =>
+      filteredSales.fold(0.0, (sum, s) => sum + s.taxAmount);
+
+  /// Tax given back with the refunds recorded in this period.
+  ///
+  /// The refunds figure already nets these out of revenue; leaving them out of
+  /// the tax figure meant a shop that refunded an item still reported the tax
+  /// on it as collected, and would think it owed more than it did.
+  double get totalTaxRefunded => taxRefundedBy(
+    _returnsController.returnsInRange(startDate.value, endDate.value),
+    _salesController.sales,
+  );
+
+  /// Tax returned by [returns] against [sales].
+  ///
+  /// Static and free of Hive and GetX so the arithmetic can be tested on its
+  /// own. A return whose sale cannot be found reverses nothing rather than
+  /// guessing.
+  static double taxRefundedBy(
+    List<ReturnModel> returns,
+    List<SaleModel> sales,
+  ) {
+    var refunded = 0.0;
+    for (final ret in returns) {
+      final sale = sales.firstWhereOrNull((s) => s.id == ret.saleId);
+      if (sale != null) refunded += sale.taxShareOf(ret.refundAmount);
+    }
+    return refunded;
+  }
 
   double get totalCOGS {
     final cogs = filteredSales.fold(0.0, (sum, s) {

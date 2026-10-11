@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
@@ -67,7 +69,11 @@ class LicensePage extends StatelessWidget {
               const SizedBox(height: AppSpacing.xxl),
 
               // ── Actions ──
-              if (LicenseService.isActivated) _DeactivateButton(),
+              if (LicenseService.isActivated) ...[
+                _RefreshLicense(),
+                const SizedBox(height: AppSpacing.md),
+                _DeactivateButton(),
+              ],
               if (!LicenseService.isPaidPlan) _UpgradeSection(),
               const SizedBox(height: AppSpacing.xxl),
 
@@ -413,6 +419,100 @@ class _PlanRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Refresh License
+// ────────────────────────────────────────────────────────────
+
+/// Re-runs the server-side license check on demand so a renewal, plan change,
+/// or deactivation applied in Firestore reaches the app without a restart.
+class _RefreshLicense extends StatefulWidget {
+  const _RefreshLicense();
+
+  @override
+  State<_RefreshLicense> createState() => _RefreshLicenseState();
+}
+
+class _RefreshLicenseState extends State<_RefreshLicense> {
+  bool _busy = false;
+
+  Future<void> _refresh() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      // If the check actually talks to the server it stamps lastVerified, so
+      // the difference between the before and after values tells a live
+      // server read apart from the offline "trust the saved copy" fallback.
+      final verifiedBefore = LicenseService.lastVerified;
+      try {
+        await LicenseService.verifyActiveLicense().timeout(
+          const Duration(seconds: 8),
+        );
+      } on TimeoutException {
+        // Matches the startup path: never leave the spinner running. The
+        // in-flight read, if it lands later, still updates the cache and the
+        // page rebuilds on its own. lastVerified was not stamped, so this
+        // falls through to the offline message below.
+      }
+      if (!mounted) return;
+
+      if (!LicenseService.isActivated) {
+        // The server check deactivated us (expired, removed, or switched off).
+        // Mirror the startup flow: premium is now locked, so hand the user to
+        // the activation screen, which shows the deactivation reason.
+        Get.offAllNamed('/activation');
+        return;
+      }
+
+      final reachedServer = LicenseService.lastVerified != verifiedBefore;
+      Get.snackbar(
+        reachedServer ? 'License verified' : 'Offline',
+        reachedServer
+            ? 'Your license is up to date with the server.'
+            : "Couldn't reach the server — showing your saved license. "
+                'It will sync automatically when you\'re back online.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        OutlinedButton.icon(
+          onPressed: _busy ? null : _refresh,
+          icon: _busy
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: cs.primary,
+                  ),
+                )
+              : const Icon(Icons.sync, size: 18),
+          label: Text(_busy ? 'Checking…' : 'Refresh license'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Re-checks your license with the server to pick up a renewal or '
+          'plan change without restarting the app.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

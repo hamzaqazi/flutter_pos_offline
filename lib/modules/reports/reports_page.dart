@@ -1,13 +1,18 @@
+import 'dart:typed_data';
+
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
 import 'package:ad_shop_pos/app/widgets/tooltip_label.dart';
 import 'package:ad_shop_pos/app/utils/formatters.dart';
 import 'package:ad_shop_pos/data/models/product_model.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
+import 'package:ad_shop_pos/data/services/shop_report_pdf_service.dart';
 import 'package:ad_shop_pos/modules/reports/charts_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/widgets/premium_gate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:printing/printing.dart';
 
 import 'reports_controller.dart';
 
@@ -29,6 +34,17 @@ class ReportsPage extends GetView<ReportsController> {
           ),
           child: Text("Reports & Analytics"),
         ),
+        actions: [
+          Obx(() {
+            LicenseService.revision.value;
+            if (!LicenseService.isPremium) return const SizedBox.shrink();
+            return IconButton(
+              onPressed: () => _openReportSheet(context),
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              tooltip: 'Save, print or share a PDF report',
+            );
+          }),
+        ],
         flexibleSpace: FlexibleSpaceBar(
           background: Container(
             decoration: BoxDecoration(
@@ -61,25 +77,79 @@ class ReportsPage extends GetView<ReportsController> {
                 AppSpacing.lg,
                 AppSpacing.sm,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Date range", style: theme.textTheme.titleSmall),
-                  const SizedBox(height: AppSpacing.sm),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+              child: Obx(() {
+                final sel = controller.selectedRange.value;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Date range", style: theme.textTheme.titleSmall),
+                    const SizedBox(height: AppSpacing.sm),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _rangeChip(
+                            "Today",
+                            selected: sel == ReportsRange.today,
+                            onTap: controller.setToday,
+                          ),
+                          _rangeChip(
+                            "This week",
+                            selected: sel == ReportsRange.thisWeek,
+                            onTap: controller.setThisWeek,
+                          ),
+                          _rangeChip(
+                            "This month",
+                            selected: sel == ReportsRange.thisMonth,
+                            onTap: controller.setThisMonth,
+                          ),
+                          _rangeChip(
+                            "Last month",
+                            selected: sel == ReportsRange.lastMonth,
+                            onTap: controller.setLastMonth,
+                          ),
+                          _rangeChip(
+                            "All time",
+                            selected: sel == ReportsRange.allTime,
+                            onTap: controller.setAllTime,
+                          ),
+                          _rangeChip(
+                            "Custom",
+                            selected: sel == ReportsRange.custom,
+                            onTap: () => _pickCustomRange(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    // Show the exact range in effect so it's obvious a filter
+                    // is active (and which one), including the default window.
+                    Row(
                       children: [
-                        _dateChip("Today", controller.setToday),
-                        _dateChip("This week", controller.setThisWeek),
-                        _dateChip("This month", controller.setThisMonth),
-                        _dateChip("Last month", controller.setLastMonth),
-                        _dateChip("All time", controller.setAllTime),
+                        Icon(
+                          Icons.date_range,
+                          size: 14,
+                          color: sel == null ? cs.onSurfaceVariant : cs.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _activeRangeLabel(sel),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: sel == null
+                                  ? cs.onSurfaceVariant
+                                  : cs.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                );
+              }),
             ),
             const Divider(height: 1),
 
@@ -125,10 +195,88 @@ class ReportsPage extends GetView<ReportsController> {
     );
   }
 
-  Widget _dateChip(String label, VoidCallback onTap) {
+  /// A single-select date-range chip. The selected one is filled and shows a
+  /// checkmark, so it's clear which filter is currently active.
+  Widget _rangeChip(
+    String label, {
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(right: AppSpacing.sm),
-      child: ActionChip(label: Text(label), onPressed: onTap),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onTap(),
+      ),
+    );
+  }
+
+  /// Text shown under the chips: the preset name + the exact dates in effect.
+  String _activeRangeLabel(ReportsRange? sel) {
+    final start = controller.startDate.value;
+    final end = controller.endDate.value;
+    final sameDay =
+        start.year == end.year &&
+        start.month == end.month &&
+        start.day == end.day;
+    final dates = sameDay
+        ? Formatters.dateShort(start)
+        : '${Formatters.dateShort(start)} – ${Formatters.dateShort(end)}';
+    return '${_rangePrefix(sel)} · $dates';
+  }
+
+  String _rangePrefix(ReportsRange? sel) {
+    switch (sel) {
+      case ReportsRange.today:
+        return 'Today';
+      case ReportsRange.thisWeek:
+        return 'This week';
+      case ReportsRange.thisMonth:
+        return 'This month';
+      case ReportsRange.lastMonth:
+        return 'Last month';
+      case ReportsRange.allTime:
+        return 'All time';
+      case ReportsRange.custom:
+        return 'Custom';
+      case null:
+        return 'Last 30 days';
+    }
+  }
+
+  /// Open a date-range picker and apply the result as the custom filter.
+  Future<void> _pickCustomRange(BuildContext context) async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000, 1, 1),
+      lastDate: DateTime.now(),
+      initialDateRange: DateTimeRange(
+        start: controller.startDate.value,
+        end: controller.endDate.value,
+      ),
+      builder: (context, child) {
+        return Theme(data: Theme.of(context), child: child!);
+      },
+    );
+    if (picked != null) {
+      controller.setCustomRange(picked.start, picked.end);
+    }
+  }
+
+  /// Opens the "save / print / share report" bottom sheet.
+  Future<void> _openReportSheet(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusLg),
+        ),
+      ),
+      builder: (_) => _ShopReportSheet(controller: controller),
     );
   }
 }
@@ -259,6 +407,7 @@ class _SummaryTab extends GetView<ReportsController> {
                   child: _StatBox(
                     icon: Icons.receipt_outlined,
                     label: "Tax collected",
+                    tooltip: FinancialTooltips.taxCollected,
                     value: Formatters.currency(controller.totalTax),
                     color: AppColors.accent,
                   ),
@@ -584,8 +733,8 @@ class _ExpensesTab extends GetView<ReportsController> {
                     children: [
                       Expanded(
                         child: _BannerStat(
-                          label: "Gross Profit",
-                          tooltip: FinancialTooltips.grossProfit,
+                          label: "Profit",
+                          tooltip: FinancialTooltips.profit,
                           value: Formatters.currency(controller.totalProfit),
                         ),
                       ),
@@ -1004,5 +1153,332 @@ class _EmptyReport extends StatelessWidget {
       title: message,
       subtitle: 'Data will appear as you make sales',
     );
+  }
+}
+
+// =================== Shop Report (PDF) sheet ===================
+
+/// Bottom sheet that lets the owner pick a date range and generate a
+/// printable / shareable PDF report. Generation shows a loading
+/// indicator; once ready, Preview and Share actions appear.
+class _ShopReportSheet extends StatefulWidget {
+  final ReportsController controller;
+
+  const _ShopReportSheet({super.key, required this.controller});
+
+  @override
+  State<_ShopReportSheet> createState() => _ShopReportSheetState();
+}
+
+class _ShopReportSheetState extends State<_ShopReportSheet> {
+  bool _busy = false;
+  Uint8List? _bytes;
+
+  ReportsController get _c => widget.controller;
+
+  String get _rangeSummary {
+    final s = _c.startDate.value;
+    final e = _c.endDate.value;
+    final sameDay = s.year == e.year && s.month == e.month && s.day == e.day;
+    final dates = sameDay
+        ? Formatters.dateShort(s)
+        : '${Formatters.dateShort(s)} – ${Formatters.dateShort(e)}';
+    return '${_rangeName(_c.selectedRange.value)} · $dates';
+  }
+
+  String _rangeName(ReportsRange? sel) {
+    switch (sel) {
+      case ReportsRange.today:
+        return 'Today';
+      case ReportsRange.thisWeek:
+        return 'This week';
+      case ReportsRange.thisMonth:
+        return 'This month';
+      case ReportsRange.lastMonth:
+        return 'Last month';
+      case ReportsRange.allTime:
+        return 'All time';
+      case ReportsRange.custom:
+        return 'Custom';
+      case null:
+        return 'Last 30 days';
+    }
+  }
+
+  /// Apply a preset, then invalidate any previously generated PDF so a
+  /// stale report can't be saved/shared for the wrong period.
+  void _onPreset(VoidCallback apply) {
+    apply();
+    setState(() => _bytes = null);
+  }
+
+  Future<void> _generate() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final bytes = await ShopReportPdfService.generate(_c.buildReportData());
+      // Brief pause so the loading state is visible even when the
+      // document generates in a few milliseconds.
+      await Future.delayed(const Duration(milliseconds: 450));
+      if (!mounted) return;
+      setState(() {
+        _bytes = bytes;
+        _busy = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      Get.snackbar(
+        'Could not generate report',
+        '$e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppColors.dangerLight,
+        colorText: AppColors.danger,
+      );
+    }
+  }
+
+  /// File name for the current period, e.g. shop_report_20251001_20251008.pdf.
+  // String get _reportFilename {
+  //   String d(DateTime x) =>
+  //       '${x.year}${x.month.toString().padLeft(2, '0')}'
+  //       '${x.day.toString().padLeft(2, '0')}';
+  //   final s = _c.startDate.value;
+  //   final e = _c.endDate.value;
+  //   return 'shop_report_${d(s)}_${d(e)}.pdf';
+  // }
+  String get _reportFilename {
+    String d(DateTime x) {
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+
+      return '${x.day.toString().padLeft(2, '0')}_${months[x.month - 1]}_${x.year}';
+    }
+
+    final s = _c.startDate.value;
+    final e = _c.endDate.value;
+
+    return 'shop_report_${d(s)}-${d(e)}.pdf';
+  }
+
+  Future<void> _share() async {
+    final bytes = _bytes;
+    if (bytes == null) return;
+    await Printing.sharePdf(bytes: bytes, filename: _reportFilename);
+  }
+
+  /// Open the report in the on-screen print/preview dialog: the system
+  /// preview renders the pages so the owner can review the report, then
+  /// print or "Save as PDF" from the dialog (or cancel without exporting).
+  Future<void> _preview() async {
+    final bytes = _bytes;
+    if (bytes == null) return;
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Obx(() {
+      final sel = _c.selectedRange.value;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Shop report',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Pick a period, then generate a PDF to save, print or share.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _chip(
+                    'Today',
+                    sel == ReportsRange.today,
+                    () => _onPreset(_c.setToday),
+                  ),
+                  _chip(
+                    'This week',
+                    sel == ReportsRange.thisWeek,
+                    () => _onPreset(_c.setThisWeek),
+                  ),
+                  _chip(
+                    'This month',
+                    sel == ReportsRange.thisMonth,
+                    () => _onPreset(_c.setThisMonth),
+                  ),
+                  _chip(
+                    'Last month',
+                    sel == ReportsRange.lastMonth,
+                    () => _onPreset(_c.setLastMonth),
+                  ),
+                  _chip(
+                    'All time',
+                    sel == ReportsRange.allTime,
+                    () => _onPreset(_c.setAllTime),
+                  ),
+                  _chip(
+                    'Custom',
+                    sel == ReportsRange.custom,
+                    () => _pickCustom(context),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Icon(
+                  Icons.date_range,
+                  size: 14,
+                  color: sel == null ? cs.onSurfaceVariant : cs.primary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _rangeSummary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: sel == null ? cs.onSurfaceVariant : cs.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (_busy)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        'Generating your report…',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else ...[
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text('Generate report'),
+                  onPressed: _generate,
+                ),
+              ),
+              if (_bytes != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonalIcon(
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: const Text('Preview report'),
+                    onPressed: _preview,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: cs.primary,
+                          side: BorderSide(color: cs.primary),
+                        ),
+                        icon: const Icon(Icons.ios_share),
+                        label: const Text('Share'),
+                        onPressed: _share,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _chip(String label, bool selected, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.sm),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onTap(),
+      ),
+    );
+  }
+
+  Future<void> _pickCustom(BuildContext context) async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000, 1, 1),
+      lastDate: DateTime.now(),
+      initialDateRange: DateTimeRange(
+        start: _c.startDate.value,
+        end: _c.endDate.value,
+      ),
+      builder: (context, child) {
+        return Theme(data: Theme.of(context), child: child!);
+      },
+    );
+    if (picked != null) {
+      if (!mounted) return;
+      setState(() => _bytes = null);
+      _c.setCustomRange(picked.start, picked.end);
+    }
   }
 }

@@ -16,6 +16,7 @@ import 'package:workmanager/workmanager.dart';
 import 'app/routes/app_pages.dart';
 import 'app/theme/app_theme.dart';
 import 'app/bindings/initial_binding.dart';
+import 'modules/onboarding/onboarding_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +71,15 @@ class _PosAppState extends State<PosApp> {
   }
 
   Future<void> _determineStartRoute() async {
+    // Show onboarding once before any activation, trial, or PIN flow.
+    if (!OnboardingPage.isComplete) {
+      setState(() {
+        _initialRoute = Routes.onboarding;
+        _checking = false;
+      });
+      return;
+    }
+
     // ── First install: go to activation screen ──
     // User must choose: Free Trial (with phone verification) or License Key.
     // No auto-start trial — user must explicitly choose and verify phone.

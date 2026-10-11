@@ -1,18 +1,18 @@
 import 'package:ad_shop_pos/app/shell/app_shell_app_bar.dart';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
-import 'package:ad_shop_pos/app/widgets/app_widgets.dart';
+import 'package:ad_shop_pos/app/widgets/app_empty_state.dart';
 import 'package:ad_shop_pos/data/services/category_service.dart';
 import 'package:ad_shop_pos/modules/cart/cart_controller.dart';
+import 'package:ad_shop_pos/modules/manual/manual_nav.dart';
 import 'package:ad_shop_pos/modules/scanner/barcode_scanner_page.dart';
 import 'package:ad_shop_pos/widgets/product_card.dart';
-import 'package:ad_shop_pos/widgets/product_image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:ad_shop_pos/app/shell/shell_controller.dart';
 import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:get/get.dart';
 
-import '../../data/models/product_model.dart';
 import 'products_controller.dart';
+import 'product_form_page.dart';
 
 class ProductsPage extends GetView<ProductsController> {
   const ProductsPage({super.key});
@@ -31,6 +31,9 @@ class ProductsPage extends GetView<ProductsController> {
           final count = controller.products.length;
           return Text("Products ($count/${LicenseService.freeMaxProducts})");
         }),
+        // No app-bar help icon here — this bar already carries the scanner
+        // and cart actions plus the free-plan product counter. The manual is
+        // one tap away from the empty state below and from the More tab.
         actions: [
           // Barcode scanner button
           IconButton(
@@ -88,7 +91,7 @@ class ProductsPage extends GetView<ProductsController> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: AppSpacing.navClearance),
         child: FloatingActionButton.extended(
-          onPressed: () => _showAddProductDialog(context),
+          onPressed: () => Get.to(() => const ProductFormPage()),
           icon: const Icon(Icons.add),
           label: const Text("Add product"),
           shape: RoundedRectangleBorder(
@@ -123,6 +126,39 @@ class ProductsPage extends GetView<ProductsController> {
             ),
           ),
 
+          // ---------- View toggle ----------
+          Padding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.lg,
+              right: AppSpacing.lg,
+              bottom: AppSpacing.sm,
+            ),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Obx(
+                () => SegmentedButton<ProductViewMode>(
+                  segments: const [
+                    ButtonSegment(
+                      value: ProductViewMode.grid,
+                      icon: Icon(Icons.grid_view_rounded),
+                      label: Text('Grid'),
+                    ),
+                    ButtonSegment(
+                      value: ProductViewMode.list,
+                      icon: Icon(Icons.view_list_rounded),
+                      label: Text('List'),
+                    ),
+                  ],
+                  selected: {controller.viewMode.value},
+                  onSelectionChanged: (selected) {
+                    controller.viewMode.value = selected.first;
+                  },
+                  showSelectedIcon: false,
+                ),
+              ),
+            ),
+          ),
+
           // ---------- Category filter ----------
           SizedBox(
             height: 44,
@@ -142,7 +178,7 @@ class ProductsPage extends GetView<ProductsController> {
             }),
           ),
 
-          // ---------- Grid ----------
+          // ---------- Products ----------
           Expanded(
             child: RefreshIndicator(
               onRefresh: controller.refreshProducts,
@@ -168,15 +204,29 @@ class ProductsPage extends GetView<ProductsController> {
                     },
                   );
                 }
+                final padding = const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  // Floating nav clearance + room for the FAB above it
+                  AppSpacing.navClearance + AppSpacing.huge,
+                );
+
+                if (controller.viewMode.value == ProductViewMode.list) {
+                  return ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: padding,
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (_, index) =>
+                        ProductCard(product: items[index], compact: true),
+                  );
+                }
+
                 return GridView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                    // Floating nav clearance + room for the FAB above it
-                    AppSpacing.navClearance + AppSpacing.huge,
-                  ),
+                  padding: padding,
                   itemCount: items.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -210,289 +260,6 @@ class ProductsPage extends GetView<ProductsController> {
       );
     });
   }
-
-  void _showAddProductDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final brandController = TextEditingController();
-    final skuController = TextEditingController();
-    final barcodeController = TextEditingController();
-    final priceController = TextEditingController();
-    final purchasePriceController = TextEditingController();
-    final discountController = TextEditingController();
-    final stockController = TextEditingController();
-    String? imagePath;
-    String selectedCategory =
-        Get.find<CategoryController>().categoryNames.firstOrNull ?? "General";
-
-    // Auto-generate SKU when category changes
-    void updateAutoSku(String category) {
-      skuController.text = controller.generateSku(category);
-    }
-
-    updateAutoSku(selectedCategory);
-
-    Get.dialog(
-      Dialog(
-        insetPadding: const EdgeInsets.all(AppSpacing.lg),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              final theme = Theme.of(context);
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.12,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              AppSpacing.radiusSm,
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.add_box_outlined,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text("Add Product", style: theme.textTheme.titleLarge),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    ProductImagePicker(
-                      imagePath: imagePath,
-                      onChanged: (path) => setState(() => imagePath = path),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: nameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: "Product name",
-                        prefixIcon: Icon(Icons.label_outline),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: brandController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: "Brand (optional)",
-                        prefixIcon: Icon(Icons.branding_watermark_outlined),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    // SKU field (internal code)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: skuController,
-                            textCapitalization: TextCapitalization.characters,
-                            decoration: const InputDecoration(
-                              labelText: "SKU",
-                              hintText: "e.g. W0001",
-                              prefixIcon: Icon(Icons.tag_outlined),
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.outlined(
-                          onPressed: () {
-                            updateAutoSku(selectedCategory);
-                            setState(() {});
-                          },
-                          icon: const Icon(Icons.autorenew, size: 20),
-                          tooltip: "Auto-generate SKU",
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    // Barcode field (real-world barcode from product packaging)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: barcodeController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Barcode",
-                              hintText: "e.g. 8901234567890",
-                              prefixIcon: Icon(Icons.qr_code_outlined),
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.outlined(
-                          onPressed: () async {
-                            final result =
-                                await BarcodeScannerHelper.scanAndLookupRaw();
-                            if (result != null && result.isNotEmpty) {
-                              setState(() => barcodeController.text = result);
-                            }
-                          },
-                          icon: const Icon(Icons.qr_code_scanner, size: 20),
-                          tooltip: "Scan barcode with camera",
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: priceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Sell price",
-                              prefixIcon: Icon(Icons.sell_outlined),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: TextField(
-                            controller: purchasePriceController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Purchase price",
-                              prefixIcon: Icon(Icons.payments_outlined),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: discountController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Discount %",
-                              prefixIcon: Icon(Icons.discount_outlined),
-                              suffixText: "%",
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: TextField(
-                            controller: stockController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "Stock",
-                              prefixIcon: Icon(Icons.inventory_2_outlined),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<String>(
-                      value: selectedCategory,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: "Category",
-                        prefixIcon: Icon(Icons.category_outlined),
-                      ),
-                      items: Get.find<CategoryController>().categoryNames
-                          .map(
-                            (name) => DropdownMenuItem(
-                              value: name,
-                              child: Text(name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() => selectedCategory = value!);
-                        updateAutoSku(value!);
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: Get.back,
-                            child: const Text("Cancel"),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () {
-                              if (nameController.text.isEmpty ||
-                                  priceController.text.isEmpty ||
-                                  stockController.text.isEmpty) {
-                                Get.snackbar(
-                                  "Missing info",
-                                  "Please fill all required fields",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                                return;
-                              }
-
-                              final discountVal =
-                                  double.tryParse(discountController.text) ?? 0;
-                              if (discountVal < 0 || discountVal > 100) {
-                                Get.snackbar(
-                                  "Invalid discount",
-                                  "Discount must be between 0 and 100",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                                return;
-                              }
-
-                              controller.addProduct(
-                                ProductModel(
-                                  id: UniqueKey().toString(),
-                                  name: nameController.text,
-                                  brand: brandController.text,
-                                  category: selectedCategory,
-                                  price:
-                                      double.tryParse(priceController.text) ??
-                                      0,
-                                  purchasePrice:
-                                      double.tryParse(
-                                        purchasePriceController.text,
-                                      ) ??
-                                      0,
-                                  discount: discountVal,
-                                  stock:
-                                      int.tryParse(stockController.text) ?? 0,
-                                  image: imagePath,
-                                  sku: skuController.text.trim(),
-                                  barcode: barcodeController.text.trim(),
-                                ),
-                              );
-                              Get.back();
-                            },
-                            child: const Text("Save"),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _EmptyState extends StatelessWidget {
@@ -507,6 +274,10 @@ class _EmptyState extends StatelessWidget {
       subtitle: hasProducts
           ? 'Try a different search or category'
           : 'Tap "Add product" to get started',
+      // Point first-time users at the manual rather than leaving them at a
+      // dead end.
+      actionLabel: hasProducts ? null : 'How to add a product',
+      onAction: hasProducts ? null : () => ManualNav.openGuide('add-product'),
     );
   }
 }

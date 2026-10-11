@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:ad_shop_pos/app/theme/app_theme.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
+import 'package:ad_shop_pos/data/services/auto_backup_service.dart';
 
 /// A custom product category with a name and color.
 class CategoryModel {
@@ -74,6 +75,7 @@ class CategoryController extends GetxController {
 
   /// Add a new category. Returns false if name already exists.
   bool addCategory(String name, Color color) {
+    AutoBackupService.markDataChanged();
     final trimmed = name.trim();
     if (trimmed.isEmpty) return false;
     if (categories.any((c) => c.name.toLowerCase() == trimmed.toLowerCase())) {
@@ -86,6 +88,7 @@ class CategoryController extends GetxController {
 
   /// Update an existing category. Returns false if new name conflicts.
   bool updateCategory(String oldName, String newName, Color newColor) {
+    AutoBackupService.markDataChanged();
     final trimmed = newName.trim();
     if (trimmed.isEmpty) return false;
     // Allow same name (color change only) or unique name
@@ -102,6 +105,7 @@ class CategoryController extends GetxController {
 
   /// Delete a category. Returns false if products still use it.
   bool deleteCategory(String name) {
+    AutoBackupService.markDataChanged();
     categories.removeWhere((c) => c.name == name);
     _saveToBox();
     return true;

@@ -56,13 +56,16 @@ class TooltipLabel extends StatelessWidget {
 /// Tooltip definitions for financial terms used across the app.
 class FinancialTooltips {
   static const String revenue =
-      'Revenue is the total money received from all sales after product discounts are applied. It does not include expenses or refunds.';
+      'Revenue is the money received from sales after product discounts, less any refunds recorded in the period. It does not include expenses.';
 
   static const String grossProfit =
       'Gross Profit = Revenue minus Cost of Goods Sold (COGS). This is the profit before deducting expenses like rent, salaries, and refunds.';
 
+  static const String profit =
+      'Profit = Revenue minus Cost of Goods Sold, after the margin handed back on refunds. Expenses are deducted from it to give Net Profit.';
+
   static const String netProfit =
-      'Net Profit = Gross Profit minus Expenses and Refunds. This is your actual take-home profit after all costs are deducted.';
+      'Net Profit = Profit minus Expenses. This is your actual take-home profit after all costs are deducted, refunds included.';
 
   static const String netMargin =
       'Net Margin = (Net Profit / Revenue) x 100. Shows what percentage of each rupee of revenue is actual profit.';
@@ -89,14 +92,17 @@ class FinancialTooltips {
       'Number of sales transactions completed today.';
 
   static const String todayRevenue =
-      'Total money received from all sales completed today.';
+      'Money received from sales completed today, less any refunds recorded today.';
 
   static const String todayProfit =
-      'Profit earned from sales completed today (after discounts and returns).';
+      'Profit from sales completed today, after the margin handed back on refunds and before expenses.';
 
   static const String discount =
       'Discount reduces the selling price. Product discount is per-item, checkout discount applies to the whole cart.';
 
   static const String tax =
       'Tax applied on sales. If inclusive, tax is already in the selling price. If exclusive, tax is added on top.';
+
+  static const String taxCollected =
+      'Tax charged on the sales in this period, less the tax handed back with refunds — so it is the amount still held for tax, not the amount originally charged.';
 }
