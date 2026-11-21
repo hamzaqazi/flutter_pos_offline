@@ -7,6 +7,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../../app/utils/formatters.dart';
 import '../models/cart_item_model.dart';
+import '../services/license_service.dart';
 import '../services/settings_service.dart';
 
 /// Generates the receipt/invoice PDF.
@@ -340,40 +341,42 @@ class InvoicePdfService {
                 ),
               ],
 
-              // ═══════════ Powered by Codynest ═══════════
-              _dashedDivider(),
+              // ── Powered by Codynest (trial / free only; hidden for paying customers) ──
+              if (!LicenseService.isPayingCustomer) ...[
+                _dashedDivider(),
 
-              pw.Padding(
-                padding: const pw.EdgeInsets.only(top: 4),
-                child: pw.Column(
-                  children: [
-                    pw.Text(
-                      'Powered by Codynest.com',
-                      textAlign: pw.TextAlign.center,
-                      style: pw.TextStyle(
-                        fontSize: 8,
-                        fontWeight: pw.FontWeight.bold,
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 4),
+                  child: pw.Column(
+                    children: [
+                      pw.Text(
+                        'Powered by Codynest.com',
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                          fontSize: 8,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
                       ),
-                    ),
 
-                    pw.SizedBox(height: 2),
+                      pw.SizedBox(height: 2),
 
-                    pw.Text(
-                      'Support & WhatsApp:',
-                      textAlign: pw.TextAlign.center,
-                      style: const pw.TextStyle(fontSize: 7),
-                    ),
+                      pw.Text(
+                        'Support & WhatsApp:',
+                        textAlign: pw.TextAlign.center,
+                        style: const pw.TextStyle(fontSize: 7),
+                      ),
 
-                    pw.SizedBox(height: 1),
+                      pw.SizedBox(height: 1),
 
-                    pw.Text(
-                      '0315-3507075 / 0345-3333316',
-                      textAlign: pw.TextAlign.center,
-                      style: const pw.TextStyle(fontSize: 7),
-                    ),
-                  ],
+                      pw.Text(
+                        '0315-3507075 / 0345-3333316',
+                        textAlign: pw.TextAlign.center,
+                        style: const pw.TextStyle(fontSize: 7),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
           );
         },

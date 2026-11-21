@@ -176,6 +176,18 @@ class LicenseService {
     return !isPremium && !isTrialActive;
   }
 
+  /// Whether this device is a **paying customer** — a licence key is
+  /// activated AND currently valid (not expired, within offline grace).
+  ///
+  /// Distinct from [isPremium], which is also true during a free trial, and
+  /// from [isPaidPlan], which ignores activation/expiry. A trial or free-tier
+  /// user is NOT a paying customer. Used to suppress the "Powered by
+  /// Codynest" vendor branding on receipts, invoices and reports once the
+  /// owner has bought a licence.
+  static bool get isPayingCustomer {
+    return isActivated && isPremium;
+  }
+
   /// Maximum number of products allowed for current plan.
   static int get maxProducts {
     if (isPremium) return 999999; // Unlimited

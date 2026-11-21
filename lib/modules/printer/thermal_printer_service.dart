@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:math';
 import 'package:ad_shop_pos/data/models/cart_item_model.dart';
 import 'package:ad_shop_pos/data/models/receipt_settings_model.dart';
+import 'package:ad_shop_pos/data/services/license_service.dart';
 import 'package:ad_shop_pos/data/services/settings_service.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:image/image.dart' as img;
@@ -384,30 +385,32 @@ class ThermalPrinterService {
     }
     bytes += generator.hr();
 
-    // --- Powered by Codynest ---
-    bytes += generator.feed(2);
-    bytes += generator.text(
-      'Powered by Codynest.com',
-      styles: const PosStyles(
-        align: PosAlign.center,
-        fontType: PosFontType.fontB,
-      ),
-    );
+    // --- Powered by Codynest (trial / free only; hidden for paying customers) ---
+    if (!LicenseService.isPayingCustomer) {
+      bytes += generator.feed(2);
+      bytes += generator.text(
+        'Powered by Codynest.com',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          fontType: PosFontType.fontB,
+        ),
+      );
 
-    bytes += generator.text(
-      'Support & WhatsApp:',
-      styles: const PosStyles(
-        align: PosAlign.center,
-        fontType: PosFontType.fontB,
-      ),
-    );
-    bytes += generator.text(
-      '0315-3507075 / 0345-3333316',
-      styles: const PosStyles(
-        align: PosAlign.center,
-        fontType: PosFontType.fontB,
-      ),
-    );
+      bytes += generator.text(
+        'Support & WhatsApp:',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          fontType: PosFontType.fontB,
+        ),
+      );
+      bytes += generator.text(
+        '0315-3507075 / 0345-3333316',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          fontType: PosFontType.fontB,
+        ),
+      );
+    }
 
     // bytes += generator.feed(1);
     bytes += generator.cut();
