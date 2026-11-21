@@ -236,9 +236,7 @@ class SettingsPage extends GetView<SettingsController> {
             subtitle: "How your shop data is stored & protected",
             color: AppColors.seed,
             onTap: () => Launcher.launch(
-              Uri.parse(
-                'https://www.freeprivacypolicy.com/live/5c721b8c-0bc4-4390-8c47-0fa555393b03',
-              ),
+              Uri.parse('https://pos.codynest.com/privacy-policy.html'),
               mode: LaunchMode.externalApplication,
             ),
           ),
@@ -746,10 +744,10 @@ class _AppVersionFooterState extends State<_AppVersionFooter> {
   void initState() {
     super.initState();
     PackageInfo.fromPlatform()
-      .then((info) {
-        if (mounted) setState(() => _info = info);
-      })
-      .catchError((_) {});
+        .then((info) {
+          if (mounted) setState(() => _info = info);
+        })
+        .catchError((_) {});
   }
 
   @override
