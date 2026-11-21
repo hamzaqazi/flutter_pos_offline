@@ -15,7 +15,7 @@ import 'package:hive/hive.dart';
 ///         {id, addedAt, lastUsed, label} objects (see `_Device`).
 /// Trial device fields: trialStartedAt, deviceModel, trialDurationDays
 ///
-/// Plans: "free", "monthly", "yearly", "lifetime"
+/// Plans: "free", "monthly", "6month", "yearly", "lifetime"
 /// Trial: 14-day free trial on first install, all premium features unlocked.
 class LicenseService {
   static final _box = Hive.box('settings');
@@ -116,7 +116,7 @@ class LicenseService {
   // =================== Plan & Premium ===================
 
   /// Get the current plan type.
-  /// Returns: "trial", "free", "monthly", "yearly", "lifetime"
+  /// Returns: "trial", "free", "monthly", "6month", "yearly", "lifetime"
   /// Paid plan always supersedes trial — if user has an active license,
   /// we show the paid plan regardless of whether trial is also running.
   static String get plan {
@@ -142,8 +142,8 @@ class LicenseService {
       final p = storedPlan;
       if (p == 'lifetime') return true;
 
-      // Monthly / yearly — check expiry
-      if (p == 'monthly' || p == 'yearly') {
+      // Monthly / 6-month / yearly — check expiry
+      if (p == 'monthly' || p == '6month' || p == 'yearly') {
         if (isExpired) return false;
 
         // Offline grace: trust premium for N days without verification
@@ -933,6 +933,8 @@ class LicenseService {
         return 'Free Trial';
       case 'monthly':
         return 'Monthly';
+      case '6month':
+        return '6 Months';
       case 'yearly':
         return 'Yearly';
       case 'lifetime':
@@ -950,6 +952,8 @@ class LicenseService {
         return '🎁  Free Trial';
       case 'monthly':
         return '📅  Monthly';
+      case '6month':
+        return '🗓️  6 Months';
       case 'yearly':
         return '🗓️  Yearly';
       case 'lifetime':
@@ -963,7 +967,7 @@ class LicenseService {
   /// Check if the plan is a paid plan (not free/trial).
   static bool get isPaidPlan {
     final p = storedPlan;
-    return p == 'monthly' || p == 'yearly' || p == 'lifetime';
+    return p == 'monthly' || p == '6month' || p == 'yearly' || p == 'lifetime';
   }
 
   // =================== Formatting ===================
