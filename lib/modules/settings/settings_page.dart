@@ -19,6 +19,7 @@ import 'package:ad_shop_pos/modules/manual/manual_nav.dart';
 import 'package:ad_shop_pos/modules/printer/thermal_printer_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -295,6 +296,9 @@ class SettingsPage extends GetView<SettingsController> {
       children.add(const SizedBox(height: AppSpacing.xl));
     }
     children.removeLast();
+
+    // ── App version footer (showcased at the bottom of Settings) ──
+    children.add(const _AppVersionFooter());
 
     return Scaffold(
       appBar: const AppShellAppBar(
@@ -718,6 +722,68 @@ class _ColorPickerGrid extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// =================== App Version Footer ===================
+
+/// Showcases the app version (and build number) at the bottom of Settings.
+///
+/// Read from [PackageInfo.fromPlatform] so it always reflects the actual
+/// installed version/build from pubspec — never a stale hardcoded string.
+class _AppVersionFooter extends StatefulWidget {
+  const _AppVersionFooter();
+
+  @override
+  State<_AppVersionFooter> createState() => _AppVersionFooterState();
+}
+
+class _AppVersionFooterState extends State<_AppVersionFooter> {
+  PackageInfo? _info;
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform()
+      .then((info) {
+        if (mounted) setState(() => _info = info);
+      })
+      .catchError((_) {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final info = _info;
+    final version = info?.version ?? '';
+    final build = info?.buildNumber ?? '';
+    final detail = build.isEmpty
+        ? 'Version $version'
+        : 'Version $version · Build $build';
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Column(
+          children: [
+            Text(
+              'Codynest POS',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              detail,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
