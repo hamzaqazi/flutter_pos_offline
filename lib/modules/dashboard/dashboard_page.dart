@@ -176,7 +176,7 @@ class DashboardPage extends GetView<DashboardController> {
         );
       } else if (days != null && expiresAt != null) {
         final isCritical = days <= 7;
-        final isWarning = days <= 30;
+        final isWarning = days <= 14;
 
         banners.add(
           banner(
@@ -714,9 +714,9 @@ class _AutoBackupSheetState extends State<_AutoBackupSheet> {
               autoOn
                   ? (AutoBackupService.frequency == 'manual'
                         ? 'Scheduling is set to manual — run a backup '
-                            'whenever you like.'
+                              'whenever you like.'
                         : 'Your data is being saved automatically. '
-                            'You can also run a backup right now.')
+                              'You can also run a backup right now.')
                   : 'New sales, returns or edits since your last backup. '
                         'Auto backup is off — run one now to keep them safe.',
               textAlign: TextAlign.center,
